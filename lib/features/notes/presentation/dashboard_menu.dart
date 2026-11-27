@@ -68,14 +68,17 @@ extension _DashMenu on _DashboardScreenState {
         sections: [
           MenuSection(l10n.menuSectionApp, [
             MenuAction('view', l10n.homeViewMenu, Icons.view_quilt_outlined),
-            MenuAction('theme', l10n.themePickerTitle, AppIcons.appearance),
+            MenuAction(
+              'appearance',
+              l10n.settingsAppearance,
+              AppIcons.appearance,
+            ),
             if (!Personalize.current.shows(UiItem.homeAccount))
               MenuAction(
                 'account',
                 l10n.account,
                 Icons.account_circle_outlined,
               ),
-            MenuAction('background', l10n.dashboardBackground, Icons.wallpaper),
             if (hasHiddenFolders)
               MenuAction(
                 'hidden',
@@ -98,6 +101,8 @@ extension _DashMenu on _DashboardScreenState {
     switch (action) {
       case 'view':
         unawaited(showFilterSheet(context));
+      case 'appearance':
+        unawaited(showAppearanceStudio(context));
       case 'theme':
         unawaited(showThemePickerSheet(context));
       case 'account':

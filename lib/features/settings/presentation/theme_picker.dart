@@ -11,6 +11,7 @@ import '../../../core/app_icons.dart';
 import '../../../core/haptics.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../../../core/widgets/horizontal_wheel_strip.dart';
 import '../../../core/widgets/press_scale.dart';
 import '../../../core/widgets/sheet_header.dart';
 import '../../../core/widgets/toggle_pop.dart';
@@ -20,6 +21,59 @@ import '../../entitlement/presentation/pro_lock.dart';
 import '../settings_providers.dart';
 
 typedef ThemeOption = (AppThemeChoice, String, List<ThemeData>);
+typedef ThemeFamilyOption = (ThemeFamily, String, ThemeData);
+
+/// Aile seçiminde PRO kilidi kontrolü (`ThemeChoiceCard` ile uyumlu).
+bool themeFamilyLocked(
+  ThemeFamily option,
+  ThemeFamily current, {
+  required bool unlocked,
+}) => AppearanceGate.locked(
+  option.name,
+  free: AppearanceGate.freeThemes,
+  current: current.name,
+  unlocked: unlocked,
+);
+
+/// Her tema ailesinde **Otomatik · Açık · Koyu** 3-lü parlaklık anahtarı.
+class ThemeBrightnessSegmented extends ConsumerWidget {
+  const ThemeBrightnessSegmented({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final mode = ref.watch(themeBrightnessModeProvider);
+    return SegmentedButton<AppBrightnessMode>(
+      key: const ValueKey('appearance-brightness'),
+      showSelectedIcon: false,
+      segments: [
+        ButtonSegment(
+          value: AppBrightnessMode.system,
+          icon: const Icon(
+            Icons.brightness_auto_outlined,
+            size: AppIconSize.xs,
+          ),
+          label: Text(l10n.brightnessModeAuto),
+        ),
+        ButtonSegment(
+          value: AppBrightnessMode.light,
+          icon: const Icon(Icons.light_mode_outlined, size: AppIconSize.xs),
+          label: Text(l10n.brightnessModeLight),
+        ),
+        ButtonSegment(
+          value: AppBrightnessMode.dark,
+          icon: const Icon(Icons.dark_mode_outlined, size: AppIconSize.xs),
+          label: Text(l10n.brightnessModeDark),
+        ),
+      ],
+      selected: {mode},
+      onSelectionChanged: (sel) {
+        AppHaptics.tick();
+        ref.read(themeBrightnessModeProvider.notifier).set(sel.first);
+      },
+    );
+  }
+}
 
 /// PL6 `extraAppearance` kapısı: bu tema şimdi YENİ seçim için kilitli mi.
 /// Seçili tema ve ücretsiz temel set ([AppearanceGate]) hiç kilitlenmez.
@@ -76,10 +130,15 @@ const _groupIcons = <IconData>[
 /// Gruplu tema seçenekleri: (grup adı, seçenekler).
 List<(String, List<ThemeOption>)> themeChoiceGroups(
   BuildContext context,
-  String font,
-) {
+  String font, {
+  Brightness? previewBrightness,
+}) {
   final l10n = context.l10n;
-  final all = {for (final o in _allThemeOptions(context, font)) o.$1: o};
+  final b = previewBrightness ?? Brightness.light;
+  final all = {
+    for (final o in _allThemeOptions(context, font, previewBrightness: b))
+      o.$1: o,
+  };
   final names = [
     l10n.themeGroupCalm,
     l10n.themeGroupPaper,
@@ -91,71 +150,163 @@ List<(String, List<ThemeOption>)> themeChoiceGroups(
   ];
 }
 
+/// 20 özgün tema ailesini gruplar halinde ve seçili parlaklıkta döndürür.
+List<(String, List<ThemeFamilyOption>)> themeFamilyGroups(
+  BuildContext context,
+  String font, {
+  Brightness? previewBrightness,
+}) {
+  final l10n = context.l10n;
+  final b = previewBrightness ?? Theme.of(context).brightness;
+  final names = [
+    l10n.themeGroupCalm,
+    l10n.themeGroupPaper,
+    l10n.themeGroupVivid,
+  ];
+  const order = <List<ThemeFamily>>[
+    [
+      ThemeFamily.sage,
+      ThemeFamily.porcelain,
+      ThemeFamily.clay,
+      ThemeFamily.lavender,
+      ThemeFamily.olive,
+      ThemeFamily.mint,
+      ThemeFamily.peach,
+    ],
+    [
+      ThemeFamily.white,
+      ThemeFamily.straw,
+      ThemeFamily.cream,
+      ThemeFamily.classic,
+      ThemeFamily.newsprint,
+      ThemeFamily.notebook,
+      ThemeFamily.graphite,
+      ThemeFamily.ledger,
+    ],
+    [
+      ThemeFamily.ocean,
+      ThemeFamily.rose,
+      ThemeFamily.tangerine,
+      ThemeFamily.emerald,
+      ThemeFamily.amethyst,
+    ],
+  ];
+  String labelOf(ThemeFamily f) => switch (f) {
+    ThemeFamily.sage => l10n.themeSage,
+    ThemeFamily.porcelain => l10n.themePorcelain,
+    ThemeFamily.clay => l10n.themeClay,
+    ThemeFamily.lavender => l10n.themeLavender,
+    ThemeFamily.olive => l10n.themeOlive,
+    ThemeFamily.mint => l10n.themeMint,
+    ThemeFamily.peach => l10n.themePeach,
+    ThemeFamily.white => l10n.themeWhite,
+    ThemeFamily.straw => l10n.themeStraw,
+    ThemeFamily.cream => l10n.themeCream,
+    ThemeFamily.classic => l10n.themeClassic,
+    ThemeFamily.newsprint => l10n.themeNewsprint,
+    ThemeFamily.notebook => l10n.themeNotebook,
+    ThemeFamily.graphite => l10n.themeGraphite,
+    ThemeFamily.ledger => l10n.themeLedger,
+    ThemeFamily.ocean => l10n.themeOcean,
+    ThemeFamily.rose => l10n.themeRose,
+    ThemeFamily.tangerine => l10n.themeTangerine,
+    ThemeFamily.emerald => l10n.themeEmerald,
+    ThemeFamily.amethyst => l10n.themeAmethyst,
+  };
+  return [
+    for (var i = 0; i < order.length; i++)
+      (
+        names[i],
+        [
+          for (final f in order[i])
+            (f, labelOf(f), AppTheme.of(f, b, font: font)),
+        ],
+      ),
+  ];
+}
+
 /// Tema seçeneklerinin TEK listesi (Ayarlar → Görünüm ve ana ekrandaki tema
 /// levhası aynı sırayı gösterir) — gruplar sırasıyla düzleştirilmiş.
-List<ThemeOption> themeChoiceOptions(BuildContext context, String font) => [
-  for (final g in themeChoiceGroups(context, font)) ...g.$2,
+List<ThemeOption> themeChoiceOptions(
+  BuildContext context,
+  String font, {
+  Brightness? previewBrightness,
+}) => [
+  for (final g in themeChoiceGroups(
+    context,
+    font,
+    previewBrightness: previewBrightness,
+  ))
+    ...g.$2,
 ];
 
 /// Üçüncü öğe önizlemede çizilen tema(lar): Sistem açık + koyu iki yarım.
-List<ThemeOption> _allThemeOptions(BuildContext context, String font) {
+List<ThemeOption> _allThemeOptions(
+  BuildContext context,
+  String font, {
+  Brightness previewBrightness = Brightness.light,
+}) {
   final l10n = context.l10n;
   ThemeData of(ThemeFamily f, Brightness b) => AppTheme.of(f, b, font: font);
-  ThemeData light(ThemeFamily f) => of(f, Brightness.light);
-  final sage = light(ThemeFamily.sage);
+  ThemeData preview(ThemeFamily f) => of(f, previewBrightness);
+  final sage = preview(ThemeFamily.sage);
   final dark = of(ThemeFamily.sage, Brightness.dark);
   return [
-    (AppThemeChoice.system, l10n.themeSystem, [sage, dark]),
+    (
+      AppThemeChoice.system,
+      l10n.themeSystem,
+      [of(ThemeFamily.sage, Brightness.light), dark],
+    ),
     (AppThemeChoice.sage, l10n.themeSage, [sage]),
     (
       AppThemeChoice.porcelain,
       l10n.themePorcelain,
-      [light(ThemeFamily.porcelain)],
+      [preview(ThemeFamily.porcelain)],
     ),
-    (AppThemeChoice.clay, l10n.themeClay, [light(ThemeFamily.clay)]),
+    (AppThemeChoice.clay, l10n.themeClay, [preview(ThemeFamily.clay)]),
     (
       AppThemeChoice.lavender,
       l10n.themeLavender,
-      [light(ThemeFamily.lavender)],
+      [preview(ThemeFamily.lavender)],
     ),
-    (AppThemeChoice.olive, l10n.themeOlive, [light(ThemeFamily.olive)]),
-    (AppThemeChoice.white, l10n.themeWhite, [light(ThemeFamily.white)]),
-    (AppThemeChoice.straw, l10n.themeStraw, [light(ThemeFamily.straw)]),
-    (AppThemeChoice.cream, l10n.themeCream, [light(ThemeFamily.cream)]),
-    (AppThemeChoice.peach, l10n.themePeach, [light(ThemeFamily.peach)]),
-    (AppThemeChoice.mint, l10n.themeMint, [light(ThemeFamily.mint)]),
+    (AppThemeChoice.olive, l10n.themeOlive, [preview(ThemeFamily.olive)]),
+    (AppThemeChoice.white, l10n.themeWhite, [preview(ThemeFamily.white)]),
+    (AppThemeChoice.straw, l10n.themeStraw, [preview(ThemeFamily.straw)]),
+    (AppThemeChoice.cream, l10n.themeCream, [preview(ThemeFamily.cream)]),
+    (AppThemeChoice.peach, l10n.themePeach, [preview(ThemeFamily.peach)]),
+    (AppThemeChoice.mint, l10n.themeMint, [preview(ThemeFamily.mint)]),
     // CANLI TEMALAR (2026-11-06).
-    (AppThemeChoice.ocean, l10n.themeOcean, [light(ThemeFamily.ocean)]),
-    (AppThemeChoice.rose, l10n.themeRose, [light(ThemeFamily.rose)]),
+    (AppThemeChoice.ocean, l10n.themeOcean, [preview(ThemeFamily.ocean)]),
+    (AppThemeChoice.rose, l10n.themeRose, [preview(ThemeFamily.rose)]),
     (
       AppThemeChoice.tangerine,
       l10n.themeTangerine,
-      [light(ThemeFamily.tangerine)],
+      [preview(ThemeFamily.tangerine)],
     ),
-    (AppThemeChoice.emerald, l10n.themeEmerald, [light(ThemeFamily.emerald)]),
+    (AppThemeChoice.emerald, l10n.themeEmerald, [preview(ThemeFamily.emerald)]),
     (
       AppThemeChoice.amethyst,
       l10n.themeAmethyst,
-      [light(ThemeFamily.amethyst)],
+      [preview(ThemeFamily.amethyst)],
     ),
     // SADE KLASİK TEMALAR (2026-11-08).
-    (AppThemeChoice.classic, l10n.themeClassic, [light(ThemeFamily.classic)]),
+    (AppThemeChoice.classic, l10n.themeClassic, [preview(ThemeFamily.classic)]),
     (
       AppThemeChoice.newsprint,
       l10n.themeNewsprint,
-      [light(ThemeFamily.newsprint)],
+      [preview(ThemeFamily.newsprint)],
     ),
     (
       AppThemeChoice.notebook,
       l10n.themeNotebook,
-      [light(ThemeFamily.notebook)],
+      [preview(ThemeFamily.notebook)],
     ),
     (
       AppThemeChoice.graphite,
       l10n.themeGraphite,
-      [light(ThemeFamily.graphite)],
+      [preview(ThemeFamily.graphite)],
     ),
-    (AppThemeChoice.ledger, l10n.themeLedger, [light(ThemeFamily.ledger)]),
+    (AppThemeChoice.ledger, l10n.themeLedger, [preview(ThemeFamily.ledger)]),
     (AppThemeChoice.dark, l10n.themeDark, [dark]),
   ];
 }
@@ -172,7 +323,17 @@ class ThemeChoiceGrid extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final choice = ref.watch(themeChoiceProvider);
     final unlocked = ref.watch(proFeatureProvider(ProFeature.extraAppearance));
-    final groups = themeChoiceGroups(context, ref.watch(appFontProvider));
+    final brightnessMode = ref.watch(themeBrightnessModeProvider);
+    final previewBrightness = switch (brightnessMode) {
+      AppBrightnessMode.light => Brightness.light,
+      AppBrightnessMode.dark => Brightness.dark,
+      AppBrightnessMode.system => Theme.of(context).brightness,
+    };
+    final groups = themeChoiceGroups(
+      context,
+      ref.watch(appFontProvider),
+      previewBrightness: previewBrightness,
+    );
     final active = _findActiveOption(groups, choice);
 
     return LayoutBuilder(
@@ -185,10 +346,7 @@ class ThemeChoiceGrid extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (active != null) ...[
-              _ActiveThemeBanner(
-                groupName: active.$1,
-                option: active.$2,
-              ),
+              _ActiveThemeBanner(groupName: active.$1, option: active.$2),
               const SizedBox(height: AppSpace.l),
             ],
             for (var g = 0; g < groups.length; g++) ...[
@@ -257,10 +415,7 @@ class ThemeChoiceGrid extends ConsumerWidget {
 
 /// Üstte seçili temayı ve canlı renk paletini sergileyen vitrin kartı.
 class _ActiveThemeBanner extends StatelessWidget {
-  const _ActiveThemeBanner({
-    required this.groupName,
-    required this.option,
-  });
+  const _ActiveThemeBanner({required this.groupName, required this.option});
 
   final String groupName;
   final ThemeOption option;
@@ -396,11 +551,13 @@ class _ThemeGroupHeader extends StatelessWidget {
 Future<void> showThemePickerSheet(BuildContext context) {
   final container = ProviderScope.containerOf(context, listen: false);
   final before = container.read(themeChoiceProvider);
+  final beforeBrightness = container.read(themeBrightnessModeProvider);
   return showAppSheet<void>(
     context: context,
     barrierColor: Colors.transparent,
     showDragHandle: true,
-    builder: (_) => _ThemePickerSheet(initial: before),
+    builder: (_) =>
+        _ThemePickerSheet(initial: before, initialBrightness: beforeBrightness),
   );
 }
 
@@ -413,9 +570,13 @@ final Set<int> _groupStarts = {
 };
 
 class _ThemePickerSheet extends ConsumerStatefulWidget {
-  const _ThemePickerSheet({required this.initial});
+  const _ThemePickerSheet({
+    required this.initial,
+    required this.initialBrightness,
+  });
 
   final AppThemeChoice initial;
+  final AppBrightnessMode initialBrightness;
 
   @override
   ConsumerState<_ThemePickerSheet> createState() => _ThemePickerSheetState();
@@ -457,12 +618,28 @@ class _ThemePickerSheetState extends ConsumerState<_ThemePickerSheet> {
     final tokens = AppTokens.fromTheme(theme);
     final text = AppText.of(theme);
     final choice = ref.watch(themeChoiceProvider);
+    final brightnessMode = ref.watch(themeBrightnessModeProvider);
+    final previewBrightness = switch (brightnessMode) {
+      AppBrightnessMode.light => Brightness.light,
+      AppBrightnessMode.dark => Brightness.dark,
+      AppBrightnessMode.system => theme.brightness,
+    };
     final unlocked = ref.watch(proFeatureProvider(ProFeature.extraAppearance));
     final font = ref.watch(appFontProvider);
-    final groups = themeChoiceGroups(context, font);
+    final groups = themeChoiceGroups(
+      context,
+      font,
+      previewBrightness: previewBrightness,
+    );
     final options = _groupFilter == null
-        ? themeChoiceOptions(context, font)
+        ? themeChoiceOptions(
+            context,
+            font,
+            previewBrightness: previewBrightness,
+          )
         : groups[_groupFilter!].$2;
+    final changed =
+        choice != initial || brightnessMode != widget.initialBrightness;
 
     return SafeArea(
       top: false,
@@ -482,17 +659,17 @@ class _ThemePickerSheetState extends ConsumerState<_ThemePickerSheet> {
               child: Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      l10n.themePickerTitle,
-                      style: text.sheetTitle,
-                    ),
+                    child: Text(l10n.themePickerTitle, style: text.sheetTitle),
                   ),
-                  if (choice != initial)
+                  if (changed)
                     TextButton(
                       key: const ValueKey('theme-sheet-revert'),
                       onPressed: () {
                         AppHaptics.tick();
                         ref.read(themeChoiceProvider.notifier).set(initial);
+                        ref
+                            .read(themeBrightnessModeProvider.notifier)
+                            .set(widget.initialBrightness);
                         Navigator.pop(context);
                       },
                       child: Text(l10n.cancel),
@@ -509,6 +686,15 @@ class _ThemePickerSheetState extends ConsumerState<_ThemePickerSheet> {
                   ),
                 ],
               ),
+            ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(
+                AppSpace.l,
+                0,
+                AppSpace.l,
+                AppSpace.s,
+              ),
+              child: ThemeBrightnessSegmented(),
             ),
             // Hızlı grup süzgeci: Tümü · Sakin · Kâğıt · Canlı.
             SingleChildScrollView(
@@ -545,47 +731,50 @@ class _ThemePickerSheetState extends ConsumerState<_ThemePickerSheet> {
             ),
             SizedBox(
               height: 122,
-              child: ListView.separated(
-                key: const ValueKey('theme-sheet-list'),
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
+              child: HorizontalScrollStrip(
                 controller: _scroll,
-                itemCount: options.length,
-                separatorBuilder: (_, i) => SizedBox(
-                  width: _groupFilter == null && _groupStarts.contains(i + 1)
-                      ? AppSpace.l
-                      : AppSpace.s,
-                ),
-                itemBuilder: (context, i) {
-                  final o = options[i];
-                  return SizedBox(
-                    width: 90,
-                    child: ThemeChoiceCard(
-                      key: ValueKey('theme-sheet-${o.$1.name}'),
-                      label: o.$2,
-                      themes: o.$3,
-                      selected: o.$1 == choice,
-                      locked: themeChoiceLocked(
-                        o.$1,
-                        choice,
-                        unlocked: unlocked,
-                      ),
-                      onTap: () {
-                        if (themeChoiceLocked(
+                builder: (_, controller) => ListView.separated(
+                  key: const ValueKey('theme-sheet-list'),
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
+                  controller: controller,
+                  itemCount: options.length,
+                  separatorBuilder: (_, i) => SizedBox(
+                    width: _groupFilter == null && _groupStarts.contains(i + 1)
+                        ? AppSpace.l
+                        : AppSpace.s,
+                  ),
+                  itemBuilder: (context, i) {
+                    final o = options[i];
+                    return SizedBox(
+                      width: 90,
+                      child: ThemeChoiceCard(
+                        key: ValueKey('theme-sheet-${o.$1.name}'),
+                        label: o.$2,
+                        themes: o.$3,
+                        selected: o.$1 == choice,
+                        locked: themeChoiceLocked(
                           o.$1,
                           choice,
                           unlocked: unlocked,
-                        )) {
-                          // Levha kapanır (seçim değişmedi: "Vazgeç" gerekmez).
-                          openProScreen(context, popFirst: true);
-                          return;
-                        }
-                        AppHaptics.tick();
-                        ref.read(themeChoiceProvider.notifier).set(o.$1);
-                      },
-                    ),
-                  );
-                },
+                        ),
+                        onTap: () {
+                          if (themeChoiceLocked(
+                            o.$1,
+                            choice,
+                            unlocked: unlocked,
+                          )) {
+                            // Levha kapanır (seçim değişmedi: "Vazgeç" gerekmez).
+                            openProScreen(context, popFirst: true);
+                            return;
+                          }
+                          AppHaptics.tick();
+                          ref.read(themeChoiceProvider.notifier).set(o.$1);
+                        },
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ],
@@ -710,9 +899,7 @@ class ThemeChoiceCard extends StatelessWidget {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      CustomPaint(
-                        painter: _MiniThemePreviewPainter(themes),
-                      ),
+                      CustomPaint(painter: _MiniThemePreviewPainter(themes)),
                       if (locked && !selected)
                         Positioned(
                           right: AppSpace.xs,

@@ -23,8 +23,8 @@ import '../../notes/data/notes_repository.dart';
 import '../../notes/domain/note.dart';
 import '../../notes/domain/note_type.dart';
 import '../../notes/presentation/app_background_layers.dart';
-import '../../notes/presentation/dashboard_background_sheet.dart';
 import '../../notes/presentation/notes_providers.dart';
+import '../../settings/presentation/appearance_studio_sheet.dart';
 import '../data/calendar_repository.dart';
 import '../data/holiday_source.dart';
 import '../data/task_note_sync.dart';
@@ -335,21 +335,21 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     // HAFTA PANOSU (kullanıcı isteği 2026-11-21): saat çizelgesi yerine
     // büyük karolar + not önizlemeleri; saat çizelgesi gün sayfasında.
     final Widget page = WeekBoardPage(
-        weekStart: weekStart,
-        data: data,
-        today: _today,
-        selected: _selected,
-        targets: _targets,
-        onDayTap: (d) => unawaited(_showDay(d, data)),
-        // Karo başlığı: o günün saat çizelgesi (eskiden haftada üstteki
-        // güne dokunuş, kullanıcı isteği 2026-11-07).
-        onDayOpen: _openDayPage,
-        onDayLongPress: (d) {
-          setState(() => _selected = d);
-          unawaited(showEventEditor(context, day: d));
-        },
-        onEntryTap: _openEntry,
-        onNoteTap: _openNotePreview,
+      weekStart: weekStart,
+      data: data,
+      today: _today,
+      selected: _selected,
+      targets: _targets,
+      onDayTap: (d) => unawaited(_showDay(d, data)),
+      // Karo başlığı: o günün saat çizelgesi (eskiden haftada üstteki
+      // güne dokunuş, kullanıcı isteği 2026-11-07).
+      onDayOpen: _openDayPage,
+      onDayLongPress: (d) {
+        setState(() => _selected = d);
+        unawaited(showEventEditor(context, day: d));
+      },
+      onEntryTap: _openEntry,
+      onNoteTap: _openNotePreview,
     );
     // Yalnız canlı sayfalar (görünen + komşu) tutulur.
     if (_weekPages.length > 6) _weekPages.clear();
@@ -441,11 +441,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             (_focus.year == _today.year
                 ? monthOf(_today)
                 : DateTime(_focus.year));
-        _setView(
-          CalendarView.month,
-          focus: month,
-          from: global,
-        );
+        _setView(CalendarView.month, focus: month, from: global);
       case CalendarView.month:
         if (zoomIn) {
           // İÇİNDE BULUNULAN AY açıksa yakınlaşma BU HAFTAYA gider
@@ -531,12 +527,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   /// Yeni kaydın günü: seçili gün (görünen ayda değilse ayın 1'i / bugün).
   DateTime _addDay() =>
-        _view != CalendarView.month ||
-            (_selected.year == _focus.year && _selected.month == _focus.month)
-        ? _selected
-        : (_focus.year == _today.year && _focus.month == _today.month
-              ? _today
-              : DateTime(_focus.year, _focus.month));
+      _view != CalendarView.month ||
+          (_selected.year == _focus.year && _selected.month == _focus.month)
+      ? _selected
+      : (_focus.year == _today.year && _focus.month == _today.month
+            ? _today
+            : DateTime(_focus.year, _focus.month));
 
   void _openEntry(AgendaEntry e) => openCalendarEntry(context, e);
 
@@ -690,7 +686,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final bar = PreferredSize(
       preferredSize: const Size.fromHeight(56),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(AppSpace.l, 0, AppSpace.l, AppSpace.s),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpace.l,
+          0,
+          AppSpace.l,
+          AppSpace.s,
+        ),
         child: Row(
           spacing: AppSpace.s,
           children: [
@@ -882,7 +883,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             'reminders' => context.push('/reminders'),
             'routines' => context.push('/routines'),
             'google' => showGoogleCalendarSheet(context),
-            'background' => showDashboardBackgroundSheet(context),
+            'appearance' => showAppearanceStudio(
+              context,
+              contextMode: AppearanceContext.calendar,
+            ),
             'export' => exportCalendarIcs(context, ref),
             'holidays' => Future(
               () => ref.read(showHolidaysProvider.notifier).toggle(),
@@ -905,9 +909,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               const PopupMenuDivider(),
             ],
             _menuItem(
-              'background',
-              Icons.wallpaper_outlined,
-              l10n.dashboardBackground,
+              'appearance',
+              AppIcons.appearance,
+              l10n.settingsAppearance,
             ),
             CheckedPopupMenuItem(
               key: const ValueKey('calendar-holidays-toggle'),
@@ -973,8 +977,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final body = PinchZoomDetector(
       // Yıl ve ay görünümünde dikey kaydırma yok: düz tekerlek geçiş yapar.
       // Hafta/gün görünümü tekerlekle kayar; orada Ctrl + tekerlek geçer.
-      wheelZoom:
-          _view == CalendarView.year || _view == CalendarView.month,
+      wheelZoom: _view == CalendarView.year || _view == CalendarView.month,
       onZoom: _onZoom,
       onPreview: _onPreview,
       onPinchingChanged: (v) => setState(() => _pinching = v),
@@ -992,12 +995,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             // Kıstırmayla / aya dokunarak geçişte odaktan derin yakınlaşma;
             // üst çubuktaki düğmeyle geçişte sakin, hafif ölçek + solma.
             final from = _zoomFromPinch
-                ? (incoming
-                      ? (zoomIn ? 0.55 : 1.6)
-                      : (zoomIn ? 1.6 : 0.55))
-                : (incoming
-                      ? (zoomIn ? 0.96 : 1.03)
-                      : (zoomIn ? 1.03 : 0.96));
+                ? (incoming ? (zoomIn ? 0.55 : 1.6) : (zoomIn ? 1.6 : 0.55))
+                : (incoming ? (zoomIn ? 0.96 : 1.03) : (zoomIn ? 1.03 : 0.96));
             return FadeTransition(
               opacity: animation,
               child: ScaleTransition(
@@ -1054,12 +1053,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             ),
     );
     if (!hasBackground) return scaffold;
-    return Stack(
-      children: [
-        ...backgroundLayers,
-        scaffold,
-      ],
-    );
+    return Stack(children: [...backgroundLayers, scaffold]);
   }
 
   /// Geri tuşunun bu ekrandaki sıradaki adımı; null = ekran kapanır.
@@ -1072,7 +1066,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             CalendarView.month,
             focus: monthOf(mid),
             direction: ZoomDirection.zoomOut,
-            );
+          );
         };
       case CalendarView.year:
         return () => _setView(
@@ -1159,7 +1153,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   // ana menü — kapalı panelin "^ 29 Eki" hapı kalmasın).
                   onFullPage: () => setState(() => _panelDay = null),
                   onOpenTimeline: () => _openDayPage(day),
-                  onNewEvent: () => unawaited(showEventEditor(context, day: day)),
+                  onNewEvent: () =>
+                      unawaited(showEventEditor(context, day: day)),
                   onNewTask: () => unawaited(showTaskEditor(context, due: day)),
                 ),
               ),
@@ -1183,6 +1178,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           .keys
           .toSet();
     }
+
     void select(DateTime d) => setState(() {
       _selected = startOfDay(d);
       _focus = _selected;
@@ -1248,7 +1244,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   }
 }
 
-
 class _TaskTile extends ConsumerWidget {
   const _TaskTile({required this.task});
 
@@ -1290,4 +1285,3 @@ class _TaskTile extends ConsumerWidget {
     );
   }
 }
-

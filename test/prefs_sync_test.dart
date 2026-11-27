@@ -17,15 +17,28 @@ void main() {
 
     test('yerelde değişen buluta gider, bulutta değişen yerele iner', () {
       final plan = planPrefsSync(
-        local: {'theme_mode': 'dark', 'auto_title': true},
-        snapshot: {'theme_mode': 'light', 'auto_title': true},
-        remote: {'theme_mode': 'light', 'auto_title': false},
+        local: {'auto_tag': false, 'auto_title': true},
+        snapshot: {'auto_tag': true, 'auto_title': true},
+        remote: {'auto_tag': true, 'auto_title': false},
       );
-      expect(plan.push, {'theme_mode': 'dark'});
+      expect(plan.push, {'auto_tag': false});
       expect(plan.apply, {'auto_title': false});
-      expect(plan.snapshot, {'theme_mode': 'dark', 'auto_title': false});
+      expect(plan.snapshot, {'auto_tag': false, 'auto_title': false});
       expect(plan.remove, isEmpty);
     });
+
+    test(
+      'tema, parlaklık, gece programı ve zemin tercihleri cihazlara özeldir',
+      () {
+        expect(kSyncedPrefKeys, isNot(contains('theme_mode')));
+        expect(kSyncedPrefKeys, isNot(contains('theme_family')));
+        expect(kSyncedPrefKeys, isNot(contains('theme_brightness')));
+        expect(kSyncedPrefKeys, isNot(contains('dark_schedule_enabled')));
+        expect(kSyncedPrefKeys, isNot(contains('dark_schedule_start')));
+        expect(kSyncedPrefKeys, isNot(contains('dark_schedule_end')));
+        expect(kSyncedPrefKeys, isNot(contains('dashboard_bg_apply_notes')));
+      },
+    );
 
     test('değişiklik yoksa hiçbir şey yazılmaz', () {
       final plan = planPrefsSync(

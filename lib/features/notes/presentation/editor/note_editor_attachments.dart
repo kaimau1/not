@@ -139,11 +139,21 @@ extension _EditorAttachments on _NoteEditorScreenState {
     );
     NoteTableFocus.openOnMount = table.id;
     _mutate(
-      (n) => n.copyWith(
-        attachments: [...n.attachments, _placeNewImage(table, n)],
-      ),
+      (n) =>
+          n.copyWith(attachments: [...n.attachments, _placeNewImage(table, n)]),
       immediate: true,
     );
+  }
+
+  /// Ek adını kullanıcı girişiyle günceller (uzantıyı korur).
+  Future<void> _renameAttachment(Attachment attachment) async {
+    if (_readOnly) return;
+    final next = await showRenameAttachmentSheet(
+      context,
+      currentName: attachment.fileName,
+    );
+    if (next == null || !mounted || next == attachment.fileName) return;
+    _updateAttachment(attachment.copyWith(fileName: next));
   }
 
   /// [asFile] true ise görsel sayfaya yerleşmez, alt şeritte dosya eki olur.
@@ -152,6 +162,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
     Uint8List bytes,
     String fileName, {
     bool asFile = false,
+    String? busyLabel,
   }) async {
     final repo = _attachments;
     if (repo == null) return null;
@@ -159,7 +170,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
       // Sıkıştırma + diske yazma büyük fotoğrafta saniyeler sürüyor ve o süre
       // boyunca ekranda hiçbir iz yoktu (bkz. [_busyTaskN]).
       final attachment = await _runBusy(
-        context.l10n.attachmentUploading,
+        busyLabel ?? context.l10n.attachmentUploading,
         () => repo.prepareImage(
           noteId: widget.noteId,
           bytes: bytes,
@@ -181,7 +192,11 @@ extension _EditorAttachments on _NoteEditorScreenState {
       // Yalnız FileTooLargeException yakalanıyordu; başka her hata (web'de
       // dosya sistemi yok, disk dolu, izin reddi) yukarı kaçıp await'i
       // tamamlanmadan bırakıyordu → ekran donmuş görünüyor, mesaj çıkmıyordu.
-      if (mounted) _showSnack(context.l10n.attachmentFailed(friendlyError(context.l10n, e)));
+      if (mounted) {
+        _showSnack(
+          context.l10n.attachmentFailed(friendlyError(context.l10n, e)),
+        );
+      }
     }
     return null;
   }
@@ -203,9 +218,21 @@ extension _EditorAttachments on _NoteEditorScreenState {
       maxWidth: 2400,
       maxHeight: 2400,
     );
-    for (final file in files) {
+    if (!mounted) return;
+    final l10n = context.l10n;
+    for (var i = 0; i < files.length; i++) {
       if (!mounted) return;
-      await _addImageBytes(await file.readAsBytes(), file.name, asFile: asFile);
+      final file = files[i];
+      final bytes = await file.readAsBytes();
+      if (!mounted) return;
+      await _addImageBytes(
+        bytes,
+        file.name,
+        asFile: asFile,
+        busyLabel: files.length > 1
+            ? '${l10n.attachmentUploading} (${i + 1}/${files.length})'
+            : null,
+      );
     }
   }
 
@@ -257,16 +284,20 @@ extension _EditorAttachments on _NoteEditorScreenState {
       );
     }
     if (rest.isEmpty) return;
-    files = rest;
-    final kind = PickedFileKind.of(nameOf(files.first));
-    if (kind == null) {
+    final grouped = <PickedFileKind, List<XFile>>{};
+    var unsupported = 0;
+    for (final f in rest) {
+      final kind = PickedFileKind.of(nameOf(f));
+      if (kind == null) {
+        unsupported++;
+        continue;
+      }
+      grouped.putIfAbsent(kind, () => []).add(f);
+    }
+    if (grouped.isEmpty) {
       _showSnack(l10n.quickAddFileUnsupported);
       return;
     }
-    var same = [
-      for (final f in files)
-        if (PickedFileKind.of(nameOf(f)) == kind) f,
-    ];
     Future<void> handOff(
       List<XFile> pick,
       Future<Object?> Function() flow,
@@ -279,52 +310,66 @@ extension _EditorAttachments on _NoteEditorScreenState {
       }
     }
 
-    switch (kind) {
-      case PickedFileKind.image:
-        same = await normalizeHeicImages(same);
-        if (same.isEmpty) {
-          if (mounted) _showSnack(l10n.quickAddFileUnsupported);
-          return;
-        }
-        // Ek levhası sadeleşti (2026-10-20): "Görseli ek olarak yükle" ayrı
-        // giriş değil, burada sorulur.
-        final use = await _askFileUse(kind, same);
-        if (use == null || !mounted) return;
-        for (final f in same) {
-          if (!mounted) return;
-          await _addImageBytes(
-            await f.readAsBytes(),
-            nameOf(f).split(RegExp(r'[\\/]')).last,
-            asFile: use == FileUse.imageFile,
-          );
-        }
-      case PickedFileKind.pdf:
-        await handOff(same, _pickPdf);
-        if (mounted) {
-          TipOnce.show(
-            context,
-            ref.read(sharedPreferencesProvider),
-            TipOnce.crossAppDosyalarim,
-            l10n.tipCrossAppDosyalarim,
-            icon: Icons.folder_open_rounded,
-          );
-        }
-      case PickedFileKind.slides:
-        await handOff([same.first], _pickSlide);
-      case PickedFileKind.video:
-      case PickedFileKind.audio:
-        // "Ses dosyası ekle", "Galeriden video" ve "Dosyayı metne dök" ayrı
-        // girişler değil: tür tanınır, ne yapılacağı sorulur.
-        final use = await _askFileUse(kind, same);
-        if (use == null || !mounted) return;
-        await handOff(
-          [same.first],
-          use == FileUse.transcribe
-              ? _transcribeFile
-              : kind == PickedFileKind.video
-              ? _addVideoFromGallery
-              : _pickAudioFile,
-        );
+    for (final entry in grouped.entries) {
+      if (!mounted) return;
+      final kind = entry.key;
+      var same = entry.value;
+      switch (kind) {
+        case PickedFileKind.image:
+          same = await normalizeHeicImages(same);
+          if (same.isEmpty) {
+            unsupported++;
+            continue;
+          }
+          final use = await _askFileUse(kind, same);
+          if (use == null || !mounted) continue;
+          for (var i = 0; i < same.length; i++) {
+            if (!mounted) return;
+            final f = same[i];
+            await _addImageBytes(
+              await f.readAsBytes(),
+              nameOf(f).split(RegExp(r'[\\/]')).last,
+              asFile: use == FileUse.imageFile,
+              busyLabel: same.length > 1
+                  ? '${l10n.attachmentUploading} (${i + 1}/${same.length})'
+                  : null,
+            );
+          }
+        case PickedFileKind.pdf:
+          await handOff(same, _pickPdf);
+          if (mounted) {
+            TipOnce.show(
+              context,
+              ref.read(sharedPreferencesProvider),
+              TipOnce.crossAppDosyalarim,
+              l10n.tipCrossAppDosyalarim,
+              icon: Icons.folder_open_rounded,
+            );
+          }
+        case PickedFileKind.slides:
+          for (final f in same) {
+            if (!mounted) return;
+            await handOff([f], _pickSlide);
+          }
+        case PickedFileKind.video:
+        case PickedFileKind.audio:
+          final use = await _askFileUse(kind, same);
+          if (use == null || !mounted) continue;
+          for (final f in same) {
+            if (!mounted) return;
+            await handOff(
+              [f],
+              use == FileUse.transcribe
+                  ? _transcribeFile
+                  : kind == PickedFileKind.video
+                  ? _addVideoFromGallery
+                  : _pickAudioFile,
+            );
+          }
+      }
+    }
+    if (unsupported > 0 && mounted) {
+      _showSnack(l10n.quickAddFileUnsupported);
     }
   }
 
@@ -336,7 +381,8 @@ extension _EditorAttachments on _NoteEditorScreenState {
       kind: kind,
       inNote: true,
       names: [
-        for (final f in files) (f.name.isEmpty ? f.path : f.name).split(RegExp(r'[\\/]')).last,
+        for (final f in files)
+          (f.name.isEmpty ? f.path : f.name).split(RegExp(r'[\\/]')).last,
       ],
     );
     return choice?.use;
@@ -572,8 +618,7 @@ extension _EditorAttachments on _NoteEditorScreenState {
     final webTag = tagLabel == null || note == null
         ? null
         : urlLinkTarget(note, tagLabel);
-    final url =
-        webTag ?? (caret < 0 ? null : linkAt(logical, caret));
+    final url = webTag ?? (caret < 0 ? null : linkAt(logical, caret));
     void run(VoidCallback action) {
       state.hideToolbar();
       action();
@@ -797,7 +842,11 @@ extension _EditorAttachments on _NoteEditorScreenState {
     } on FileTooLargeException catch (e) {
       if (mounted) _showSnack(_tooLargeMessage(e));
     } catch (e) {
-      if (mounted) _showSnack(context.l10n.attachmentFailed(friendlyError(context.l10n, e)));
+      if (mounted) {
+        _showSnack(
+          context.l10n.attachmentFailed(friendlyError(context.l10n, e)),
+        );
+      }
     }
     return null;
   }
@@ -916,7 +965,11 @@ extension _EditorAttachments on _NoteEditorScreenState {
     } on FileTooLargeException catch (e) {
       if (mounted) _showSnack(_tooLargeMessage(e));
     } catch (e) {
-      if (mounted) _showSnack(context.l10n.attachmentFailed(friendlyError(context.l10n, e)));
+      if (mounted) {
+        _showSnack(
+          context.l10n.attachmentFailed(friendlyError(context.l10n, e)),
+        );
+      }
     }
   }
 
@@ -1001,7 +1054,11 @@ extension _EditorAttachments on _NoteEditorScreenState {
     } on FileTooLargeException catch (e) {
       if (mounted) _showSnack(_tooLargeMessage(e));
     } catch (e) {
-      if (mounted) _showSnack(context.l10n.attachmentFailed(friendlyError(context.l10n, e)));
+      if (mounted) {
+        _showSnack(
+          context.l10n.attachmentFailed(friendlyError(context.l10n, e)),
+        );
+      }
     }
   }
 
@@ -1166,7 +1223,11 @@ extension _EditorAttachments on _NoteEditorScreenState {
     } on AttachmentMissingException {
       if (mounted) _showSnack(context.l10n.attachmentNotSynced);
     } catch (e) {
-      if (mounted) _showSnack(context.l10n.attachmentFailed(friendlyError(context.l10n, e)));
+      if (mounted) {
+        _showSnack(
+          context.l10n.attachmentFailed(friendlyError(context.l10n, e)),
+        );
+      }
     }
   }
 
@@ -1296,6 +1357,4 @@ extension _EditorAttachments on _NoteEditorScreenState {
   }
 
   // ---- Arayüz ---------------------------------------------------------
-
 }
-

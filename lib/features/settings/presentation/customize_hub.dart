@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/widgets/horizontal_wheel_strip.dart';
 import '../../../core/app_icons.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/menu_layout.dart';
@@ -229,30 +230,35 @@ class _CustomizeHubState extends State<CustomizeHub> {
               color: scheme.outlineVariant.withValues(alpha: AppAlpha.soft),
             ),
           ),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.all(AppSpace.xs),
-            child: Row(
-              children: [
-                for (final s in CustomizeSurface.values)
-                  Padding(
-                    padding: const EdgeInsetsDirectional.only(end: AppSpace.xs),
-                    child: Builder(
-                      builder: (context) {
-                        final (label, icon) = surfaceLabel(l10n, s);
-                        return radioChip(
-                          ChoiceChip(
-                            key: ValueKey('customize-surface-${s.name}'),
-                            avatar: Icon(icon, size: AppIconSize.s),
-                            label: Text(label),
-                            selected: s == _surface,
-                            onSelected: (_) => setState(() => _surface = s),
-                          ),
-                        );
-                      },
+          child: HorizontalScrollStrip(
+            builder: (_, controller) => SingleChildScrollView(
+              controller: controller,
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.all(AppSpace.xs),
+              child: Row(
+                children: [
+                  for (final s in CustomizeSurface.values)
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(
+                        end: AppSpace.xs,
+                      ),
+                      child: Builder(
+                        builder: (context) {
+                          final (label, icon) = surfaceLabel(l10n, s);
+                          return radioChip(
+                            ChoiceChip(
+                              key: ValueKey('customize-surface-${s.name}'),
+                              avatar: Icon(icon, size: AppIconSize.s),
+                              label: Text(label),
+                              selected: s == _surface,
+                              onSelected: (_) => setState(() => _surface = s),
+                            ),
+                          );
+                        },
+                      ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

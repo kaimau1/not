@@ -23,6 +23,8 @@ class _ImageTools extends StatelessWidget {
     this.onSaveAs,
     this.onShare,
     this.onCaption,
+    this.onAlign,
+    this.onRename,
     this.hasCaption = false,
     this.placementHint = false,
     this.wide = false,
@@ -43,6 +45,8 @@ class _ImageTools extends StatelessWidget {
 
   /// Görselin altına açıklama yazar (yerinde düzenleme açılır).
   final VoidCallback? onCaption;
+  final VoidCallback? onAlign;
+  final VoidCallback? onRename;
   final bool hasCaption;
 
   /// EKİ FARKLI KAYDET (2026-10-17): dosya kullanıcının seçtiği yere.
@@ -92,6 +96,7 @@ class _ImageTools extends StatelessWidget {
       attachment,
       AttachmentSurface.floating,
       AttachmentCaps(
+        rename: onRename != null,
         transcribe: onTranscribe != null,
         extractText: onExtractText != null,
         videoToNote: onVideoToNote != null,
@@ -123,11 +128,26 @@ class _ImageTools extends StatelessWidget {
           ),
           const SizedBox(width: 8),
         ],
-        Icon(Icons.photo_size_select_large, size: AppIconSize.s, color: scheme.primary),
+        Icon(
+          Icons.photo_size_select_large,
+          size: AppIconSize.s,
+          color: scheme.primary,
+        ),
         if (wide)
           SizedBox(width: wideSliderWidth, child: slider)
         else
           Expanded(child: slider),
+        if (onAlign != null)
+          IconButton(
+            key: const ValueKey('floating-align'),
+            tooltip: l10n.floatingAlignCycle,
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(
+              Icons.format_align_center_rounded,
+              size: AppIconSize.m,
+            ),
+            onPressed: onAlign,
+          ),
         if (onAddText != null)
           IconButton(
             key: const ValueKey('floating-add-text'),
@@ -142,6 +162,14 @@ class _ImageTools extends StatelessWidget {
             visualDensity: VisualDensity.compact,
             icon: const Icon(Icons.short_text_rounded, size: AppIconSize.m),
             onPressed: onCaption,
+          ),
+        if (onShare != null)
+          IconButton(
+            key: const ValueKey('floating-share'),
+            tooltip: l10n.share,
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.share_outlined, size: AppIconSize.m),
+            onPressed: onShare,
           ),
         if (onFullscreen != null)
           IconButton(
@@ -166,6 +194,8 @@ class _ImageTools extends StatelessWidget {
             icon: const Icon(Icons.more_vert, size: AppIconSize.m),
             onSelected: (action) {
               switch (action) {
+                case AttachmentAction.rename:
+                  onRename?.call();
                 case AttachmentAction.extractText:
                   onExtractText?.call();
                 case AttachmentAction.copy || AttachmentAction.copyLink:
@@ -189,6 +219,46 @@ class _ImageTools extends StatelessWidget {
             itemBuilder: (context) =>
                 attachmentPopupItems(context, menuActions),
           ),
+      ],
+    );
+    final sizePresets = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final p in [
+          ('floating-size-s', 'S', l10n.floatingSizeSmall, 0.35),
+          ('floating-size-m', 'M', l10n.floatingSizeMedium, 0.60),
+          ('floating-size-l', 'L', l10n.floatingSizeLarge, 1.00),
+        ]) ...[
+          Tooltip(
+            message: p.$3,
+            child: InkWell(
+              key: ValueKey(p.$1),
+              borderRadius: BorderRadius.circular(AppRadius.pill),
+              onTap: () => onWidthEnd(p.$4),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpace.s,
+                  vertical: AppSpace.xxs,
+                ),
+                decoration: BoxDecoration(
+                  color: (wFrac - p.$4).abs() < 0.06
+                      ? scheme.primaryContainer
+                      : scheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                ),
+                child: Text(
+                  p.$2,
+                  style: AppText.of(Theme.of(context)).badge.copyWith(
+                    color: (wFrac - p.$4).abs() < 0.06
+                        ? scheme.onPrimaryContainer
+                        : scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpace.xs),
+        ],
       ],
     );
     return Material(
@@ -243,6 +313,18 @@ class _ImageTools extends StatelessWidget {
                 ),
               ),
             tools,
+            if (!wide)
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                    left: AppSpace.s,
+                    right: AppSpace.s,
+                    bottom: AppSpace.xs,
+                  ),
+                  child: sizePresets,
+                ),
+              ),
           ],
         ),
       ),
@@ -287,14 +369,17 @@ class _PlacementHintLineState extends State<_PlacementHintLine> {
       padding: const EdgeInsets.fromLTRB(10, 0, 10, 4),
       child: Row(
         children: [
-          Icon(Icons.lightbulb_outline, size: AppIconSize.xs, color: scheme.primary),
+          Icon(
+            Icons.lightbulb_outline,
+            size: AppIconSize.xs,
+            color: scheme.primary,
+          ),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
               widget.text,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: scheme.onSurface),
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: scheme.onSurface),
             ),
           ),
         ],
@@ -330,11 +415,9 @@ class _PlacementPulseState extends State<_PlacementPulse>
     } else if (!_pulse.isAnimating && _pulse.value == 0) {
       // Üç nabız, sonra çerçeve yerinde kalır.
       unawaited(
-        _pulse
-            .repeat(reverse: true, count: 3)
-            .whenComplete(() {
-              if (mounted) _pulse.value = 1;
-            }),
+        _pulse.repeat(reverse: true, count: 3).whenComplete(() {
+          if (mounted) _pulse.value = 1;
+        }),
       );
     }
   }

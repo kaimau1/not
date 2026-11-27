@@ -1,7 +1,7 @@
 part of 'pinned_media_pane.dart';
 
-  /// Videonun yükseklik/genişlik oranı; bilinmiyorsa (YouTube, ölçüsü
-  /// henüz gelmemiş dosya) 16:9.
+/// Videonun yükseklik/genişlik oranı; bilinmiyorsa (YouTube, ölçüsü
+/// henüz gelmemiş dosya) 16:9.
 double _videoRatio(Attachment media) {
   final w = (media.width ?? 0).toDouble();
   final h = (media.height ?? 0).toDouble();
@@ -16,8 +16,7 @@ double? _fitRatio(Attachment media) {
     AttachmentKind.video => _videoRatio(media),
     AttachmentKind.slide => known ? h / w : 9 / 16,
     AttachmentKind.image => known ? h / w : null,
-    AttachmentKind.pdf =>
-      known ? 1 / pdfBoxAspect(w, h, media.pdfTurns) : null,
+    AttachmentKind.pdf => known ? 1 / pdfBoxAspect(w, h, media.pdfTurns) : null,
     _ => null,
   };
 }
@@ -164,10 +163,12 @@ extension _PinnedMediaPaneParts on _PinnedMediaPaneState {
       // UZAKLAŞ = BÖLME CANLI KÜÇÜLÜR (görsel bütün hâliyle sığar);
       // bütün kipte yakınlaşma bölmeyi büyütür.
       if (_fitsWidth && (_wholeImage || (atFit && d.scale < 0.97))) {
-        final h = (_pinchStartH * d.scale).clamp(
-          kPinnedMinHeight,
-          math.max(kPinnedMinHeight, math.min(_dragMax, _dragNatural)),
-        ).toDouble();
+        final h = (_pinchStartH * d.scale)
+            .clamp(
+              kPinnedMinHeight,
+              math.max(kPinnedMinHeight, math.min(_dragMax, _dragNatural)),
+            )
+            .toDouble();
         _redraw(() {
           if (!_wholeImage) {
             _wholeImage = true;
@@ -359,6 +360,7 @@ extension _PinnedMediaPaneParts on _PinnedMediaPaneState {
     required double available,
     required double stable,
   }) {
+    if (_collapsedN.value) return 0;
     if (!_keyboard.open) return layout;
     // KISA PENCERE + KLAVYE (F67.4: yatay tablet 640 − 300): medya en küçük
     // penceresinde, yazı alanı ≥ 200 dp kalsın.
@@ -370,24 +372,21 @@ extension _PinnedMediaPaneParts on _PinnedMediaPaneState {
         WindowHeight.short) {
       return math.min(layout, kPinnedVisibleFloor);
     }
-    // Gövde henüz kısalmadıysa (klavye açılıyor) kalacak yer tahminle
-    // hesaplanır; kısaldıysa gerçek ölçü zaten elde.
-    //
-    // ZIPLAMA (kullanıcı bulgusu 2026-10-20: "klavye açılınca çubuk önce
-    // yukarı gidiyor, sonra hafif alta iniyor"): klavye kapalıyken alt
-    // çubuğun altında gezinme çubuğu payı var, oturunca yok (bkz.
-    // KeyboardSlide) — gövde klavyenin TAMAMI kadar değil, gezinme payı
-    // EKSİK kısalıyor. Tahmin de o kadar eksik düşülmeli; yoksa pencere önce
-    // pay kadar fazla daralıp oturunca geri açılıyordu.
     final settled = stable - available > 40;
     final nav = MediaQueryData.fromView(View.of(context)).viewPadding.bottom;
     final room = settled
         ? available
         : available - math.max(0.0, _keyboard.estimate - nav);
-    final fit = room - kPinnedBarHeight - kPinnedNoteMinHeight;
-    return math.min(layout, math.max(kPinnedVisibleFloor, fit));
+    // Telefonda klavye açıkken rahat yazım alanı (≥ 168 dp) korunur.
+    final desiredNote = room >= 320
+        ? math.max(168.0, room * 0.44)
+        : math.max(kPinnedNoteMinHeight, room * 0.48);
+    final fit = room - kPinnedBarHeight - desiredNote;
+    final floor = room < 240
+        ? 0.0
+        : math.min(kPinnedVisibleFloor, math.max(0.0, fit));
+    return math.min(layout, math.max(floor, fit));
   }
-
 
   /// **HER EK VİDEO GİBİ OTURUR** (kullanıcı isteği 2026-11-05: "tüm
   /// eklerde YouTube videoları gibi kolay oto sığdırma, sabitlendiğinde"):
@@ -418,7 +417,6 @@ extension _PinnedMediaPaneParts on _PinnedMediaPaneState {
       }),
     );
   }
-
 
   void _fit() {
     final target = _fitTarget;
@@ -458,7 +456,9 @@ extension _PinnedMediaPaneParts on _PinnedMediaPaneState {
       child: Column(
         children: [
           if (!_writing) _bar(context, timed: timed),
-          Expanded(child: Offstage(offstage: _writing, child: widget.child)),
+          Expanded(
+            child: Offstage(offstage: _writing, child: widget.child),
+          ),
         ],
       ),
     );
@@ -483,9 +483,7 @@ extension _PinnedMediaPaneParts on _PinnedMediaPaneState {
         // değil, yalnız "Sığdır" hedefi (bir sayfa boyu).
         final ratio = _mediaRatio;
         final capped = ratio != null && !isPdf;
-        final natural = capped
-            ? constraints.maxWidth * ratio
-            : double.infinity;
+        final natural = capped ? constraints.maxWidth * ratio : double.infinity;
         _fitTarget = ratio == null
             ? null
             : _clamp(constraints.maxWidth * ratio, layoutMax);
@@ -522,10 +520,10 @@ extension _PinnedMediaPaneParts on _PinnedMediaPaneState {
         _dragNatural = natural;
         return Column(
           children: [
-            ValueListenableBuilder<KeyboardPhase>(
-              valueListenable: _keyboardN,
+            ListenableBuilder(
+              listenable: _windowL,
               child: media,
-              builder: (_, _, media) {
+              builder: (_, media) {
                 // Balon yazılırken medya bölmenin TAMAMI (bkz. [_writing]).
                 final full = writing ? constraints.maxHeight : height;
                 final laid = writing ? full : math.min(full, visible());
@@ -580,56 +578,59 @@ extension _PinnedMediaPaneParts on _PinnedMediaPaneState {
   Widget _bar(BuildContext context, {required bool timed}) {
     final scheme = Theme.of(context).colorScheme;
     return GestureDetector(
-              key: const ValueKey('pinned-media-bar'),
-              behavior: HitTestBehavior.opaque,
-              onVerticalDragStart: widget.fill
-                  ? null
-                  : (_) => _redraw(() => _live = _dragHeight),
-              onVerticalDragUpdate: widget.fill
-                  ? null
-                  : (d) =>
-                        _redraw(() => _live = (_live ?? _dragHeight) + d.delta.dy),
-              onVerticalDragEnd: widget.fill ? null : (_) {
-                final raw = _live ?? _dragHeight;
-                _redraw(() => _live = null);
-                if (raw < kPinnedUnpinHeight) {
-                  widget.onUnpin();
-                } else {
-                  widget.onHeightChanged(_clamp(math.min(raw, _dragNatural), _dragMax));
-                }
-              },
-              onVerticalDragCancel: () => _redraw(() => _live = null),
-              child: Container(
-                height: kPinnedBarHeight,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: PdfReadStyle.barColor(scheme),
-                  border: Border(
-                    top: PdfReadStyle.barLine(scheme),
-                    bottom: BorderSide(color: AppTokens.of(context).hairline),
+      key: const ValueKey('pinned-media-bar'),
+      behavior: HitTestBehavior.opaque,
+      onVerticalDragStart: widget.fill
+          ? null
+          : (_) => _redraw(() => _live = _dragHeight),
+      onVerticalDragUpdate: widget.fill
+          ? null
+          : (d) => _redraw(() => _live = (_live ?? _dragHeight) + d.delta.dy),
+      onVerticalDragEnd: widget.fill
+          ? null
+          : (_) {
+              final raw = _live ?? _dragHeight;
+              _redraw(() => _live = null);
+              if (raw < kPinnedUnpinHeight) {
+                widget.onUnpin();
+              } else {
+                widget.onHeightChanged(
+                  _clamp(math.min(raw, _dragNatural), _dragMax),
+                );
+              }
+            },
+      onVerticalDragCancel: () => _redraw(() => _live = null),
+      child: Container(
+        height: kPinnedBarHeight,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: PdfReadStyle.barColor(scheme),
+          border: Border(
+            top: PdfReadStyle.barLine(scheme),
+            bottom: BorderSide(color: AppTokens.of(context).hairline),
+          ),
+        ),
+        // Dar ekranda önce süre yazısı, sonra "Not al" yazısı, en
+        // son bağlantı düğmesi düşer — denetimler ve anahtar kalır.
+        child: LayoutBuilder(
+          builder: (context, bar) => Stack(
+            children: [
+              _barRow(context, bar.maxWidth),
+              // Videonun ilerlemesi çubuğun üst kenarında ince çizgi.
+              if (timed)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  child: IgnorePointer(
+                    child: VideoProgressLine(video: widget.media),
                   ),
                 ),
-                // Dar ekranda önce süre yazısı, sonra "Not al" yazısı, en
-                // son bağlantı düğmesi düşer — denetimler ve anahtar kalır.
-                child: LayoutBuilder(
-                  builder: (context, bar) => Stack(
-                    children: [
-                      _barRow(context, bar.maxWidth),
-                      // Videonun ilerlemesi çubuğun üst kenarında ince çizgi.
-                      if (timed)
-                        Positioned(
-                          left: 0,
-                          right: 0,
-                          top: 0,
-                          child: IgnorePointer(
-                            child: VideoProgressLine(video: widget.media),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            );
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _toggleShrink() {
@@ -689,9 +690,6 @@ extension _PinnedMediaPaneParts on _PinnedMediaPaneState {
   /// yinele · kalem ayarları. Araç seçimi ortak (`InkToolMemory`).
   bool get _penTools => _ownPen && !widget.penActive && _canPen;
 
-  Widget _penQuickTools(BuildContext context) => PinnedPenQuickTools(
-    ink: _inkFor(widget.media),
-    wideBar: _wideBar,
-  );
-
+  Widget _penQuickTools(BuildContext context) =>
+      PinnedPenQuickTools(ink: _inkFor(widget.media), wideBar: _wideBar);
 }

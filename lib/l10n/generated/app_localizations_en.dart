@@ -4068,7 +4068,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get personalizeTitle => 'Personalize';
+  String get personalizeTitle => 'Interface layout';
 
   @override
   String get personalizeInfo => 'Choose visible areas and buttons, plug-ins';
@@ -9415,4 +9415,105 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quickDropUrgentHint => '!urgent';
+
+  @override
+  String get brightnessModeAuto => 'Automatic';
+
+  @override
+  String get brightnessModeLight => 'Light';
+
+  @override
+  String get brightnessModeDark => 'Dark';
+
+  @override
+  String brightnessModeToggleTooltip(String mode) {
+    return 'Appearance mode: $mode';
+  }
+
+  @override
+  String get appearanceTabTheme => 'Theme';
+
+  @override
+  String get appearanceTabBackground => 'Background';
+
+  @override
+  String get appearanceTabLayout => 'Layout';
+
+  @override
+  String get appearanceOpenStudio => 'Backgrounds & appearance';
+
+  @override
+  String get applyHomeBackgroundToNotes => 'Apply to notes too';
+
+  @override
+  String get applyHomeBackgroundToNotesInfo =>
+      'Notes without a custom background inherit this backdrop.';
+
+  @override
+  String get noteUseHomeBackground => 'Home background';
+
+  @override
+  String get bgSubTabWallpapers => 'Wallpapers';
+
+  @override
+  String get bgSubTabIllustrated => 'Illustrated';
+
+  @override
+  String get bgSubTabColors => 'Colors';
+
+  @override
+  String get bgSubTabPatterns => 'Patterns';
+
+  @override
+  String get bgSubTabFrame => 'Frame';
+
+  @override
+  String get bgSubTabPaper => 'Paper';
+
+  @override
+  String get personalizeGroupEditor => 'Note editor bars';
+
+  @override
+  String get personalizeGroupAddAttach => 'Add & attachments';
+
+  @override
+  String get personalizeEditBars => 'Customize editor bars';
+
+  @override
+  String get attachmentRename => 'Rename';
+
+  @override
+  String get attachmentRenameHint => 'Attachment name';
+
+  @override
+  String attachmentsAllTitle(int count) {
+    return 'All attachments ($count)';
+  }
+
+  @override
+  String get attachmentsAllButton => 'All';
+
+  @override
+  String get attachmentRetryUpload => 'Retry upload';
+
+  @override
+  String get pinnedCollapse => 'Minimize';
+
+  @override
+  String get pinnedExpand => 'Expand';
+
+  @override
+  String get pinnedHideKeyboard => 'Hide keyboard';
+
+  @override
+  String get floatingSizeSmall => 'Small';
+
+  @override
+  String get floatingSizeMedium => 'Medium';
+
+  @override
+  String get floatingSizeLarge => 'Full';
+
+  @override
+  String get floatingAlignCycle => 'Horizontal alignment';
 }

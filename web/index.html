@@ -14,19 +14,24 @@
   <meta name="description" content="Notlar: telefon, tablet, bilgisayar ve web arasında anında senkron olan akıllı not defteri. Yapay zekâ asistanı, el yazısı, PDF üstüne not, notta YouTube videosu, çok sayfalı notlar, ortak notlar ve klasörler.">
   <meta name="application-name" content="Notlar">
   <meta name="theme-color" content="#E4EFE9">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <!--
     AÇILIŞ TEMASI = UYGULAMANIN İLK TEMASI (KW-6, web keşfi 2026-11-18):
     katman eskiden işletim sisteminin koyu kipini izliyordu, uygulama ise
     kendi ayarını (varsayılan Adaçayı AÇIK) — koyu açılıştan parlak
     uygulamaya sıçrama. Artık uygulamanın kayıtlı tema seçimine bakar
-    (shared_preferences web: localStorage `flutter.theme_mode`): yalnız
-    "Koyu" ya da "Sistem" + koyu işletim sistemi koyu açılır.
+    (shared_preferences web: localStorage `flutter.theme_brightness` /
+    `flutter.theme_mode`): yalnız "Koyu" ya da "Sistem" + koyu işletim
+    sistemi koyu açılır.
     Bekçi: test/web_splash_theme_test.dart.
   -->
   <script>
     (function () {
       var m = null;
-      try { m = JSON.parse(localStorage.getItem('flutter.theme_mode')); } catch (e) {}
+      try { m = JSON.parse(localStorage.getItem('flutter.theme_brightness')); } catch (e) {}
+      if (!m) {
+        try { m = JSON.parse(localStorage.getItem('flutter.theme_mode')); } catch (e) {}
+      }
       var dark = m === 'dark' || (m === 'system' && window.matchMedia &&
         window.matchMedia('(prefers-color-scheme: dark)').matches);
       if (!dark) return;

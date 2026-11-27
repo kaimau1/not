@@ -93,7 +93,7 @@ class _LanguageSheet extends StatefulWidget {
 class _LanguageSheetState extends State<_LanguageSheet> {
   final _controller = TextEditingController();
   late List<({String code, String label, String fCode, String fLabel})>
-      _entries = _buildEntries(widget.languages);
+  _entries = _buildEntries(widget.languages);
 
   static List<({String code, String label, String fCode, String fLabel})>
   _buildEntries(Map<String, String> languages) => [
@@ -668,33 +668,40 @@ Future<void> _showAppFontSheet(BuildContext context, WidgetRef ref) {
                   ),
                   SizedBox(
                     height: 104,
-                    child: ListView.separated(
-                      key: const ValueKey('font-sheet-list'),
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: HorizontalScrollStrip(
                       controller: scroll,
-                      itemCount: kCatalogFonts.length,
-                      separatorBuilder: (_, _) => const SizedBox(width: 8),
-                      itemBuilder: (context, i) => SizedBox(
-                        width: 80,
-                        child: _FontChoiceCard(
-                          key: ValueKey('font-sheet-${kCatalogFonts[i].id}'),
-                          font: kCatalogFonts[i],
-                          selected: kCatalogFonts[i].id == current,
-                          locked: appFontLocked(
-                            kCatalogFonts[i].id!,
-                            current,
-                            unlocked: unlocked,
+                      builder: (_, controller) => ListView.separated(
+                        key: const ValueKey('font-sheet-list'),
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        controller: controller,
+                        itemCount: kCatalogFonts.length,
+                        separatorBuilder: (_, _) => const SizedBox(width: 8),
+                        itemBuilder: (context, i) => SizedBox(
+                          width: 80,
+                          child: _FontChoiceCard(
+                            key: ValueKey('font-sheet-${kCatalogFonts[i].id}'),
+                            font: kCatalogFonts[i],
+                            selected: kCatalogFonts[i].id == current,
+                            locked: appFontLocked(
+                              kCatalogFonts[i].id!,
+                              current,
+                              unlocked: unlocked,
+                            ),
+                            onTap: () {
+                              final id = kCatalogFonts[i].id!;
+                              if (appFontLocked(
+                                id,
+                                current,
+                                unlocked: unlocked,
+                              )) {
+                                // Levha kapanır (seçim değişmedi).
+                                openProScreen(context, popFirst: true);
+                                return;
+                              }
+                              ref.read(appFontProvider.notifier).set(id);
+                            },
                           ),
-                          onTap: () {
-                            final id = kCatalogFonts[i].id!;
-                            if (appFontLocked(id, current, unlocked: unlocked)) {
-                              // Levha kapanır (seçim değişmedi).
-                              openProScreen(context, popFirst: true);
-                              return;
-                            }
-                            ref.read(appFontProvider.notifier).set(id);
-                          },
                         ),
                       ),
                     ),
@@ -848,8 +855,18 @@ String _fontScaleLabel(AppLocalizations l10n, FontScaleStep step) =>
       FontScaleStep.xlarge => l10n.fontSizeXLarge,
     };
 
+Future<void> showAppFontSheet(BuildContext context, WidgetRef ref) =>
+    _showAppFontSheet(context, ref);
+
+String appFontScaleLabel(AppLocalizations l10n, FontScaleStep s) =>
+    _fontScaleLabel(l10n, s);
+
+class DarkScheduleEditor extends _DarkScheduleEditor {
+  const DarkScheduleEditor({super.key});
+}
+
 class _DarkScheduleEditor extends ConsumerWidget {
-  const _DarkScheduleEditor();
+  const _DarkScheduleEditor({super.key});
 
   String _format(int minutes) =>
       '${(minutes ~/ 60).toString().padLeft(2, '0')}:${(minutes % 60).toString().padLeft(2, '0')}';
@@ -896,7 +913,10 @@ class _DarkScheduleEditor extends ConsumerWidget {
               const SizedBox(width: 4),
               actionChip(
                 ActionChip(
-                  avatar: const Icon(Icons.dark_mode_outlined, size: AppIconSize.xs),
+                  avatar: const Icon(
+                    Icons.dark_mode_outlined,
+                    size: AppIconSize.xs,
+                  ),
                   label: Text(_format(schedule.startMinutes)),
                   onPressed: () => _pick(context, ref, isStart: true),
                 ),
@@ -907,7 +927,10 @@ class _DarkScheduleEditor extends ConsumerWidget {
               ),
               actionChip(
                 ActionChip(
-                  avatar: const Icon(Icons.light_mode_outlined, size: AppIconSize.xs),
+                  avatar: const Icon(
+                    Icons.light_mode_outlined,
+                    size: AppIconSize.xs,
+                  ),
                   label: Text(_format(schedule.endMinutes)),
                   onPressed: () => _pick(context, ref, isStart: false),
                 ),

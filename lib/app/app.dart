@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -201,11 +202,12 @@ class NotlarApp extends ConsumerWidget {
     final fontScale = ref.watch(fontScaleProvider);
     final followSystemText = ref.watch(followSystemTextScaleProvider);
     final font = ref.watch(appFontProvider);
-    final choice = ref.watch(themeChoiceProvider);
+    final family = ref.watch(themeFamilyProvider);
 
     return MaterialApp.router(
       title: 'Notlar',
       debugShowCheckedModeBanner: false,
+      scrollBehavior: const AppScrollBehavior(),
       scaffoldMessengerKey: rootScaffoldMessengerKey,
       // Web: go_router'ın parçaları AYRI verilir ki tarayıcı geçmişine
       // yazan sağlayıcı sarılabilsin; öbür platformlarda olduğu gibi.
@@ -231,8 +233,8 @@ class NotlarApp extends ConsumerWidget {
       actions: {...WidgetsApp.defaultActions, EscBackIntent: EscBackAction()},
       // Koyu kip (Koyu seçimi, sistem ya da gece zamanlaması) seçili ailenin
       // KENDİ koyu hâlini kullanır.
-      theme: AppTheme.of(choice.family, Brightness.light, font: font),
-      darkTheme: AppTheme.of(choice.family, Brightness.dark, font: font),
+      theme: AppTheme.of(family, Brightness.light, font: font),
+      darkTheme: AppTheme.of(family, Brightness.dark, font: font),
       themeMode: themeMode,
       // ÖLÇÜLDÜ (TEMA_PLANI F34.3, v1.1.669): varsayılan 200 ms geçiş her karede
       // `ThemeData.lerp` + tam ağaç, telefonda kare başına 50–66 ms, dört
@@ -293,44 +295,45 @@ class NotlarApp extends ConsumerWidget {
             _webZoom(
               ref,
               KeyboardFocusRing(
-              child: AppLockGate(
-              child: CustomizeModeHost(
-              // Şeritteki "Sırala": düzen merkezi levhası, o anki ekranın
-              // yüzeyiyle açılır (P63 PB2).
-              onReorder: () {
-                final nav = router.routerDelegate.navigatorKey.currentContext;
-                if (nav == null) return;
-                showCustomizeHub(
-                  nav,
-                  initial: surfaceFor(
-                    router.state.uri.path,
-                    keyboard: MediaQuery.viewInsetsOf(nav).bottom > 0,
-                  ),
-                );
-              },
-              // Eski istemci kapısı (F1.5): `config/app.minClient` bu
-              // sürümün veri sürümünü aştıysa tepede "güncelle" şeridi.
-              child: UpdateRequiredBanner(
-                // BİLDİRİM ŞERİDİ (P62 PA5): ipucu / ileti / Geri al /
-                // duyuru tek yerde, Navigator'ın ve levhaların ÜSTÜNDE;
-                // kapı şeridinin altında, kilidin içinde.
-                child: AppNoticeHost(
-                // Not yazım sorunları (F1.6: 1 MiB sınırı / sunucu reddi).
-                child: NoteWriteIssueListener(
-                  // Oturum servisleri (F2.4) — ana ekranın build'inden çıktı.
-                  child: AppUpdateRunner(
-                    child: ReleaseNotesToast(
-                      child: AppServices(
-                        child: child ?? const SizedBox.shrink(),
+                child: AppLockGate(
+                  child: CustomizeModeHost(
+                    // Şeritteki "Sırala": düzen merkezi levhası, o anki ekranın
+                    // yüzeyiyle açılır (P63 PB2).
+                    onReorder: () {
+                      final nav =
+                          router.routerDelegate.navigatorKey.currentContext;
+                      if (nav == null) return;
+                      showCustomizeHub(
+                        nav,
+                        initial: surfaceFor(
+                          router.state.uri.path,
+                          keyboard: MediaQuery.viewInsetsOf(nav).bottom > 0,
+                        ),
+                      );
+                    },
+                    // Eski istemci kapısı (F1.5): `config/app.minClient` bu
+                    // sürümün veri sürümünü aştıysa tepede "güncelle" şeridi.
+                    child: UpdateRequiredBanner(
+                      // BİLDİRİM ŞERİDİ (P62 PA5): ipucu / ileti / Geri al /
+                      // duyuru tek yerde, Navigator'ın ve levhaların ÜSTÜNDE;
+                      // kapı şeridinin altında, kilidin içinde.
+                      child: AppNoticeHost(
+                        // Not yazım sorunları (F1.6: 1 MiB sınırı / sunucu reddi).
+                        child: NoteWriteIssueListener(
+                          // Oturum servisleri (F2.4) — ana ekranın build'inden çıktı.
+                          child: AppUpdateRunner(
+                            child: ReleaseNotesToast(
+                              child: AppServices(
+                                child: child ?? const SizedBox.shrink(),
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
-                ),
               ),
-            ),
-            ),
-            ),
             ),
             fontScale,
             followSystem: followSystemText,
@@ -368,4 +371,16 @@ class EscBackAction extends ContextAction<EscBackIntent> {
     }
     return null;
   }
+}
+
+/// Web ve masaüstünde yatay liste/şeritlerin fare ile sürüklenerek de
+/// kaydırılabilmesini sağlar (dokunmatik + trackpad + fare).
+class AppScrollBehavior extends MaterialScrollBehavior {
+  const AppScrollBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+    ...super.dragDevices,
+    PointerDeviceKind.mouse,
+  };
 }

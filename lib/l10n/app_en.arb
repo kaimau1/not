@@ -1506,7 +1506,7 @@
   "customizeDone": "Done",
   "videoBackSeconds": "Back {seconds} s",
   "videoForwardSeconds": "Forward {seconds} s",
-  "personalizeTitle": "Personalize",
+  "personalizeTitle": "Interface layout",
   "personalizeInfo": "Choose visible areas and buttons, plug-ins",
   "customizeStartTitle": "Edit on screen",
   "customizeStartInfo": "Tap buttons and areas to hide or show them; tap Done when finished.",
@@ -3899,5 +3899,51 @@
   "quickListGenericHint": "Type or speak items…",
   "quickDropKeepOpenShort": "Keep open",
   "quickDropTagHint": "#tag",
-  "quickDropUrgentHint": "!urgent"
+  "quickDropUrgentHint": "!urgent",
+  "brightnessModeAuto": "Automatic",
+  "brightnessModeLight": "Light",
+  "brightnessModeDark": "Dark",
+  "brightnessModeToggleTooltip": "Appearance mode: {mode}",
+  "@brightnessModeToggleTooltip": {
+    "placeholders": {
+      "mode": {
+        "type": "String"
+      }
+    }
+  },
+  "appearanceTabTheme": "Theme",
+  "appearanceTabBackground": "Background",
+  "appearanceTabLayout": "Layout",
+  "appearanceOpenStudio": "Backgrounds & appearance",
+  "applyHomeBackgroundToNotes": "Apply to notes too",
+  "applyHomeBackgroundToNotesInfo": "Notes without a custom background inherit this backdrop.",
+  "noteUseHomeBackground": "Home background",
+  "bgSubTabWallpapers": "Wallpapers",
+  "bgSubTabIllustrated": "Illustrated",
+  "bgSubTabColors": "Colors",
+  "bgSubTabPatterns": "Patterns",
+  "bgSubTabFrame": "Frame",
+  "bgSubTabPaper": "Paper",
+  "personalizeGroupEditor": "Note editor bars",
+  "personalizeGroupAddAttach": "Add & attachments",
+  "personalizeEditBars": "Customize editor bars",
+  "attachmentRename": "Rename",
+  "attachmentRenameHint": "Attachment name",
+  "attachmentsAllTitle": "All attachments ({count})",
+  "@attachmentsAllTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "attachmentsAllButton": "All",
+  "attachmentRetryUpload": "Retry upload",
+  "pinnedCollapse": "Minimize",
+  "pinnedExpand": "Expand",
+  "pinnedHideKeyboard": "Hide keyboard",
+  "floatingSizeSmall": "Small",
+  "floatingSizeMedium": "Medium",
+  "floatingSizeLarge": "Full",
+  "floatingAlignCycle": "Horizontal alignment"
 }

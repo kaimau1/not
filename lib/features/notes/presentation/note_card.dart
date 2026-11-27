@@ -1,6 +1,7 @@
 import '../../../core/haptics.dart';
 import '../../../core/app_icons.dart';
 import '../../../core/widgets/tag_pill.dart';
+
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -28,6 +29,7 @@ import '../../../core/widgets/press_scale.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../settings/settings_providers.dart';
+import 'app_background_layers.dart';
 import '../data/note_shares_repository.dart';
 import '../data/notes_repository.dart';
 import '../domain/archive_paper.dart';
@@ -121,7 +123,11 @@ class NoteCard extends ConsumerWidget {
   /// Kartın çevresine çizilen hale (ana ekranda odak / açık not vurgusu).
   /// Hücrede ayrı `Consumer` YOK (F21.4): odak ve açık not da kartın TEK
   /// aboneliğinden gelir — kaydırmada hücre başına bir bağlama eksik.
-  final Widget Function(Widget card, {required bool focused, required bool open})?
+  final Widget Function(
+    Widget card, {
+    required bool focused,
+    required bool open,
+  })?
   frame;
 
   /// Arama sürerken notun klasör adı kartta yazsın mı? Klasörün kendi
@@ -269,8 +275,7 @@ class NoteCard extends ConsumerWidget {
         unawaited(AppHaptics.tick());
         ref.read(notesRepositoryProvider)?.setUrgent(note.id, !note.urgent);
       case 'side':
-        if (note.locked &&
-            !await authenticateForNote(l10n.unlockAuthReason)) {
+        if (note.locked && !await authenticateForNote(l10n.unlockAuthReason)) {
           return;
         }
         if (!context.mounted) return;
@@ -285,12 +290,30 @@ class NoteCard extends ConsumerWidget {
 
   /// Kart içeriğini notun TEMASININ (çizilmiş zemin) ve zemin görselinin
   /// üstüne serer — editörde ne görünüyorsa kartta da o (küçülmüş hâli).
-  Widget _withNoteBackground(Note note, Widget child, double radius) {
-    final withImage = _withNoteImage(note, child, radius);
-    if (NoteThemes.byId(note.theme) == null) return withImage;
+  Widget _withNoteBackground(
+    BuildContext context,
+    Note note,
+    Widget child,
+    double radius, {
+    DashboardBackground? inheritedBg,
+  }) {
+    var layer = _withNoteImage(note, child, radius);
+    if (inheritedBg != null && note.backgroundImageId == null) {
+      layer = ClipRRect(
+        borderRadius: BorderRadius.circular(radius),
+        child: wrapWithInheritedHomeBg(
+          context,
+          note: note,
+          dashBg: inheritedBg,
+          maxDecodeWidth: 800,
+          child: layer,
+        ),
+      );
+    }
+    if (NoteThemes.byId(note.theme) == null) return layer;
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius),
-      child: NoteThemeBackdrop(themeId: note.theme, child: withImage),
+      child: NoteThemeBackdrop(themeId: note.theme, child: layer),
     );
   }
 
@@ -375,14 +398,8 @@ class NoteCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Zemin ve okunurluk teması DIŞ temaya göre (bkz. [_cardInk]).
-    final background = NoteColors.noteSurface(context, note);
-    final inkTheme = NoteColors.inkThemeFor(Theme.of(context), background);
-    _cardInk[context] = inkTheme;
-    final accent = NoteColors.noteInk(context, note);
     final tokens = AppTokens.of(context);
     final radius = tokens.cardRadius;
-    final scheme = _cardThemeOf(context).colorScheme;
     final query = _query;
     // TEK abonelik (F21.4, bkz. [_cardEnvProvider]). select() ŞART: seçim
     // kümesi her değişimde yeni bir Set; kümeyi izlemek TEK not seçilince
@@ -404,9 +421,21 @@ class NoteCard extends ConsumerWidget {
           allView: e.allView,
           focused: frame != null && e.focused == note.id,
           open: frame != null && e.open == note.id,
+          inheritedBg: noteInheritsHomeBackground(note, e.dashBg)
+              ? e.dashBg
+              : null,
         ),
       ),
     );
+    final visualNote = env.inheritedBg != null
+        ? effectiveNoteWithHomeBg(note, env.inheritedBg!)
+        : note;
+    // Zemin ve okunurluk teması DIŞ temaya göre (bkz. [_cardInk]).
+    final background = NoteColors.noteSurface(context, visualNote);
+    final inkTheme = NoteColors.inkThemeFor(Theme.of(context), background);
+    _cardInk[context] = inkTheme;
+    final accent = NoteColors.noteInk(context, visualNote);
+    final scheme = _cardThemeOf(context).colorScheme;
     final selectionActive = env.selectionActive;
     final selected = env.selected;
     final richPreview = env.rich;
@@ -526,10 +555,8 @@ class NoteCard extends ConsumerWidget {
         ? null
         : ref.watch(
             foldersStreamProvider.select(
-              (async) => async.value
-                  ?.where((f) => f.id == folderId)
-                  .firstOrNull
-                  ?.name,
+              (async) =>
+                  async.value?.where((f) => f.id == folderId).firstOrNull?.name,
             ),
           );
 
@@ -576,161 +603,162 @@ class NoteCard extends ConsumerWidget {
               ),
             ),
           ...[
-          // Kilitli not: içerik kartta gösterilmez; yalnızca kilit satırı.
-          if (note.locked)
-            Row(
-              children: [
-                Icon(
-                  Icons.lock_outline,
-                  size: 14,
-                  color: scheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 6),
-                // Dar hücrede / büyük yazı ölçeğinde taşmasın.
-                Flexible(
-                  child: Text(
-                    context.l10n.lockedNote,
-                    overflow: TextOverflow.ellipsis,
-                    style: _cardThemeOf(context).textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
+            // Kilitli not: içerik kartta gösterilmez; yalnızca kilit satırı.
+            if (note.locked)
+              Row(
+                children: [
+                  Icon(
+                    Icons.lock_outline,
+                    size: 14,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 6),
+                  // Dar hücrede / büyük yazı ölçeğinde taşmasın.
+                  Flexible(
+                    child: Text(
+                      context.l10n.lockedNote,
+                      overflow: TextOverflow.ellipsis,
+                      style: _cardThemeOf(context).textTheme.bodySmall
+                          ?.copyWith(color: scheme.onSurfaceVariant),
                     ),
                   ),
-                ),
+                ],
+              )
+            else if (credential)
+              _SensitiveHidden(
+                onLock: ownerId != null || readOnly
+                    ? null
+                    : () async {
+                        final reason = context.l10n.unlockAuthReason;
+                        final repo = ref.read(notesRepositoryProvider);
+                        if (repo == null) return;
+                        if (!await ensureNoteE2eeKeyForLock(reason)) return;
+                        await repo.setLocked(note, true);
+                      },
+              )
+            else ...[
+              _NotePreview(
+                note: note,
+                preview: preview,
+                highlightQuery: query,
+                rich: richPreview,
+                showProgress: display.progress,
+                showMoreCount: display.moreCount,
+                collapseChecked: !display.checked,
+              ),
+              // Ekler: belge kartı, küçük karolar, dosya/ses satırları (kapak
+              // ayrıca kartın tepesinde). Zemin görseli ek sayılmaz.
+              if (media != null &&
+                  ((media.heroDocument != null && cover == null) ||
+                      media.strip.isNotEmpty ||
+                      media.docs.isNotEmpty ||
+                      media.audioCount > 0 ||
+                      media.transcriptCount > 0)) ...[
+                const SizedBox(height: 8),
+                CardMediaBody(plan: media),
               ],
-            )
-          else if (credential)
-            _SensitiveHidden(
-              onLock: ownerId != null || readOnly
-                  ? null
-                  : () async {
-                      final reason = context.l10n.unlockAuthReason;
-                      final repo = ref.read(notesRepositoryProvider);
-                      if (repo == null) return;
-                      if (!await ensureNoteE2eeKeyForLock(reason)) return;
-                      await repo.setLocked(note, true);
-                    },
-            )
-          else ...[
-            _NotePreview(
-              note: note,
-              preview: preview,
-              highlightQuery: query,
-              rich: richPreview,
-              showProgress: display.progress,
-              showMoreCount: display.moreCount,
-              collapseChecked: !display.checked,
-            ),
-            // Ekler: belge kartı, küçük karolar, dosya/ses satırları (kapak
-            // ayrıca kartın tepesinde). Zemin görseli ek sayılmaz.
-            if (media != null &&
-                ((media.heroDocument != null && cover == null) ||
-                    media.strip.isNotEmpty ||
-                    media.docs.isNotEmpty ||
-                    media.audioCount > 0 ||
-                    media.transcriptCount > 0)) ...[
-              const SizedBox(height: 8),
-              CardMediaBody(plan: media),
+              if (!hiddenMedia.isEmpty) ...[
+                const SizedBox(height: 8),
+                CardHiddenMediaLine(media: hiddenMedia),
+              ],
+              if (note.hasPageInk) ...[
+                const SizedBox(height: 8),
+                CardPageInk(note: note),
+              ],
             ],
-            if (!hiddenMedia.isEmpty) ...[
+            if (folderName != null && folderName.isNotEmpty) ...[
               const SizedBox(height: 8),
-              CardHiddenMediaLine(media: hiddenMedia),
+              _FolderBadge(name: folderName),
             ],
-            if (note.hasPageInk) ...[
+            // ALT META SATIRI: durum simgeleri · ilk etiket · sağda tarih.
+            // Üçü tek bantta olduğu için kartın yüksekliği rozet sayısına göre
+            // değişmiyor; eskiden etiketler Wrap ile ikinci satıra taşıyordu.
+            if (statusIcons.isNotEmpty ||
+                showTag ||
+                showDate ||
+                calendarDay != null) ...[
               const SizedBox(height: 8),
-              CardPageInk(note: note),
-            ],
-          ],
-          if (folderName != null && folderName.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            _FolderBadge(name: folderName),
-          ],
-          // ALT META SATIRI: durum simgeleri · ilk etiket · sağda tarih.
-          // Üçü tek bantta olduğu için kartın yüksekliği rozet sayısına göre
-          // değişmiyor; eskiden etiketler Wrap ile ikinci satıra taşıyordu.
-          if (statusIcons.isNotEmpty ||
-              showTag ||
-              showDate ||
-              calendarDay != null) ...[
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                // Sol grup Expanded: tarih hep sağa yaslı. Spacer + Flexible
-                // boşluğu oranla böler, kullanılmayan pay boş kalıp tarihi
-                // ortaya bırakıyordu; saat de yer varken kesiliyordu (F37.2).
-                Expanded(
-                  child: Row(
-                    children: [
-                      for (final icon in squeeze >= 2
-                          ? statusIcons.take(1)
-                          : statusIcons)
-                        Padding(
-                          padding: const EdgeInsetsDirectional.only(end: 4),
-                          child: icon,
-                        ),
-                      if (reminderLabel != null && squeeze == 0)
-                        Flexible(
-                          flex: 8,
-                          child: Padding(
-                            padding: const EdgeInsetsDirectional.only(end: 6),
-                            child: Text(
-                              reminderLabel,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: AppWeight.strong,
-                                color: accent ?? scheme.onSurfaceVariant,
+              Row(
+                children: [
+                  // Sol grup Expanded: tarih hep sağa yaslı. Spacer + Flexible
+                  // boşluğu oranla böler, kullanılmayan pay boş kalıp tarihi
+                  // ortaya bırakıyordu; saat de yer varken kesiliyordu (F37.2).
+                  Expanded(
+                    child: Row(
+                      children: [
+                        for (final icon
+                            in squeeze >= 2 ? statusIcons.take(1) : statusIcons)
+                          Padding(
+                            padding: const EdgeInsetsDirectional.only(end: 4),
+                            child: icon,
+                          ),
+                        if (reminderLabel != null && squeeze == 0)
+                          Flexible(
+                            flex: 8,
+                            child: Padding(
+                              padding: const EdgeInsetsDirectional.only(end: 6),
+                              child: Text(
+                                reminderLabel,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: AppWeight.strong,
+                                  color: accent ?? scheme.onSurfaceVariant,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      if (expiryLabel != null && squeeze == 0)
-                        Flexible(
-                          flex: 4,
-                          child: Padding(
-                            padding: const EdgeInsetsDirectional.only(end: 6),
-                            child: Text(
-                              expiryLabel,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppText.of(_cardThemeOf(context)).badge
-                                  .copyWith(
-                                    color: accent ?? scheme.onSurfaceVariant,
-                                  ),
+                        if (expiryLabel != null && squeeze == 0)
+                          Flexible(
+                            flex: 4,
+                            child: Padding(
+                              padding: const EdgeInsetsDirectional.only(end: 6),
+                              child: Text(
+                                expiryLabel,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppText.of(_cardThemeOf(context)).badge
+                                    .copyWith(
+                                      color: accent ?? scheme.onSurfaceVariant,
+                                    ),
+                              ),
                             ),
                           ),
-                        ),
-                      if (calendarDay case final day?)
-                        Flexible(
-                          flex: 5,
-                          child: Padding(
-                            padding: const EdgeInsetsDirectional.only(end: 6),
-                            child: CardCalendarPill(day: day, accent: accent),
+                        if (calendarDay case final day?)
+                          Flexible(
+                            flex: 5,
+                            child: Padding(
+                              padding: const EdgeInsetsDirectional.only(end: 6),
+                              child: CardCalendarPill(day: day, accent: accent),
+                            ),
                           ),
-                        ),
-                      // Dar kartta etiket hapı sıfıra sıkışıp boş bir
-                      // mavi leke kalıyordu (kullanıcı bulgusu 2026-11-07).
-                      if (showTag && squeeze == 0)
-                        Flexible(
-                          flex: 3,
-                          child: TagPill(tag: note.tags.first, accent: accent),
-                        ),
-                    ],
-                  ),
-                ),
-                if (showDate)
-                  Text(
-                    formatNoteDate(note.updatedAt!),
-                    maxLines: 1,
-                    style: TextStyle(
-                      fontSize: squeeze >= 2 ? 10.5 : 12,
-                      fontWeight: AppWeight.strong,
-                      color: scheme.onSurfaceVariant,
+                        // Dar kartta etiket hapı sıfıra sıkışıp boş bir
+                        // mavi leke kalıyordu (kullanıcı bulgusu 2026-11-07).
+                        if (showTag && squeeze == 0)
+                          Flexible(
+                            flex: 3,
+                            child: TagPill(
+                              tag: note.tags.first,
+                              accent: accent,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-              ],
-            ),
-          ],
+                  if (showDate)
+                    Text(
+                      formatNoteDate(note.updatedAt!),
+                      maxLines: 1,
+                      style: TextStyle(
+                        fontSize: squeeze >= 2 ? 10.5 : 12,
+                        fontWeight: AppWeight.strong,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                ],
+              ),
+            ],
           ],
         ],
       ),
@@ -782,7 +810,7 @@ class NoteCard extends ConsumerWidget {
     // dokunuş dalgası) dış temada kalır.
     Widget inner = NoteAccent(
       accent: accent,
-      background: NoteColors.effectiveSurface(context, note),
+      background: NoteColors.effectiveSurface(context, visualNote),
       child: content,
     );
     if (inkTheme != null) {
@@ -842,7 +870,13 @@ class NoteCard extends ConsumerWidget {
           // notun zemin görseli dashboard'ta da görülmeli"). Editördeki
           // görünürlük ayarı burada da geçerli; görsel kartın köşelerine
           // kırpılır ve içeriğin ARKASINDA durur.
-          child: _withNoteBackground(note, inner, radius),
+          child: _withNoteBackground(
+            context,
+            visualNote,
+            inner,
+            radius,
+            inheritedBg: env.inheritedBg,
+          ),
         ),
       ),
     );
@@ -922,113 +956,121 @@ class NoteCard extends ConsumerWidget {
                         _showContextMenu(context, ref, details.globalPosition),
               child: _CardHover(
                 child: Stack(
-                children: [
-                  ExcludeSemantics(child: shadowed),
-                  // Üç nokta hızlı işlem düğmesi (madde 5): kartın SAĞ ÜST KÖŞESİnde
-                  // durur — ikon köşeye hizalı, dokunma alanı 48dp (F15.4). Seçim modunda
-                  // gizlenir; yerine tik rozeti gelir. Katmandan bağımsız olduğu için
-                  // başlık satırının yerleşimini değiştirmez (masonry sütun dengesi
-                  // seçim sırasında sabit kalır).
-                  // PAYLAŞILAN notta ⋮ YOK: levhadaki işlemlerin hepsi
-                  // `notesRepositoryProvider` üzerinden, yani BENİM koleksiyonuma
-                  // yazar — başkasının notunda o işlemler kendi altımda aynı
-                  // kimlikle HAYALET bir doküman yaratırdı. Paylaşılan notu
-                  // düzenlemek editörden geçer (o, sahibin deposuna yazar).
-                  if (!selectionActive && ownerId == null)
-                    PositionedDirectional(
-                      top: 2,
-                      end: 2,
-                      // Ekran okuyucuda kendi adıyla AYRI düğüm (F15.2);
-                      // dokunma alanı 48 dp (F15.4) — simge köşede aynı
-                      // yerde kalır, alan yalnız içeri doğru büyür.
-                      child: Semantics(
-                        container: true,
-                        button: true,
-                        label: context.l10n.noteMenu,
-                        excludeSemantics: true,
-                        onTap: () => showNoteActionsSheet(context, ref, note),
-                        child: _RevealOnCardHover(
-                        child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          key: const ValueKey('note-card-menu'),
-                          borderRadius: BorderRadius.circular(AppRadius.xl),
+                  children: [
+                    ExcludeSemantics(child: shadowed),
+                    // Üç nokta hızlı işlem düğmesi (madde 5): kartın SAĞ ÜST KÖŞESİnde
+                    // durur — ikon köşeye hizalı, dokunma alanı 48dp (F15.4). Seçim modunda
+                    // gizlenir; yerine tik rozeti gelir. Katmandan bağımsız olduğu için
+                    // başlık satırının yerleşimini değiştirmez (masonry sütun dengesi
+                    // seçim sırasında sabit kalır).
+                    // PAYLAŞILAN notta ⋮ YOK: levhadaki işlemlerin hepsi
+                    // `notesRepositoryProvider` üzerinden, yani BENİM koleksiyonuma
+                    // yazar — başkasının notunda o işlemler kendi altımda aynı
+                    // kimlikle HAYALET bir doküman yaratırdı. Paylaşılan notu
+                    // düzenlemek editörden geçer (o, sahibin deposuna yazar).
+                    if (!selectionActive && ownerId == null)
+                      PositionedDirectional(
+                        top: 2,
+                        end: 2,
+                        // Ekran okuyucuda kendi adıyla AYRI düğüm (F15.2);
+                        // dokunma alanı 48 dp (F15.4) — simge köşede aynı
+                        // yerde kalır, alan yalnız içeri doğru büyür.
+                        child: Semantics(
+                          container: true,
+                          button: true,
+                          label: context.l10n.noteMenu,
+                          excludeSemantics: true,
                           onTap: () => showNoteActionsSheet(context, ref, note),
-                          child: SizedBox(
-                            width: kMinInteractiveDimension,
-                            height: kMinInteractiveDimension,
-                            child: Align(
-                              alignment: AlignmentDirectional.topEnd,
-                              child: Padding(
-                                padding: const EdgeInsets.all(6),
-                                // Kapağın üstünde düğme koyu yuvarlakla okunur
-                                // kalır (açık renkli fotoğrafta kaybolmasın).
-                                // F74.4(b): düz kartta soluk (krom susar),
-                                // görselli kartta 28 dp siyah %32 daire.
-                                child: !hasCover
-                                    ? Icon(
-                                        Icons.more_vert,
-                                        size: AppIconSize.s,
-                                        color: scheme.onSurfaceVariant
-                                            .withValues(alpha: AppAlpha.muted),
-                                      )
-                                    : DecoratedBox(
-                                        decoration: BoxDecoration(
-                                          color: Colors.black.withValues(
-                                            alpha: AppAlpha.scrim,
-                                          ),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: const SizedBox.square(
-                                          dimension: 28,
-                                          child: Icon(
-                                            Icons.more_vert,
-                                            size: AppIconSize.s,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
+                          child: _RevealOnCardHover(
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                key: const ValueKey('note-card-menu'),
+                                borderRadius: BorderRadius.circular(
+                                  AppRadius.xl,
+                                ),
+                                onTap: () =>
+                                    showNoteActionsSheet(context, ref, note),
+                                child: SizedBox(
+                                  width: kMinInteractiveDimension,
+                                  height: kMinInteractiveDimension,
+                                  child: Align(
+                                    alignment: AlignmentDirectional.topEnd,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(6),
+                                      // Kapağın üstünde düğme koyu yuvarlakla okunur
+                                      // kalır (açık renkli fotoğrafta kaybolmasın).
+                                      // F74.4(b): düz kartta soluk (krom susar),
+                                      // görselli kartta 28 dp siyah %32 daire.
+                                      child: !hasCover
+                                          ? Icon(
+                                              Icons.more_vert,
+                                              size: AppIconSize.s,
+                                              color: scheme.onSurfaceVariant
+                                                  .withValues(
+                                                    alpha: AppAlpha.muted,
+                                                  ),
+                                            )
+                                          : DecoratedBox(
+                                              decoration: BoxDecoration(
+                                                color: Colors.black.withValues(
+                                                  alpha: AppAlpha.scrim,
+                                                ),
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: const SizedBox.square(
+                                                dimension: 28,
+                                                child: Icon(
+                                                  Icons.more_vert,
+                                                  size: AppIconSize.s,
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                      ),
-                      ),
-                    ),
-                  // Seçim çerçevesi: yerleşimi değiştirmeyen boya katmanı
-                  // (yukarıdaki kök nedene bak). `IgnorePointer` şart — katman
-                  // kartın tamamını kapladığı için dokunuşu yutardı.
-                  if (selected)
-                    Positioned.fill(
-                      child: IgnorePointer(
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(radius),
-                            border: Border.all(color: scheme.primary, width: 2),
+                    // Seçim çerçevesi: yerleşimi değiştirmeyen boya katmanı
+                    // (yukarıdaki kök nedene bak). `IgnorePointer` şart — katman
+                    // kartın tamamını kapladığı için dokunuşu yutardı.
+                    if (selected)
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(radius),
+                              border: Border.all(
+                                color: scheme.primary,
+                                width: 2,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  if (selected)
-                    PositionedDirectional(
-                      top: 6,
-                      end: 6,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: scheme.primary,
-                          shape: BoxShape.circle,
-                        ),
-                        padding: const EdgeInsets.all(2),
-                        child: Icon(
-                          Icons.check,
-                          size: 14,
-                          color: scheme.onPrimary,
+                    if (selected)
+                      PositionedDirectional(
+                        top: 6,
+                        end: 6,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: scheme.primary,
+                            shape: BoxShape.circle,
+                          ),
+                          padding: const EdgeInsets.all(2),
+                          child: Icon(
+                            Icons.check,
+                            size: 14,
+                            color: scheme.onPrimary,
+                          ),
                         ),
                       ),
-                    ),
-                ],
-              ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1040,7 +1082,6 @@ class NoteCard extends ConsumerWidget {
         : framed(out, focused: env.focused, open: env.open);
   }
 }
-
 
 class _NotePreview extends StatelessWidget {
   const _NotePreview({
@@ -1079,7 +1120,8 @@ class _NotePreview extends StatelessWidget {
     // seçim yalnız editörde varmış gibi duruyordu. Kartın kendi küçük taban
     // boyutu korunur; çarpan onun üzerine biner (ızgara bozulmasın diye
     // makul bir tavanla).
-    final cardBase = _cardThemeOf(context).textTheme.bodySmall ?? const TextStyle();
+    final cardBase =
+        _cardThemeOf(context).textTheme.bodySmall ?? const TextStyle();
     final bodyStyle = applyNoteOpacity(
       applyNoteFont(
         cardBase.copyWith(
@@ -1207,9 +1249,8 @@ class _NotePreview extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 2),
                   child: Text(
                     _moreItemsLabel(context, slice.more),
-                    style: _cardThemeOf(context).textTheme.labelSmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
+                    style: _cardThemeOf(context).textTheme.labelSmall
+                        ?.copyWith(color: scheme.onSurfaceVariant),
                   ),
                 ),
               if (slice.done > 0)
@@ -1239,8 +1280,7 @@ class _NotePreview extends StatelessWidget {
         final slice = cardItemSlice(
           visible,
           6,
-          collapseChecked:
-              collapseChecked && note.type == NoteType.checklist,
+          collapseChecked: collapseChecked && note.type == NoteType.checklist,
         );
         final shown = slice.shown;
         final remaining = slice.more;
@@ -1266,9 +1306,8 @@ class _NotePreview extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 2),
                 child: Text(
                   _moreItemsLabel(context, remaining),
-                  style: _cardThemeOf(context).textTheme.labelSmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+                  style: _cardThemeOf(context).textTheme.labelSmall
+                      ?.copyWith(color: scheme.onSurfaceVariant),
                 ),
               ),
             if (slice.done > 0)
@@ -1326,9 +1365,8 @@ class _NotePreview extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 2),
                 child: Text(
                   _moreItemsLabel(context, morePages),
-                  style: _cardThemeOf(context).textTheme.labelSmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+                  style: _cardThemeOf(context).textTheme.labelSmall
+                      ?.copyWith(color: scheme.onSurfaceVariant),
                 ),
               ),
           ],
@@ -1336,4 +1374,3 @@ class _NotePreview extends StatelessWidget {
     }
   }
 }
-

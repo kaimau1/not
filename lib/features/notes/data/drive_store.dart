@@ -228,7 +228,7 @@ class AndroidDriveAuth implements DriveAuth {
     try {
       return await _authorize(prompt: false);
     } catch (e) {
-      debugPrint('Drive jetonu alınamadı: $e');
+      if (kDebugMode) debugPrint('Drive jetonu alınamadı: $e');
       return null;
     }
   }
@@ -264,13 +264,12 @@ class AndroidDriveAuth implements DriveAuth {
 /// kullanılamıyorsa (engelli betik / istemci kimliği boş) Firebase'in Google
 /// açılır penceresiyle yedek akış çalışır. Jeton kısa ömürlü olarak
 /// `sessionStorage` + bellekte tutulur.
-typedef WebGisRequester =
-    Future<WebGisToken?> Function({
-      required String clientId,
-      required List<String> scopes,
-      String? loginHint,
-      required bool silent,
-    });
+typedef WebGisRequester = Future<WebGisToken?> Function({
+  required String clientId,
+  required List<String> scopes,
+  String? loginHint,
+  required bool silent,
+});
 
 class WebDriveAuth implements DriveAuth {
   WebDriveAuth({
@@ -316,8 +315,9 @@ class WebDriveAuth implements DriveAuth {
   /// gerekir (Google tarayıcıda yenileme anahtarı vermiyor).
   static const _localKey = 'notlar_drive_token_v3';
 
-  String? get _uid =>
-      _uidProvider != null ? _uidProvider() : (_auth ?? FirebaseAuth.instance).currentUser?.uid;
+  String? get _uid => _uidProvider != null
+      ? _uidProvider()
+      : (_auth ?? FirebaseAuth.instance).currentUser?.uid;
 
   String? get _email => _emailProvider != null
       ? _emailProvider()
@@ -821,7 +821,7 @@ class DriveStore {
                 ..headers['Authorization'] = 'Bearer $token',
         );
         if (response.statusCode != 200) {
-          debugPrint(await _failure(response));
+          if (kDebugMode) debugPrint(await _failure(response));
           return;
         }
         final body = jsonDecode(
@@ -834,7 +834,7 @@ class DriveStore {
         pageToken = body['nextPageToken'] as String?;
       } while (pageToken != null);
     } catch (e) {
-      debugPrint('Drive uygulama verisi silinemedi: $e');
+      if (kDebugMode) debugPrint('Drive uygulama verisi silinemedi: $e');
     }
   }
 

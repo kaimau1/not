@@ -39,11 +39,14 @@ import '../../../core/error_log.dart';
 import '../../../core/feedback_mail.dart';
 import '../../../core/constants.dart';
 import '../../../app/theme/app_design.dart';
+import '../../../app/theme/app_palette.dart' show ThemeFamily;
 import '../../../app/theme/app_tokens.dart';
+import '../../../core/widgets/horizontal_wheel_strip.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/personalize.dart';
 import '../../../core/play_build.dart';
 import '../../../core/tips.dart';
+import 'appearance_studio_sheet.dart';
 import 'personalize_screen.dart' show PersonalizeModuleSwitches;
 import 'theme_picker.dart';
 import 'typing_bar_settings.dart';
@@ -480,6 +483,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const _DarkScheduleEditor(),
             title: l10n.darkSchedule,
             keywords: l10n.darkScheduleInfo,
+          ),
+          _SettingRow(
+            ListTile(
+              key: const ValueKey('settings-open-appearance-studio'),
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.wallpaper_outlined),
+              title: Text(l10n.appearanceOpenStudio),
+              subtitle: Text(l10n.dashboardBackgroundInfo),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => unawaited(
+                showAppearanceStudio(
+                  context,
+                  contextMode: AppearanceContext.settings,
+                ),
+              ),
+            ),
+            title: l10n.appearanceOpenStudio,
+            keywords:
+                '${l10n.dashboardBackground} ${l10n.appearanceTabTheme} ${l10n.appearanceTabBackground}',
           ),
         ],
       ),
@@ -1285,29 +1307,32 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   String _appearanceSummary(AppLocalizations l10n) {
-    final theme = switch (ref.watch(themeChoiceProvider)) {
-      AppThemeChoice.system => l10n.themeSystem,
-      AppThemeChoice.sage => l10n.themeSage,
-      AppThemeChoice.porcelain => l10n.themePorcelain,
-      AppThemeChoice.clay => l10n.themeClay,
-      AppThemeChoice.lavender => l10n.themeLavender,
-      AppThemeChoice.olive => l10n.themeOlive,
-      AppThemeChoice.white => l10n.themeWhite,
-      AppThemeChoice.straw => l10n.themeStraw,
-      AppThemeChoice.cream => l10n.themeCream,
-      AppThemeChoice.peach => l10n.themePeach,
-      AppThemeChoice.mint => l10n.themeMint,
-      AppThemeChoice.ocean => l10n.themeOcean,
-      AppThemeChoice.rose => l10n.themeRose,
-      AppThemeChoice.tangerine => l10n.themeTangerine,
-      AppThemeChoice.emerald => l10n.themeEmerald,
-      AppThemeChoice.amethyst => l10n.themeAmethyst,
-      AppThemeChoice.classic => l10n.themeClassic,
-      AppThemeChoice.newsprint => l10n.themeNewsprint,
-      AppThemeChoice.notebook => l10n.themeNotebook,
-      AppThemeChoice.graphite => l10n.themeGraphite,
-      AppThemeChoice.ledger => l10n.themeLedger,
-      AppThemeChoice.dark => l10n.themeDark,
+    final theme = switch (ref.watch(themeFamilyProvider)) {
+      ThemeFamily.sage => l10n.themeSage,
+      ThemeFamily.porcelain => l10n.themePorcelain,
+      ThemeFamily.clay => l10n.themeClay,
+      ThemeFamily.lavender => l10n.themeLavender,
+      ThemeFamily.olive => l10n.themeOlive,
+      ThemeFamily.white => l10n.themeWhite,
+      ThemeFamily.straw => l10n.themeStraw,
+      ThemeFamily.cream => l10n.themeCream,
+      ThemeFamily.peach => l10n.themePeach,
+      ThemeFamily.mint => l10n.themeMint,
+      ThemeFamily.ocean => l10n.themeOcean,
+      ThemeFamily.rose => l10n.themeRose,
+      ThemeFamily.tangerine => l10n.themeTangerine,
+      ThemeFamily.emerald => l10n.themeEmerald,
+      ThemeFamily.amethyst => l10n.themeAmethyst,
+      ThemeFamily.classic => l10n.themeClassic,
+      ThemeFamily.newsprint => l10n.themeNewsprint,
+      ThemeFamily.notebook => l10n.themeNotebook,
+      ThemeFamily.graphite => l10n.themeGraphite,
+      ThemeFamily.ledger => l10n.themeLedger,
+    };
+    final brightnessLabel = switch (ref.watch(themeBrightnessModeProvider)) {
+      AppBrightnessMode.system => l10n.brightnessModeAuto,
+      AppBrightnessMode.light => l10n.brightnessModeLight,
+      AppBrightnessMode.dark => l10n.brightnessModeDark,
     };
     final size = switch (nearestFontScaleStep(ref.watch(fontScaleProvider))) {
       FontScaleStep.small => l10n.fontSizeSmall,
@@ -1315,7 +1340,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       FontScaleStep.large => l10n.fontSizeLarge,
       FontScaleStep.xlarge => l10n.fontSizeXLarge,
     };
-    return '$theme · $size · ${ref.watch(appFontProvider)}';
+    return '$theme ($brightnessLabel) · $size · ${ref.watch(appFontProvider)}';
   }
 
   String _soundSummary(AppLocalizations l10n) {

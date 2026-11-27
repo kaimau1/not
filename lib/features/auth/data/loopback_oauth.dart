@@ -158,7 +158,9 @@ Future<LoopbackTokens?> _authorize(List<String> scopes, String? email) async {
       },
     );
     if (res.statusCode != 200) {
-      debugPrint('Google jeton değişimi: ${res.statusCode} ${res.body}');
+      if (kDebugMode) {
+        debugPrint('Google jeton değişimi başarısız: HTTP ${res.statusCode}');
+      }
       return null;
     }
     return parseTokenResponse(res.body, DateTime.now());

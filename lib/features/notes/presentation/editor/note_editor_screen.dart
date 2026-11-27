@@ -1,3 +1,4 @@
+import '../app_background_layers.dart';
 import '../note_link_ui.dart';
 import 'editor_chrome_palette.dart';
 import 'glyph_button.dart';
@@ -54,12 +55,9 @@ import '../../../../app/window_class.dart';
 export '../../../../app/window_class.dart' show kReadingWidth;
 import '../../../auth/presentation/auth_providers.dart';
 import '../../../settings/presentation/app_lock.dart' show AppLockSecureScope;
-import '../../../../app/theme/app_design.dart';
 import '../../../../app/theme/dashboard_wallpapers.dart';
 import '../../../../app/theme/note_colors.dart';
 import '../../../../app/theme/note_themes.dart';
-import '../../../../core/widgets/press_scale.dart';
-import '../../../../core/widgets/sheet_header.dart';
 import '../../../../core/constants.dart';
 import '../../../../core/l10n_ext.dart';
 import '../../../../core/utils/web_file_drop.dart';
@@ -84,6 +82,7 @@ import '../../../../core/utils/video_time.dart';
 import '../../../../core/utils/youtube.dart';
 import '../../../../core/widgets/customizable.dart';
 import '../../../../core/widgets/keyboard_snap.dart';
+import '../../../settings/presentation/appearance_studio_sheet.dart';
 import '../../../../core/widgets/note_route_closing.dart';
 import '../../../../core/widgets/scale_settle.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
@@ -163,7 +162,6 @@ import '../collaborators_sheet.dart';
 import '../../../../core/widgets/action_menu_sheet.dart';
 import '../color_picker_sheet.dart';
 import '../note_menu_model.dart';
-import '../note_theme_sheet.dart';
 import '../note_stats_sheet.dart';
 import '../note_template_sheet.dart';
 import '../notes_providers.dart';
@@ -1228,6 +1226,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       background: style.background,
       noteAccent: style.noteAccent,
       themed: style.themed,
+      effectiveThemeId: style.effectiveThemeId,
+      dashBg: style.dashBg,
       noteBodyStyle: style.noteBodyStyle,
       body: content.body,
       readingColumn: content.readingColumn,

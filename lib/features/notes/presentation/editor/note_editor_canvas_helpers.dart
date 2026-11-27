@@ -5,6 +5,8 @@ typedef _EditorBuildStyle = ({
   Color background,
   Color? noteAccent,
   bool themed,
+  String effectiveThemeId,
+  DashboardBackground dashBg,
   bool chromeSeeThrough,
   RichTextTheme richTheme,
   ThemeData theme,
@@ -99,80 +101,91 @@ extension _NoteEditorCanvasHelpers on _NoteEditorScreenState {
     child: Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: kReadingWidth),
-        child: _withRuledLines(note, bodyStyle, PageInkStack(
-      ink: _pageInkOf(note),
-      page: textPagePosition(note).index + 1,
-      penActive: _penMode,
-      scroll: _pageScroll,
-      child: ValueListenableBuilder<double>(
-      // Başlık ölçümü (bkz. [_measureBodyTop]) yalnız tuvali kurar.
-      valueListenable: _bodyTopN,
-      builder: (context, bodyTop, _) => NotePageCanvas(
-      // KLAVYEDEN BAĞIMSIZ taban — bkz. [_stableCanvasHeight].
-      minHeight: minHeight,
-      placementHintId: _placementHintId,
-      onPlacementHintShown: () => _placementHintId = null,
-      images: imageAttachments,
-      onRemove: _removeAttachment,
-      onChanged: _updateAttachment,
-      onTableChanged: _updateTableContent,
-      readOnly: _readOnly,
-      onInkChanged: _updateAttachmentInk,
-      onChangedMany: _updateAttachments,
-      onCrop: _cropImage,
-      onRotate: _rotateImage,
-      onExtractText: _ocrImage,
-      onCopy: _copyAttachment,
-      onCopyMany: _copyAttachments,
-      onTranscribe: _openTranscript,
-      onSaveAs: (a) => unawaited(AttachmentSaveAs.run(context, ref, a)),
-      onShare: (a) => unawaited(shareAttachment(
-          context,
-          ref,
-          a,
-          siblings: _note?.attachments ?? const [],
-        )),
-      onPinTop: _pinMediaTop,
-      onPinHover: _setPinHover,
-      onPinDrag: _setPinDrag,
-      onViewChange: _readOnly
-          ? null
-          : (a, view) => unawaited(_setAttachmentView(a, view)),
-      // Yazıya göm kısayolu (2026-11-01): gövdesi olan notta.
-      onEmbed: _readOnly || note.type.isPageNoteType
-          ? null
-          : _startPendingEmbed,
-      topLimit: bodyTop,
-      // İpucu, gövde alanının İLK METİN SATIRINA hizalanır (dikeyde iç dolgu,
-      // yatayda kenar boşluğu): imleçle aynı çizgide dursun.
-      textTop: _NoteEditorScreenState._kBodyTextTop,
-      textLeft: _NoteEditorScreenState._kGutter,
-      hintLineHeight: hintLineHeight,
-      hint: useCanvasHint
-          // DOLGU YOK: ipucunun yeri tuvalde, metnin ilk satırının tam
-          // çizgisinde hesaplanıyor (bkz. NotePageCanvas.textTop/textLeft).
-          // Buraya konan her pay o hesabı kaydırır — eskiden üstte 16 dp
-          // vardı ve ipucu metnin bir tık altında duruyordu.
-          //
-          // İpucu, gövdenin KENDİ stiliyle çizilir (yazı tipi, punto, satır
-          // aralığı): tema stiliyle çizilirse notun büyütülmüş yazısında
-          // ipucu ile imleç ayrı satırlara düşer.
-          ? Text(
-              l10n.bodyHint,
-              style: hintStyle.copyWith(color: _themeOf(context).hintColor),
-            )
-          : null,
-      onFloats: _applyFloats,
-      // Boş alana dokunmak gövdeye odaklanır — yazmaya başlamak için aşağıya
-      // dokunmak yeterli. Listede gövde alanı yok.
-      onTapEmpty: hasBodyField
-          ? () {
-              if (!_bodyFocus.hasFocus) _bodyFocus.requestFocus();
-            }
-          : null,
-      child: KeyedSubtree(key: _pageKey, child: pageContent),
-    ),
-      ))),
+        child: _withRuledLines(
+          note,
+          bodyStyle,
+          PageInkStack(
+            ink: _pageInkOf(note),
+            page: textPagePosition(note).index + 1,
+            penActive: _penMode,
+            scroll: _pageScroll,
+            child: ValueListenableBuilder<double>(
+              // Başlık ölçümü (bkz. [_measureBodyTop]) yalnız tuvali kurar.
+              valueListenable: _bodyTopN,
+              builder: (context, bodyTop, _) => NotePageCanvas(
+                // KLAVYEDEN BAĞIMSIZ taban — bkz. [_stableCanvasHeight].
+                minHeight: minHeight,
+                placementHintId: _placementHintId,
+                onPlacementHintShown: () => _placementHintId = null,
+                images: imageAttachments,
+                onRemove: _removeAttachment,
+                onChanged: _updateAttachment,
+                onTableChanged: _updateTableContent,
+                readOnly: _readOnly,
+                onInkChanged: _updateAttachmentInk,
+                onChangedMany: _updateAttachments,
+                onCrop: _cropImage,
+                onRotate: _rotateImage,
+                onExtractText: _ocrImage,
+                onCopy: _copyAttachment,
+                onCopyMany: _copyAttachments,
+                onTranscribe: _openTranscript,
+                onSaveAs: (a) =>
+                    unawaited(AttachmentSaveAs.run(context, ref, a)),
+                onShare: (a) => unawaited(
+                  shareAttachment(
+                    context,
+                    ref,
+                    a,
+                    siblings: _note?.attachments ?? const [],
+                  ),
+                ),
+                onRename: _readOnly ? null : _renameAttachment,
+                onPinTop: _pinMediaTop,
+                onPinHover: _setPinHover,
+                onPinDrag: _setPinDrag,
+                onViewChange: _readOnly
+                    ? null
+                    : (a, view) => unawaited(_setAttachmentView(a, view)),
+                // Yazıya göm kısayolu (2026-11-01): gövdesi olan notta.
+                onEmbed: _readOnly || note.type.isPageNoteType
+                    ? null
+                    : _startPendingEmbed,
+                topLimit: bodyTop,
+                // İpucu, gövde alanının İLK METİN SATIRINA hizalanır (dikeyde iç dolgu,
+                // yatayda kenar boşluğu): imleçle aynı çizgide dursun.
+                textTop: _NoteEditorScreenState._kBodyTextTop,
+                textLeft: _NoteEditorScreenState._kGutter,
+                hintLineHeight: hintLineHeight,
+                hint: useCanvasHint
+                    // DOLGU YOK: ipucunun yeri tuvalde, metnin ilk satırının tam
+                    // çizgisinde hesaplanıyor (bkz. NotePageCanvas.textTop/textLeft).
+                    // Buraya konan her pay o hesabı kaydırır — eskiden üstte 16 dp
+                    // vardı ve ipucu metnin bir tık altında duruyordu.
+                    //
+                    // İpucu, gövdenin KENDİ stiliyle çizilir (yazı tipi, punto, satır
+                    // aralığı): tema stiliyle çizilirse notun büyütülmüş yazısında
+                    // ipucu ile imleç ayrı satırlara düşer.
+                    ? Text(
+                        l10n.bodyHint,
+                        style: hintStyle.copyWith(
+                          color: _themeOf(context).hintColor,
+                        ),
+                      )
+                    : null,
+                onFloats: _applyFloats,
+                // Boş alana dokunmak gövdeye odaklanır — yazmaya başlamak için aşağıya
+                // dokunmak yeterli. Listede gövde alanı yok.
+                onTapEmpty: hasBodyField
+                    ? () {
+                        if (!_bodyFocus.hasFocus) _bodyFocus.requestFocus();
+                      }
+                    : null,
+                child: KeyedSubtree(key: _pageKey, child: pageContent),
+              ),
+            ),
+          ),
+        ),
       ),
     ),
   );
@@ -282,9 +295,7 @@ extension _NoteEditorCanvasHelpers on _NoteEditorScreenState {
   /// alır (bkz. `_recordAudio`).
   bool _micBusyElsewhere() {
     final busy = _NoteEditorScreenState._live.any(
-      (e) =>
-          !identical(e, this) &&
-          (e._dictating || e._voiceRecorder != null),
+      (e) => !identical(e, this) && (e._dictating || e._voiceRecorder != null),
     );
     if (busy) _showSnack(context.l10n.micBusySideNote);
     return busy;
@@ -388,94 +399,93 @@ extension _NoteEditorCanvasHelpers on _NoteEditorScreenState {
     final row = TapRegion(
       groupId: kNotePackageTapGroup,
       child: EditorQuickRow(
-          fit: wide,
-          target: _formatTargetN,
-          onBold: () => _applyFormat(RichFormat.bold),
-          onBullet: () => _runOnTarget(applyLineBullet),
-          // HIZLI SATIRDA ☑ HER NOT TÜRÜNDE (kullanıcı bulgusu 2026-11-19:
-          // liste notunda menüye eklenen "Onay kutusu" sessizce yoktu):
-          // metin notunda satır ↔ madde, liste notunda odaktaki maddeyi
-          // işaretler, numaralı listede onay kutulu listeye çevirir.
-          onCheckbox: note.type.isPageNoteType ? null : _quickRowCheckbox,
-          onHeading: () => _runOnTarget((c) {
-            final next = switch (activeRichHeading(c)) {
-              RichHeading.normal => RichHeading.h1,
-              RichHeading.h1 => RichHeading.h2,
-              RichHeading.h2 => RichHeading.normal,
-            };
-            return applyRichHeading(c, next);
-          }),
-          onPhoto: () {
-            _rememberCaret();
-            unawaited(_pickImage());
-          },
-          onFile: () => unawaited(_attachAnyFile()),
-          onPen: pen ? _togglePen : null,
-          penOn: _penMode,
-          onPenSettings: pen
-              ? () => showInkSettings(context, _pageInkOf(note))
-              : null,
-          onReminder: () => unawaited(_pickReminder()),
-          // Ara başlık: satırı doğrudan alt başlık yapar (metin modu).
-          onSubheading: note.type == NoteType.text
-              ? () => _runOnTarget(
-                  (c) => applyRichHeading(
-                    c,
-                    activeRichHeading(c) == RichHeading.h2
-                        ? RichHeading.normal
-                        : RichHeading.h2,
-                  ),
-                )
-              : null,
-          onSpell: () {
-            AutoSpell.toggle();
-            unawaited(_seedSpell());
-          },
-          onSpellSettings: () => showSpellSettings(
-            context,
-            onReviewNote: _readOnly || note.type.isPageNoteType
-                ? null
-                : () => unawaited(_reviewSpelling()),
-          ),
-          onPackage: () => _packageFromQuickRow(note),
-          packageHint:
-              note.type == NoteType.text && suggestsPackage(note.body),
-          onItalic: () => _applyFormat(RichFormat.italic),
-          onUnderline: () => _applyFormat(RichFormat.underline),
-          onHighlight: () => _applyFormat(RichFormat.highlight),
-          onDictation: () => unawaited(_toggleDictation()),
-          onCamera: kIsWeb
+        fit: wide,
+        target: _formatTargetN,
+        onBold: () => _applyFormat(RichFormat.bold),
+        onBullet: () => _runOnTarget(applyLineBullet),
+        // HIZLI SATIRDA ☑ HER NOT TÜRÜNDE (kullanıcı bulgusu 2026-11-19:
+        // liste notunda menüye eklenen "Onay kutusu" sessizce yoktu):
+        // metin notunda satır ↔ madde, liste notunda odaktaki maddeyi
+        // işaretler, numaralı listede onay kutulu listeye çevirir.
+        onCheckbox: note.type.isPageNoteType ? null : _quickRowCheckbox,
+        onHeading: () => _runOnTarget((c) {
+          final next = switch (activeRichHeading(c)) {
+            RichHeading.normal => RichHeading.h1,
+            RichHeading.h1 => RichHeading.h2,
+            RichHeading.h2 => RichHeading.normal,
+          };
+          return applyRichHeading(c, next);
+        }),
+        onPhoto: () {
+          _rememberCaret();
+          unawaited(_pickImage());
+        },
+        onFile: () => unawaited(_attachAnyFile()),
+        onPen: pen ? _togglePen : null,
+        penOn: _penMode,
+        onPenSettings: pen
+            ? () => showInkSettings(context, _pageInkOf(note))
+            : null,
+        onReminder: () => unawaited(_pickReminder()),
+        // Ara başlık: satırı doğrudan alt başlık yapar (metin modu).
+        onSubheading: note.type == NoteType.text
+            ? () => _runOnTarget(
+                (c) => applyRichHeading(
+                  c,
+                  activeRichHeading(c) == RichHeading.h2
+                      ? RichHeading.normal
+                      : RichHeading.h2,
+                ),
+              )
+            : null,
+        onSpell: () {
+          AutoSpell.toggle();
+          unawaited(_seedSpell());
+        },
+        onSpellSettings: () => showSpellSettings(
+          context,
+          onReviewNote: _readOnly || note.type.isPageNoteType
               ? null
-              : () {
-                  _rememberCaret();
-                  unawaited(_takePhoto());
-                },
-          onScan: kIsWeb ? null : () => unawaited(_scanDocument()),
-          onDate: () => _insertAtCaretOrCell(
-            DateFormat.yMMMMd(
-              Localizations.localeOf(context).toLanguageTag(),
-            ).add_Hm().format(DateTime.now()),
-          ),
-          onDay: _insertDay,
-          onTable: note.type.isPageNoteType ? null : _insertTable,
-          onCalculator: () => unawaited(_openCalculator()),
-          onFind: () => unawaited(_openNoteSearch()),
-          onListen: () => unawaited(_listen()),
-          onStats: () {
-            _flushPending(_bodyController);
-            unawaited(showNoteStatsSheet(context, _note ?? note));
-          },
-          onAttach: () => unawaited(_showAttachMenu()),
-          onColor: () => _applyFormat(
-            RichFormat.color,
-            colorIndex: NoteFormatMemory.favoriteColor,
-          ),
-          onColorPick: () => unawaited(_pickFavoriteColor()),
-          favoriteColor: _NoteEditorScreenState._favoriteColorValue(),
-          // Nota her girişte bir kez (durum örneği nota bağlı); setState
-          // YOK — yalnız bir sonraki açılışta vurgulanmasın diye.
-          hint: !_quickRowHinted,
-          onHinted: () => _quickRowHinted = true,
+              : () => unawaited(_reviewSpelling()),
+        ),
+        onPackage: () => _packageFromQuickRow(note),
+        packageHint: note.type == NoteType.text && suggestsPackage(note.body),
+        onItalic: () => _applyFormat(RichFormat.italic),
+        onUnderline: () => _applyFormat(RichFormat.underline),
+        onHighlight: () => _applyFormat(RichFormat.highlight),
+        onDictation: () => unawaited(_toggleDictation()),
+        onCamera: kIsWeb
+            ? null
+            : () {
+                _rememberCaret();
+                unawaited(_takePhoto());
+              },
+        onScan: kIsWeb ? null : () => unawaited(_scanDocument()),
+        onDate: () => _insertAtCaretOrCell(
+          DateFormat.yMMMMd(Localizations.localeOf(context).toLanguageTag())
+              .add_Hm()
+              .format(DateTime.now()),
+        ),
+        onDay: _insertDay,
+        onTable: note.type.isPageNoteType ? null : _insertTable,
+        onCalculator: () => unawaited(_openCalculator()),
+        onFind: () => unawaited(_openNoteSearch()),
+        onListen: () => unawaited(_listen()),
+        onStats: () {
+          _flushPending(_bodyController);
+          unawaited(showNoteStatsSheet(context, _note ?? note));
+        },
+        onAttach: () => unawaited(_showAttachMenu()),
+        onColor: () => _applyFormat(
+          RichFormat.color,
+          colorIndex: NoteFormatMemory.favoriteColor,
+        ),
+        onColorPick: () => unawaited(_pickFavoriteColor()),
+        favoriteColor: _NoteEditorScreenState._favoriteColorValue(),
+        // Nota her girişte bir kez (durum örneği nota bağlı); setState
+        // YOK — yalnız bir sonraki açılışta vurgulanmasın diye.
+        hint: !_quickRowHinted,
+        onHinted: () => _quickRowHinted = true,
       ),
     );
     final Widget styledRow = _chrome.topBarPills
@@ -529,7 +539,13 @@ extension _NoteEditorCanvasHelpers on _NoteEditorScreenState {
         children: [
           if (idle != null) Flexible(child: idle),
           const SizedBox(width: 12),
-          Expanded(flex: 2, child: Align(alignment: AlignmentDirectional.centerStart, child: styledRow)),
+          Expanded(
+            flex: 2,
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: styledRow,
+            ),
+          ),
         ],
       );
     }
@@ -544,8 +560,7 @@ extension _NoteEditorCanvasHelpers on _NoteEditorScreenState {
   /// Yazarken (klavye açık) üst çubukta yalnız hızlı satır + geri al/yinele
   /// kalır (kullanıcı isteği 2026-11-08): öbür düğmeler klavye açıkken
   /// gizlenir. Yaprak düzeyde ([KeyboardSwitch]) — ekran yeniden kurulmaz.
-  Widget _hideWhileTyping(Note note, Widget child) =>
-      _readOnly
+  Widget _hideWhileTyping(Note note, Widget child) => _readOnly
       ? child
       : KeyboardSwitch(open: const SizedBox.shrink(), closed: child);
 
@@ -639,37 +654,37 @@ extension _NoteEditorCanvasHelpers on _NoteEditorScreenState {
     final pane = WebDriveGate(
       attachment: doc,
       builder: (context, doc) => isSlides
-        ? SlideNotePane(
-            key: ValueKey('slide-pane-${doc.id}'),
-            noteOf: () => _note ?? note,
-            attachment: doc,
-            textStyle: textStyle,
-            richTheme: richTheme,
-            onPageNoteChanged: (page, text) =>
-                _mutate((n) => n.withPageNote(doc, page, text)),
-            onAttachmentChanged: _updateAttachment,
-            onFieldFocused: _setFormatTarget,
-            onFieldDisposed: _clearFormatTargetFor,
-            onImmersiveChanged: _setImmersiveBubble,
-            penMode: _penMode,
-            onPenModeChanged: onPenModeChanged,
-          )
-        : PdfNotePane(
-            key: ValueKey('pdf-pane-${doc.id}'),
-            noteOf: () => _note ?? note,
-            onEditPages: (pageCount) => _editPdfPages(doc, pageCount),
-            attachment: doc,
-            textStyle: textStyle,
-            richTheme: richTheme,
-            onPageNoteChanged: (page, text) =>
-                _mutate((n) => n.withPageNote(doc, page, text)),
-            onAttachmentChanged: _updateAttachment,
-            onFieldFocused: _setFormatTarget,
-            onFieldDisposed: _clearFormatTargetFor,
-            onImmersiveChanged: _setImmersiveBubble,
-            penMode: _penMode,
-            onPenModeChanged: onPenModeChanged,
-          ),
+          ? SlideNotePane(
+              key: ValueKey('slide-pane-${doc.id}'),
+              noteOf: () => _note ?? note,
+              attachment: doc,
+              textStyle: textStyle,
+              richTheme: richTheme,
+              onPageNoteChanged: (page, text) =>
+                  _mutate((n) => n.withPageNote(doc, page, text)),
+              onAttachmentChanged: _updateAttachment,
+              onFieldFocused: _setFormatTarget,
+              onFieldDisposed: _clearFormatTargetFor,
+              onImmersiveChanged: _setImmersiveBubble,
+              penMode: _penMode,
+              onPenModeChanged: onPenModeChanged,
+            )
+          : PdfNotePane(
+              key: ValueKey('pdf-pane-${doc.id}'),
+              noteOf: () => _note ?? note,
+              onEditPages: (pageCount) => _editPdfPages(doc, pageCount),
+              attachment: doc,
+              textStyle: textStyle,
+              richTheme: richTheme,
+              onPageNoteChanged: (page, text) =>
+                  _mutate((n) => n.withPageNote(doc, page, text)),
+              onAttachmentChanged: _updateAttachment,
+              onFieldFocused: _setFormatTarget,
+              onFieldDisposed: _clearFormatTargetFor,
+              onImmersiveChanged: _setImmersiveBubble,
+              penMode: _penMode,
+              onPenModeChanged: onPenModeChanged,
+            ),
     );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -692,10 +707,17 @@ extension _NoteEditorCanvasHelpers on _NoteEditorScreenState {
     // isteği 2026-11-22): her tema, renk, defter kâğıdı ve arka plan
     // görselinde tek kaynaklı renk uyumu ve WCAG AA okunurluk garantisi.
     // `Theme.of` BURADA bilerek dış tema: okunurluk kararı dış temaya göre.
+    final dashBg = ref.watch(dashboardBackgroundProvider);
+    final visualNote = effectiveNoteWithHomeBg(note, dashBg);
+    final inheritsHomeImage =
+        bgImage == null &&
+        noteInheritsHomeBackground(note, dashBg) &&
+        (DashboardWallpapers.byId(dashBg.preset) != null ||
+            (dashBg.path != null && localFileExists(dashBg.path!)));
     final chrome = EditorChromePalette.resolve(
       outerTheme: Theme.of(context),
-      note: note,
-      hasBgImage: bgImage != null,
+      note: visualNote,
+      hasBgImage: bgImage != null || inheritsHomeImage,
       bgTone: bgImage == null ? null : _bgTone,
     );
     _chrome = chrome;
@@ -708,15 +730,14 @@ extension _NoteEditorCanvasHelpers on _NoteEditorScreenState {
     _barPage = chrome.barPage;
     // Çizilmiş tema varsa sayfa ve üst çubuk saydam: süsleme arkadan görünür
     // (bkz. NoteThemeBackdrop).
-    final themed = NoteThemes.byId(note.theme) != null;
+    final themed = NoteThemes.byId(visualNote.theme) != null;
     final chromeSeeThrough = chrome.chromeSeeThrough;
     // Satır içi biçimlendirmenin çizim ayarları: gövde ve maddeler AYNI
     // paleti kullanır (metindeki 1..5 indeksi her ikisinde aynı rengi verir).
     final richTheme = RichTextTheme(
       palette: NoteColors.richPalette,
-      markerColor: _themeOf(
-        context,
-      ).colorScheme.onSurfaceVariant.withValues(alpha: 0.45),
+      markerColor: _themeOf(context).colorScheme.onSurfaceVariant
+          .withValues(alpha: 0.45),
       // Renkli yazı notun zeminine göre okunur hâle getirilir.
       background: background,
     );
@@ -787,6 +808,8 @@ extension _NoteEditorCanvasHelpers on _NoteEditorScreenState {
       background: background,
       noteAccent: noteAccent,
       themed: themed,
+      effectiveThemeId: visualNote.theme,
+      dashBg: dashBg,
       chromeSeeThrough: chromeSeeThrough,
       richTheme: richTheme,
       theme: theme,

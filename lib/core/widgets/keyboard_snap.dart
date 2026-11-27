@@ -199,9 +199,8 @@ abstract final class KeyboardInset {
   static Future<void> init() async {
     if (kIsWeb || !Platform.isAndroid) return;
     try {
-      final sdk = await const MethodChannel(
-        'dev.kaimau.notlar/system',
-      ).invokeMethod<int>('sdkInt');
+      final sdk = await const MethodChannel('dev.kaimau.notlar/system')
+          .invokeMethod<int>('sdkInt');
       // Motor: `Build.VERSION.SDK_INT < API_35` iken düşer.
       navExcludedWhileAnimating = sdk != null && sdk < 35;
     } catch (_) {
@@ -230,6 +229,10 @@ abstract final class KeyboardInset {
   /// KARARLI boşluk (hareket sırasında 0); kapsam yoksa null.
   static double? maybeStableOf(BuildContext context) =>
       context.dependOnInheritedWidgetOfExactType<_StableInset>()?.value;
+
+  /// Klavye oturmuş ve açık mı (hareket sırasında false — S17 / K-12 uyumlu).
+  static bool stableOpenOf(BuildContext context) =>
+      (maybeStableOf(context) ?? MediaQuery.viewInsetsOf(context).bottom) > 40;
 }
 
 /// Klavyenin VARACAĞI yer (kip `k`, kullanıcı 2026-11-16: "alt panoyu

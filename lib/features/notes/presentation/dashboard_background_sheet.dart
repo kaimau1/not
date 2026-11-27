@@ -19,11 +19,33 @@ import '../../../core/l10n_ext.dart';
 import '../../../core/utils/local_file.dart' show localFileExists;
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/color_palette.dart';
+import '../../../core/widgets/horizontal_wheel_strip.dart';
 import '../../../core/widgets/press_scale.dart';
 import '../../../core/widgets/sheet_header.dart';
 import '../../../core/widgets/toggle_pop.dart';
 import '../../settings/settings_providers.dart';
 import 'dashboard_pattern.dart';
+
+/// Galeriden seçilen fotoğrafı uygulamanın kalıcı klasörüne kopyalayıp ana
+/// ekran zemini olarak ayarlar (stüdyo ve eski levha ortak kullanır).
+Future<void> pickDashboardBackgroundImage(WidgetRef ref) async {
+  if (kIsWeb) return;
+  final file = await ImagePicker().pickImage(
+    source: ImageSource.gallery,
+    maxWidth: 2400,
+    maxHeight: 2400,
+  );
+  if (file == null) return;
+  final Uint8List bytes = await file.readAsBytes();
+  final dir = await getApplicationDocumentsDirectory();
+  final target = File('${dir.path}/dashboard_bg_${const Uuid().v4()}.img');
+  await target.writeAsBytes(bytes);
+  final previous = ref.read(dashboardBackgroundProvider).path;
+  ref.read(dashboardBackgroundProvider.notifier).setPath(target.path);
+  if (previous != null && previous != target.path) {
+    unawaited(File(previous).delete().catchError((_) => File(previous)));
+  }
+}
 
 /// Ana ekranın zemini: **hazır renkli görseller · renk · desen · takvim şeridi**.
 ///
@@ -41,9 +63,8 @@ Future<void> showDashboardBackgroundSheet(BuildContext context) =>
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      barrierColor: Theme.of(
-        context,
-      ).colorScheme.scrim.withValues(alpha: AppAlpha.pressed),
+      barrierColor: Theme.of(context).colorScheme.scrim
+          .withValues(alpha: AppAlpha.pressed),
       constraints: BoxConstraints(
         maxHeight: MediaQuery.sizeOf(context).height * 0.84,
         maxWidth: kSheetMaxWidth,
@@ -54,28 +75,7 @@ Future<void> showDashboardBackgroundSheet(BuildContext context) =>
 class _DashboardBackgroundSheet extends ConsumerWidget {
   const _DashboardBackgroundSheet();
 
-  Future<void> _pick(WidgetRef ref) async {
-    if (kIsWeb) return;
-    // Zemin ekran boyutunda gösterilir; tam çözünürlüklü fotoğraf okumak
-    // boşuna bellek (bkz. editördeki aynı tavan).
-    final file = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 2400,
-      maxHeight: 2400,
-    );
-    if (file == null) return;
-    final Uint8List bytes = await file.readAsBytes();
-    final dir = await getApplicationDocumentsDirectory();
-    // Dosya adı her seferinde değişir: aynı yol yeniden yazılsa Flutter'ın
-    // görsel önbelleği eski kareyi göstermeye devam ederdi.
-    final target = File('${dir.path}/dashboard_bg_${const Uuid().v4()}.img');
-    await target.writeAsBytes(bytes);
-    final previous = ref.read(dashboardBackgroundProvider).path;
-    ref.read(dashboardBackgroundProvider.notifier).setPath(target.path);
-    if (previous != null && previous != target.path) {
-      unawaited(File(previous).delete().catchError((_) => File(previous)));
-    }
-  }
+  Future<void> _pick(WidgetRef ref) => pickDashboardBackgroundImage(ref);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -91,7 +91,8 @@ class _DashboardBackgroundSheet extends ConsumerWidget {
         background.path != null &&
         localFileExists(background.path!);
     final hasAnyImage = preset != null || hasDeviceImage;
-    final showOpacity = hasAnyImage || background.pattern != DashboardPattern.none;
+    final showOpacity =
+        hasAnyImage || background.pattern != DashboardPattern.none;
 
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
@@ -154,42 +155,44 @@ class _DashboardBackgroundSheet extends ConsumerWidget {
               children: [
                 SizedBox(
                   height: 122,
-                  child: ListView.separated(
-                    key: const ValueKey('bg-wallpaper-gallery'),
-                    scrollDirection: Axis.horizontal,
-                    itemCount: DashboardWallpapers.all.length + 1,
-                    separatorBuilder: (_, _) =>
-                        const SizedBox(width: AppSpace.s),
-                    itemBuilder: (context, index) {
-                      if (index == 0) {
-                        return _PlainWallpaperTile(
-                          label: l10n.patternNone,
-                          selected: !hasAnyImage,
+                  child: HorizontalScrollStrip(
+                    builder: (_, controller) => ListView.separated(
+                      key: const ValueKey('bg-wallpaper-gallery'),
+                      controller: controller,
+                      scrollDirection: Axis.horizontal,
+                      itemCount: DashboardWallpapers.all.length + 1,
+                      separatorBuilder: (_, _) =>
+                          const SizedBox(width: AppSpace.s),
+                      itemBuilder: (context, index) {
+                        if (index == 0) {
+                          return _PlainWallpaperTile(
+                            label: l10n.patternNone,
+                            selected: !hasAnyImage,
+                            onTap: () {
+                              AppHaptics.tick();
+                              ref.read(dashboardBackgroundProvider.notifier)
+                                ..setPreset(null)
+                                ..setPath(null);
+                            },
+                          );
+                        }
+                        final w = DashboardWallpapers.all[index - 1];
+                        return _WallpaperTile(
+                          wallpaper: w,
+                          label: w.label(l10n),
+                          selected: preset?.id == w.id,
                           onTap: () {
                             AppHaptics.tick();
                             ref
                                 .read(dashboardBackgroundProvider.notifier)
-                                ..setPreset(null)
-                                ..setPath(null);
+                                .setPreset(
+                                  w.id,
+                                  defaultOpacity: w.defaultOpacity,
+                                );
                           },
                         );
-                      }
-                      final w = DashboardWallpapers.all[index - 1];
-                      return _WallpaperTile(
-                        wallpaper: w,
-                        label: w.label(l10n),
-                        selected: preset?.id == w.id,
-                        onTap: () {
-                          AppHaptics.tick();
-                          ref
-                              .read(dashboardBackgroundProvider.notifier)
-                              .setPreset(
-                                w.id,
-                                defaultOpacity: w.defaultOpacity,
-                              );
-                        },
-                      );
-                    },
+                      },
+                    ),
                   ),
                 ),
                 if (!kIsWeb) ...[
@@ -371,6 +374,49 @@ class _DashboardBackgroundSheet extends ConsumerWidget {
                 onChanged: (v) {
                   AppHaptics.tick();
                   ref.read(homeCalendarStripProvider.notifier).set(v);
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpace.m),
+          Container(
+            decoration: AppSurface.sheetCard(theme),
+            clipBehavior: Clip.antiAlias,
+            child: Material(
+              type: MaterialType.transparency,
+              child: SwitchListTile(
+                key: const ValueKey('bg-apply-to-notes'),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: AppSpace.m,
+                  vertical: AppSpace.xs,
+                ),
+                secondary: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: tokens.resolvedTintSoft(scheme),
+                    borderRadius: BorderRadius.circular(AppRadius.m),
+                  ),
+                  child: Icon(
+                    Icons.note_outlined,
+                    size: AppIconSize.m,
+                    color: scheme.primary,
+                  ),
+                ),
+                title: Text(
+                  l10n.applyHomeBackgroundToNotes,
+                  style: text.rowTitle,
+                ),
+                subtitle: Text(
+                  l10n.applyHomeBackgroundToNotesInfo,
+                  style: text.meta,
+                ),
+                value: background.applyToNotes,
+                onChanged: (v) {
+                  AppHaptics.tick();
+                  ref
+                      .read(dashboardBackgroundProvider.notifier)
+                      .setApplyToNotes(v);
                 },
               ),
             ),

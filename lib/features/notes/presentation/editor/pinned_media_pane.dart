@@ -60,7 +60,6 @@ const double kPinnedNoteMinHeight = 72;
 /// Klavye açıkken medyanın görünür penceresinin en az yüksekliği.
 const double kPinnedVisibleFloor = 56;
 
-
 /// **ÜSTTE MEDYA, ALTTA NOT** (kullanıcı isteği 2026-10-11).
 ///
 /// Görsel ya da video notun tepesinde SABİT durur, not ([child]) altında
@@ -90,6 +89,7 @@ class PinnedMediaPane extends StatefulWidget {
     this.shrinkToFit = false,
     this.onShrinkToFitChanged,
     this.onCaption,
+    this.onRename,
     this.onNoteAt,
     this.bubbleDoc,
     this.onRemove,
@@ -241,6 +241,9 @@ class PinnedMediaPane extends StatefulWidget {
   /// Görsel açıklamasını yazar (⋮, bant).
   final VoidCallback? onCaption;
 
+  /// Ek adını düzenler (⋮, sağ tık).
+  final VoidCallback? onRename;
+
   /// "Bu ana not al" (yalnız video): ayraç çubuğunda yazılı düğme.
   final VoidCallback? onNoteAt;
 
@@ -251,6 +254,7 @@ class PinnedMediaPane extends StatefulWidget {
 class _PinnedMediaPaneState extends State<PinnedMediaPane>
     with TickerProviderStateMixin {
   void _redraw([VoidCallback? fn]) => setState(fn ?? () {});
+
   /// Sabit görselin üstündeki balonların denetleyicisi (bkz.
   /// [PinnedMediaPane.bubbleDoc]); aç/kapa durumu yazılmaz — görselin
   /// uzayındaki kopya belgeye geri yazılamaz, okuma için yeter.
@@ -417,30 +421,32 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   bool get _canEditPdfBubbles =>
       widget.media.kind == AttachmentKind.pdf && widget.onChanged != null;
 
-  BubbleController _ownController() => _ownBubbles ??= _withLuma(BubbleController(
-    initial: widget.media.bubbles.isNotEmpty
-        ? widget.media.bubbles
-        : (widget.bubbleDoc == null
-              ? const []
-              : _mappedBubbles(widget.bubbleDoc!)),
-    hidden: widget.media.bubbles.isNotEmpty
-        ? widget.media.bubblesHidden
-        : (widget.bubbleDoc?.bubblesHidden ?? widget.media.bubblesHidden),
-    onChanged: (list) => widget.onChanged?.call(
-      widget.media.copyWith(
-        bubbles: list,
-        bubblesHidden: _ownBubbles?.hidden ?? widget.media.bubblesHidden,
-      ),
-    ),
-    onHiddenChanged: (hidden) => widget.onChanged?.call(
-      widget.media.copyWith(
-        bubblesHidden: hidden,
-        bubbles: _ownBubbles?.bubbles ?? widget.media.bubbles,
-      ),
-    ),
-  )
-    ..addListener(_onOwnBubbles)
-    ..onEditingChanged = _setWriting);
+  BubbleController _ownController() => _ownBubbles ??= _withLuma(
+    BubbleController(
+        initial: widget.media.bubbles.isNotEmpty
+            ? widget.media.bubbles
+            : (widget.bubbleDoc == null
+                  ? const []
+                  : _mappedBubbles(widget.bubbleDoc!)),
+        hidden: widget.media.bubbles.isNotEmpty
+            ? widget.media.bubblesHidden
+            : (widget.bubbleDoc?.bubblesHidden ?? widget.media.bubblesHidden),
+        onChanged: (list) => widget.onChanged?.call(
+          widget.media.copyWith(
+            bubbles: list,
+            bubblesHidden: _ownBubbles?.hidden ?? widget.media.bubblesHidden,
+          ),
+        ),
+        onHiddenChanged: (hidden) => widget.onChanged?.call(
+          widget.media.copyWith(
+            bubblesHidden: hidden,
+            bubbles: _ownBubbles?.bubbles ?? widget.media.bubbles,
+          ),
+        ),
+      )
+      ..addListener(_onOwnBubbles)
+      ..onEditingChanged = _setWriting,
+  );
 
   /// Koyu görselde yeni metin/balon açık renkle doğsun (bkz. [ImageLuma]).
   BubbleController _withLuma(BubbleController c) {
@@ -501,7 +507,6 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   /// değişmediği (bkz. [_onImageZoomEnd]).
   double _pinchStartH = 0;
   bool _resizing = false;
-
 
   /// Dokunuş başladığında açık balon / bırakma kipi var mıydı? Varsa
   /// dokunuş onu kapatır, tam ekran görüntüleyiciyi AÇMAZ.
@@ -593,6 +598,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
     _ownBubbles?.dispose();
     _imageBubbles?.dispose();
     _pdfAdding.dispose();
+    _collapsedN.dispose();
     _keyboardN.dispose();
     _watcher.dispose();
     _slide.dispose();
@@ -660,6 +666,8 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   /// ortasında yeniden kuruluyordu — çevrim başına 4 kez. Yalnız medyanın
   /// görünür penceresi dinler (bkz. [build] içindeki dinleyici).
   final _keyboardN = ValueNotifier<KeyboardPhase>((open: false, estimate: 0));
+  final _collapsedN = ValueNotifier<bool>(false);
+  late final Listenable _windowL = Listenable.merge([_keyboardN, _collapsedN]);
   KeyboardPhase get _keyboard => _keyboardN.value;
 
   /// **BOY TEK ADIMDA, HAREKET BOYAMADA** (P49; kullanıcı 2026-11-12: "sabit
@@ -688,8 +696,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   late final AnimationController _slide = AnimationController(vsync: this)
     ..addListener(
       () => _dy.value =
-          _dyFrom +
-          (_dyTo - _dyFrom) * AppMotion.enter.transform(_slide.value),
+          _dyFrom + (_dyTo - _dyFrom) * AppMotion.enter.transform(_slide.value),
     );
   late final _shift = _ShiftFlow(_dy);
 
@@ -702,287 +709,286 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
     final isAudio = widget.media.kind == AttachmentKind.audio;
     final isSlide = widget.media.kind == AttachmentKind.slide;
     final isImage = widget.media.kind == AttachmentKind.image;
-                return isText && isNoteTable(widget.media)
-                    // TABLO SABİT BÖLMEDE (kullanıcı isteği 2026-11-23:
-                    // "görsel gibi sabitlenebilir"): bölme genişliğinde,
-                    // dikeyde kayar, hücreleri burada da yazılır.
-                    ? SingleChildScrollView(
-                        key: ValueKey('pinned-table-${widget.media.id}'),
-                        padding: const EdgeInsets.all(AppSpace.m),
-                        child: TablePageBox(
-                          attachment: widget.media,
-                          onChanged: widget.onTableChanged ?? (_) {},
-                          onRemove: widget.onRemove,
-                          editable: widget.onTableChanged != null,
-                        ),
-                      )
-                    : isText
-                    // METİN (2026-10-17): kaydırılan, seçilebilen kâğıt. Basılı
-                    // tutmak metni SEÇER (görseldeki "aşağı çekip bırak"
-                    // jesti yok) — bölmeden çıkış anahtardan/menüden.
-                    ? TextReaderView(
-                        key: ValueKey('pinned-text-${widget.media.id}'),
-                        attachment: widget.media,
-                      )
-                    : isAudio
-                    // SES: oynatıcı kartı; ±sn, hız ve "Not al" çubukta.
-                    ? AudioCardBox(
-                        key: ValueKey('pinned-audio-${widget.media.id}'),
-                        attachment: widget.media,
-                        noteAtButton: false,
-                      )
-                    : isSlide
-                    // SUNUM (2026-10-17): slayt çevrilebilen kutu; bölmeden
-                    // çıkış görünüm anahtarından.
-                    ? WebDriveGate(
-                        attachment: widget.media,
-                        builder: (_, shown) => SlidePageBox(
-                          key: ValueKey('pinned-slide-${widget.media.id}'),
-                          attachment: shown,
-                          onChanged: widget.onChanged ?? (_) {},
-                        ),
-                      )
-                    : isPdf
-                    // Belge kutusu kendi jestlerini kullanır (yatay kaydırma
-                    // sayfa çevirir, çubuğu sayfa atlar); bölmeden çıkış
-                    // görünüm anahtarından.
-                    //
-                    // OKUMA KİPİ (kullanıcı isteği 2026-11-03: "kitabını
-                    // okurken güzel kullanışlı bir not uygulaması"): sayfa
-                    // bölmenin GENİŞLİĞİNE oturur (yanlarda boşluk yok, yazı
-                    // büyük), boyu taşarsa dikeyde kayar; yazı basılı
-                    // tutularak seçilir → "Not al".
-                    ? ColoredBox(
-                        color: PdfReadStyle.of(context).background,
-                        child: _shrinkPdf(WebDriveGate(
-                          attachment: widget.media,
-                          // KALEMLE YAZARKEN kalem sayfayı kaydırmaz (çizer);
-                          // parmak kaydırır ("yalnız kalem" açıksa).
-                          builder: (_, shown) => ScrollConfiguration(
-                            behavior: ScrollConfiguration.of(context).copyWith(
-                              dragDevices: !_penOn
-                                  ? null
-                                  : {
-                                      PointerDeviceKind.mouse,
-                                      PointerDeviceKind.trackpad,
-                                      if (_policy.fingerScrolls)
-                                        PointerDeviceKind.touch,
-                                    },
-                            ),
-                            child: PdfPageBox(
-                            ink: _penOn ? _inkFor(shown) : null,
-                            key: ValueKey('pinned-pdf-${widget.media.id}'),
-                            attachment: _penOn || identical(_shownInk, shown.ink)
-                                ? shown
-                                : shown.copyWith(ink: _shownInk),
-                            onChanged: widget.onChanged ?? (_) {},
-                            // Balonludan sabite alınan belge balonlarıyla
-                            // görünür; çubukta göster/gizle.
-                            showBubbles: true,
-                            editBubbles: widget.onChanged != null,
-                            addingBubbles: _pdfAdding,
-                            addingPlain: _pdfPlain,
-                            onBubbleWriting: _setWriting,
-                            fitWidth: true,
-                            externalBar: _pdfBar,
-                            onNoteFromSelection: widget.onPdfNote,
-                            onInsertToNote: widget.onInsertToNote,
-                          ),
-                          ),
-                        )),
-                      )
-                    : GestureDetector(
-                        onTap: isVideo
-                            ? null
-                            : () {
-                                // Tutamaca dokunuş balonu açtıysa (kart şimdi
-                                // açık) görüntüleyici açılmaz.
-                                if (_ownBubbles?.openBubble != null &&
-                                    !_tapBusy) {
-                                  return;
-                                }
-                                if (_tapBusy) {
-                                  // Görselin dışındaki boşluk da açık kartı
-                                  // kapatır (katmanınki yalnız görselde).
-                                  final own = _ownBubbles;
-                                  if (own != null && !own.adding) {
-                                    own.collapseAll();
-                                  }
-                                  return;
-                                }
-                                widget.onOpen();
-                              },
-                        // ÇİFT DOKUNUŞ = YAKINLAŞTIR (kullanıcı kararı
-                        // 2026-11-05; PDF kutusu ve görüntüleyiciyle aynı).
-                        onDoubleTapDown: isImage
-                            ? (d) => _doubleTapAt = d.localPosition
-                            : null,
-                        onDoubleTap: isImage ? _toggleImageZoom : null,
-                        // Genişliğe oturan görselde dikey kaydırma (bkz.
-                        // [_fitWidthImage]).
-                        // Dikey kaydırma burada DEĞİL: ölçek tanıyıcısında
-                        // (bkz. [_onImageZoomUpdate]) — ayrı sürükleme
-                        // tanıyıcısı iki parmağı engelliyordu.
-                        // BASILI TUT = METİN SEÇİMİ (kullanıcı kararı
-                        // 2026-11-05: "basılı tutmak metin seçimini açsın,
-                        // balon sadece butonla eklensin"): yazılabilir
-                        // görselde görseldeki yazı tanınıp seçilebilir
-                        // ekranda açılır. Salt okunurda eski jest: aşağı
-                        // çekip bırakınca sayfaya geri koyar.
-                        onLongPress: widget.onExtractText == null
-                            ? null
-                            : () {
-                                if (_bubbleEdit) return;
-                                AppHaptics.tick();
-                                widget.onExtractText!();
-                              },
-                        onLongPressStart: widget.onExtractText != null
-                            ? null
-                            : (_) {
-                                AppHaptics.tick();
-                                setState(() {
-                                  _pulling = true;
-                                  _pullDown = 0;
-                                });
-                              },
-                        onLongPressMoveUpdate: widget.onExtractText != null
-                            ? null
-                            : (d) => setState(
-                                () => _pullDown = d.offsetFromOrigin.dy,
-                              ),
-                        onLongPressEnd: widget.onExtractText != null
-                            ? null
-                            : (_) {
-                                final unpin = _unpinArmed;
-                                setState(() {
-                                  _pulling = false;
-                                  _pullDown = 0;
-                                });
-                                if (unpin) widget.onUnpin();
-                              },
-                        onLongPressCancel: widget.onExtractText != null
-                            ? null
-                            : () => setState(() {
-                                _pulling = false;
-                                _pullDown = 0;
-                              }),
-                        onSecondaryTapUp: (d) =>
-                            unawaited(_showContextMenu(d.globalPosition)),
-                        // Durum parmak İNERKEN okunur: tutamaca dokunuş balonu
-                        // parmak kalkınca açar, `onTapDown` ise ondan SONRA
-                        // gelebiliyor (kartı hemen kapatırdı).
-                        child: Listener(
-                          onPointerDown: (_) {
-                            final own = _ownBubbles;
-                            _tapBusy =
-                                own != null &&
-                                (own.adding || own.openBubble != null);
+    return isText && isNoteTable(widget.media)
+        // TABLO SABİT BÖLMEDE (kullanıcı isteği 2026-11-23:
+        // "görsel gibi sabitlenebilir"): bölme genişliğinde,
+        // dikeyde kayar, hücreleri burada da yazılır.
+        ? SingleChildScrollView(
+            key: ValueKey('pinned-table-${widget.media.id}'),
+            padding: const EdgeInsets.all(AppSpace.m),
+            child: TablePageBox(
+              attachment: widget.media,
+              onChanged: widget.onTableChanged ?? (_) {},
+              onRemove: widget.onRemove,
+              editable: widget.onTableChanged != null,
+            ),
+          )
+        : isText
+        // METİN (2026-10-17): kaydırılan, seçilebilen kâğıt. Basılı
+        // tutmak metni SEÇER (görseldeki "aşağı çekip bırak"
+        // jesti yok) — bölmeden çıkış anahtardan/menüden.
+        ? TextReaderView(
+            key: ValueKey('pinned-text-${widget.media.id}'),
+            attachment: widget.media,
+          )
+        : isAudio
+        // SES: oynatıcı kartı; ±sn, hız ve "Not al" çubukta.
+        ? AudioCardBox(
+            key: ValueKey('pinned-audio-${widget.media.id}'),
+            attachment: widget.media,
+            noteAtButton: false,
+          )
+        : isSlide
+        // SUNUM (2026-10-17): slayt çevrilebilen kutu; bölmeden
+        // çıkış görünüm anahtarından.
+        ? WebDriveGate(
+            attachment: widget.media,
+            builder: (_, shown) => SlidePageBox(
+              key: ValueKey('pinned-slide-${widget.media.id}'),
+              attachment: shown,
+              onChanged: widget.onChanged ?? (_) {},
+            ),
+          )
+        : isPdf
+        // Belge kutusu kendi jestlerini kullanır (yatay kaydırma
+        // sayfa çevirir, çubuğu sayfa atlar); bölmeden çıkış
+        // görünüm anahtarından.
+        //
+        // OKUMA KİPİ (kullanıcı isteği 2026-11-03: "kitabını
+        // okurken güzel kullanışlı bir not uygulaması"): sayfa
+        // bölmenin GENİŞLİĞİNE oturur (yanlarda boşluk yok, yazı
+        // büyük), boyu taşarsa dikeyde kayar; yazı basılı
+        // tutularak seçilir → "Not al".
+        ? ColoredBox(
+            color: PdfReadStyle.of(context).background,
+            child: _shrinkPdf(
+              WebDriveGate(
+                attachment: widget.media,
+                // KALEMLE YAZARKEN kalem sayfayı kaydırmaz (çizer);
+                // parmak kaydırır ("yalnız kalem" açıksa).
+                builder: (_, shown) => ScrollConfiguration(
+                  behavior: ScrollConfiguration.of(context).copyWith(
+                    dragDevices: !_penOn
+                        ? null
+                        : {
+                            PointerDeviceKind.mouse,
+                            PointerDeviceKind.trackpad,
+                            if (_policy.fingerScrolls) PointerDeviceKind.touch,
                           },
-                          child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            _fitWidthImage(isImage, _zoomable(
-                              enabled: isImage,
-                              child: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  ColoredBox(
-                                    color: isVideo
-                                        ? Colors.black
-                                        : scheme.surfaceContainerHigh,
-                                    child: Transform.translate(
-                                      offset: Offset(
-                                        0,
-                                        _pulling ? _pullDown.clamp(0, 140) : 0,
-                                      ),
-                                      child: Opacity(
-                                        opacity: _pulling ? 0.6 : 1,
-                                        child: NoteMediaBox(
-                                          // Ek değişince (başka medya
-                                          // sabitlenince) oynatıcı da
-                                          // yenilensin.
-                                          key: ValueKey(widget.media.id),
-                                          attachment: widget.media,
-                                          fit: BoxFit.contain,
-                                          // Çizim görselin dikdörtgeninde,
-                                          // aşağıdaki katmanda (F63.3).
-                                          imageInk: !isImage,
-                                          inlineWebVideo: true,
-                                          showWebTitle: true,
-                                          // Denetim bölmenin çubuğunda.
-                                          videoControls: false,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  if (!isVideo && !_pulling)
-                                    if (_layerBubbles() case final bubbles?)
-                                      _imageBubbleLayer(bubbles),
-                                  if (isImage &&
-                                      !_pulling &&
-                                      (_penOn || _shownInk.isNotEmpty))
-                                    _imageInkLayer(),
-                                ],
+                  ),
+                  child: PdfPageBox(
+                    ink: _penOn ? _inkFor(shown) : null,
+                    key: ValueKey('pinned-pdf-${widget.media.id}'),
+                    attachment: _penOn || identical(_shownInk, shown.ink)
+                        ? shown
+                        : shown.copyWith(ink: _shownInk),
+                    onChanged: widget.onChanged ?? (_) {},
+                    // Balonludan sabite alınan belge balonlarıyla
+                    // görünür; çubukta göster/gizle.
+                    showBubbles: true,
+                    editBubbles: widget.onChanged != null,
+                    addingBubbles: _pdfAdding,
+                    addingPlain: _pdfPlain,
+                    onBubbleWriting: _setWriting,
+                    fitWidth: true,
+                    externalBar: _pdfBar,
+                    onNoteFromSelection: widget.onPdfNote,
+                    onInsertToNote: widget.onInsertToNote,
+                  ),
+                ),
+              ),
+            ),
+          )
+        : GestureDetector(
+            onTap: isVideo
+                ? null
+                : () {
+                    // Tutamaca dokunuş balonu açtıysa (kart şimdi
+                    // açık) görüntüleyici açılmaz.
+                    if (_ownBubbles?.openBubble != null && !_tapBusy) {
+                      return;
+                    }
+                    if (_tapBusy) {
+                      // Görselin dışındaki boşluk da açık kartı
+                      // kapatır (katmanınki yalnız görselde).
+                      final own = _ownBubbles;
+                      if (own != null && !own.adding) {
+                        own.collapseAll();
+                      }
+                      return;
+                    }
+                    widget.onOpen();
+                  },
+            // ÇİFT DOKUNUŞ = YAKINLAŞTIR (kullanıcı kararı
+            // 2026-11-05; PDF kutusu ve görüntüleyiciyle aynı).
+            onDoubleTapDown: isImage
+                ? (d) => _doubleTapAt = d.localPosition
+                : null,
+            onDoubleTap: isImage ? _toggleImageZoom : null,
+            // Genişliğe oturan görselde dikey kaydırma (bkz.
+            // [_fitWidthImage]).
+            // Dikey kaydırma burada DEĞİL: ölçek tanıyıcısında
+            // (bkz. [_onImageZoomUpdate]) — ayrı sürükleme
+            // tanıyıcısı iki parmağı engelliyordu.
+            // BASILI TUT = METİN SEÇİMİ (kullanıcı kararı
+            // 2026-11-05: "basılı tutmak metin seçimini açsın,
+            // balon sadece butonla eklensin"): yazılabilir
+            // görselde görseldeki yazı tanınıp seçilebilir
+            // ekranda açılır. Salt okunurda eski jest: aşağı
+            // çekip bırakınca sayfaya geri koyar.
+            onLongPress: widget.onExtractText == null
+                ? null
+                : () {
+                    if (_bubbleEdit) return;
+                    AppHaptics.tick();
+                    widget.onExtractText!();
+                  },
+            onLongPressStart: widget.onExtractText != null
+                ? null
+                : (_) {
+                    AppHaptics.tick();
+                    setState(() {
+                      _pulling = true;
+                      _pullDown = 0;
+                    });
+                  },
+            onLongPressMoveUpdate: widget.onExtractText != null
+                ? null
+                : (d) => setState(() => _pullDown = d.offsetFromOrigin.dy),
+            onLongPressEnd: widget.onExtractText != null
+                ? null
+                : (_) {
+                    final unpin = _unpinArmed;
+                    setState(() {
+                      _pulling = false;
+                      _pullDown = 0;
+                    });
+                    if (unpin) widget.onUnpin();
+                  },
+            onLongPressCancel: widget.onExtractText != null
+                ? null
+                : () => setState(() {
+                    _pulling = false;
+                    _pullDown = 0;
+                  }),
+            onSecondaryTapUp: (d) =>
+                unawaited(_showContextMenu(d.globalPosition)),
+            // Durum parmak İNERKEN okunur: tutamaca dokunuş balonu
+            // parmak kalkınca açar, `onTapDown` ise ondan SONRA
+            // gelebiliyor (kartı hemen kapatırdı).
+            child: Listener(
+              onPointerDown: (_) {
+                final own = _ownBubbles;
+                _tapBusy =
+                    own != null && (own.adding || own.openBubble != null);
+              },
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  _fitWidthImage(
+                    isImage,
+                    _zoomable(
+                      enabled: isImage,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          ColoredBox(
+                            color: isVideo
+                                ? Colors.black
+                                : scheme.surfaceContainerHigh,
+                            child: Transform.translate(
+                              offset: Offset(
+                                0,
+                                _pulling ? _pullDown.clamp(0, 140) : 0,
                               ),
-                            )),
-                            // Parmak çizerken (kalem kipi, "yalnız kalem"
-                            // kapalı) iki parmak yakınlaştırır/kaydırır:
-                            // dokunuşları çizim üstlendiği için dönüşümü bu
-                            // katman uygular. Sarmalamaz (ağaç şekli sabit).
-                            if (isImage && _penOn && !_policy.fingerScrolls)
-                              InkNavLayer(
-                                enabled: true,
-                                controller: _inkFor(widget.media),
-                                getMatrix: () => _imageZoom.value,
-                                setMatrix: (m) => _imageZoom.value = m,
-                                minScale: 1,
-                                maxScale: 4,
-                                clampToBounds: true,
-                                child: const SizedBox.expand(),
-                              )
-                            else
-                              const SizedBox.shrink(),
-                            if (widget.media.caption.isNotEmpty &&
-                                !_pulling &&
-                                !_imageZoomed)
-                              Align(
-                                alignment: Alignment.bottomCenter,
-                                child: ColoredBox(
-                                  color: scheme.surfaceContainerHigh,
-                                  child: AttachmentCaptionBand(
-                                    text: widget.media.caption,
-                                    onTap: widget.onCaption,
-                                  ),
+                              child: Opacity(
+                                opacity: _pulling ? 0.6 : 1,
+                                child: NoteMediaBox(
+                                  // Ek değişince (başka medya
+                                  // sabitlenince) oynatıcı da
+                                  // yenilensin.
+                                  key: ValueKey(widget.media.id),
+                                  attachment: widget.media,
+                                  fit: BoxFit.contain,
+                                  // Çizim görselin dikdörtgeninde,
+                                  // aşağıdaki katmanda (F63.3).
+                                  imageInk: !isImage,
+                                  inlineWebVideo: true,
+                                  showWebTitle: true,
+                                  // Denetim bölmenin çubuğunda.
+                                  videoControls: false,
                                 ),
                               ),
-                            // Yazma kartı kendini yalnız bir balon
-                            // düzenlenirken çizer (okuma kartında "Düzenle").
-                            if (_canEditBubbles && _ownBubbles != null) ...[
-                              Positioned(
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                                child: BubbleDock(controller: _ownBubbles!),
-                              ),
-                              Positioned(
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                                child: ValueListenableBuilder<bool>(
-                                  valueListenable:
-                                      _ownBubbles!.addingListenable,
-                                  builder: (context, adding, _) => adding
-                                      ? BubbleToolbar(controller: _ownBubbles!)
-                                      : const SizedBox.shrink(),
-                                ),
-                              ),
-                            ],
-                            if (_unpinArmed)
-                              PinnedUnpinHint(label: l10n.unpinMediaRelease),
-                          ],
+                            ),
+                          ),
+                          if (!isVideo && !_pulling)
+                            if (_layerBubbles() case final bubbles?)
+                              _imageBubbleLayer(bubbles),
+                          if (isImage &&
+                              !_pulling &&
+                              (_penOn || _shownInk.isNotEmpty))
+                            _imageInkLayer(),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Parmak çizerken (kalem kipi, "yalnız kalem"
+                  // kapalı) iki parmak yakınlaştırır/kaydırır:
+                  // dokunuşları çizim üstlendiği için dönüşümü bu
+                  // katman uygular. Sarmalamaz (ağaç şekli sabit).
+                  if (isImage && _penOn && !_policy.fingerScrolls)
+                    InkNavLayer(
+                      enabled: true,
+                      controller: _inkFor(widget.media),
+                      getMatrix: () => _imageZoom.value,
+                      setMatrix: (m) => _imageZoom.value = m,
+                      minScale: 1,
+                      maxScale: 4,
+                      clampToBounds: true,
+                      child: const SizedBox.expand(),
+                    )
+                  else
+                    const SizedBox.shrink(),
+                  if (widget.media.caption.isNotEmpty &&
+                      !_pulling &&
+                      !_imageZoomed)
+                    Align(
+                      alignment: Alignment.bottomCenter,
+                      child: ColoredBox(
+                        color: scheme.surfaceContainerHigh,
+                        child: AttachmentCaptionBand(
+                          text: widget.media.caption,
+                          onTap: widget.onCaption,
                         ),
-                        ),
-                      );
+                      ),
+                    ),
+                  // Yazma kartı kendini yalnız bir balon
+                  // düzenlenirken çizer (okuma kartında "Düzenle").
+                  if (_canEditBubbles && _ownBubbles != null) ...[
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: BubbleDock(controller: _ownBubbles!),
+                    ),
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: ValueListenableBuilder<bool>(
+                        valueListenable: _ownBubbles!.addingListenable,
+                        builder: (context, adding, _) => adding
+                            ? BubbleToolbar(controller: _ownBubbles!)
+                            : const SizedBox.shrink(),
+                      ),
+                    ),
+                  ],
+                  if (_unpinArmed)
+                    PinnedUnpinHint(label: l10n.unpinMediaRelease),
+                ],
+              ),
+            ),
+          );
   }
 
   /// Sürüklemenin tabanı: son yerleşimde hesaplanan boy ve sınırlar (çubuk
@@ -990,7 +996,6 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   double _dragHeight = 0;
   double _dragMax = 0;
   double _dragNatural = double.infinity;
-
 
   /// Küçültme (bütün sığdır) denetimi bu ekte var mı.
   bool get _canShrink =>
@@ -1039,7 +1044,6 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
       widget.onSmartTasks != null ||
       _effectiveAreaAsk != null;
 
-
   static String _sideLabel(AppLocalizations l10n, PinnedSide side) =>
       switch (side) {
         PinnedSide.top => l10n.pinnedSideTop,
@@ -1082,7 +1086,8 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
             'side',
             PinnedBarButton(
               key: const ValueKey('pinned-side'),
-              tooltip: '${_sideLabel(l10n, widget.side)} — ${l10n.pinnedSideToggle}',
+              tooltip:
+                  '${_sideLabel(l10n, widget.side)} — ${l10n.pinnedSideToggle}',
               icon: _sideIcon(widget.side),
               onPressed: widget.onCycleSide!,
             ),
@@ -1110,7 +1115,9 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
               PinnedBarButton(
                 key: const ValueKey('pinned-shrink'),
                 tooltip: l10n.pinnedShrinkToFit,
-                icon: _shrinkActive ? Icons.fit_screen : Icons.fit_screen_outlined,
+                icon: _shrinkActive
+                    ? Icons.fit_screen
+                    : Icons.fit_screen_outlined,
                 selected: _shrinkActive,
                 tonal: true,
                 onPressed: _toggleShrink,
@@ -1144,6 +1151,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
           Expanded(
             child: Semantics(
               label: l10n.pinnedMediaResize,
+              hint: _fitTarget == null ? null : l10n.pinnedMediaFit,
               onTap: _fitTarget == null ? null : _fit,
               // TUTAMAĞA DOKUN = SIĞDIR: bölme medyanın doğal boyuna oturur
               // (sürükleme ayrı jest, çubuğun kendisinde). Yalnız boş orta
@@ -1152,12 +1160,11 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
                 key: const ValueKey('pinned-media-fit'),
                 behavior: HitTestBehavior.opaque,
                 onTap: _fitTarget == null ? null : _fit,
-                child: Tooltip(
-                  message: _fitTarget == null ? '' : l10n.pinnedMediaFit,
-                  child: Center(
-                    child: Container(
-                      width: _live != null ? 48 : 38,
-                      height: 4,
+                child: Center(
+                  child: SizedBox(
+                    width: _live != null ? 48 : 38,
+                    height: 4,
+                    child: DecoratedBox(
                       decoration: BoxDecoration(
                         color: _live != null
                             ? scheme.primary
@@ -1288,6 +1295,40 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
               onPressed: _togglePen,
             ),
           ),
+        if (!widget.fill)
+          _BarCollapseIcon(
+            collapsed: _collapsedN,
+            collapseTooltip: l10n.pinnedCollapse,
+            expandTooltip: l10n.pinnedExpand,
+            onToggle: () {
+              AppHaptics.tick();
+              _collapsedN.value = !_collapsedN.value;
+            },
+          ),
+        if (KeyboardInset.stableOpenOf(context))
+          Semantics(
+            button: true,
+            label: l10n.pinnedHideKeyboard,
+            child: GestureDetector(
+              key: const ValueKey('pinned-hide-keyboard'),
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                AppHaptics.tick();
+                FocusManager.instance.primaryFocus?.unfocus();
+              },
+              child: SizedBox(
+                width: 34,
+                height: kPinnedBarHeight,
+                child: Center(
+                  child: Icon(
+                    Icons.keyboard_hide_outlined,
+                    size: AppIconSize.m,
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+          ),
         if (_hasSheet)
           PinnedBarButton(
             key: const ValueKey('pinned-media-menu'),
@@ -1327,6 +1368,7 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
         AttachmentCaps(
           rotate: _rotateInMenu,
           caption: widget.onCaption != null,
+          rename: widget.onRename != null,
           transcribe: widget.onTranscribe != null,
           extractText: widget.onExtractText != null,
           copy: widget.onCopy != null,
@@ -1336,7 +1378,6 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
           remove: widget.onRemove != null,
         ),
       );
-
 
   /// **TEK ⋮ LEVHASI** (P49 (a), kullanıcı 2026-11-12: "⋮ ile sayfalara göz
   /// at menüleri tek ⋮ menüde; kart düğmesi bizim stilde, yer açılır").
@@ -1365,3 +1406,85 @@ class _PinnedMediaPaneState extends State<PinnedMediaPane>
   Widget build(BuildContext context) => _buildPinnedPane(context);
 }
 
+class _BarCollapseIcon extends StatefulWidget {
+  const _BarCollapseIcon({
+    required this.collapsed,
+    required this.collapseTooltip,
+    required this.expandTooltip,
+    required this.onToggle,
+  });
+
+  final ValueListenable<bool> collapsed;
+  final String collapseTooltip;
+  final String expandTooltip;
+  final VoidCallback onToggle;
+
+  @override
+  State<_BarCollapseIcon> createState() => _BarCollapseIconState();
+}
+
+class _BarCollapseIconState extends State<_BarCollapseIcon> {
+  @override
+  void initState() {
+    super.initState();
+    widget.collapsed.addListener(_onChanged);
+  }
+
+  @override
+  void didUpdateWidget(_BarCollapseIcon old) {
+    super.didUpdateWidget(old);
+    if (old.collapsed != widget.collapsed) {
+      old.collapsed.removeListener(_onChanged);
+      widget.collapsed.addListener(_onChanged);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.collapsed.removeListener(_onChanged);
+    super.dispose();
+  }
+
+  void _onChanged() => setState(() {});
+
+  @override
+  Widget build(BuildContext context) {
+    final active = widget.collapsed.value;
+    final scheme = Theme.of(context).colorScheme;
+    return Semantics(
+      button: true,
+      label: active ? widget.expandTooltip : widget.collapseTooltip,
+      child: GestureDetector(
+        key: const ValueKey('pinned-collapse'),
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onToggle,
+        child: SizedBox(
+          width: 34,
+          height: kPinnedBarHeight,
+          child: Center(
+            child: active
+                ? DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: scheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(AppRadius.s),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpace.xxs),
+                      child: Icon(
+                        Icons.unfold_more_rounded,
+                        size: AppIconSize.m,
+                        color: scheme.onPrimaryContainer,
+                      ),
+                    ),
+                  )
+                : Icon(
+                    Icons.unfold_less_rounded,
+                    size: AppIconSize.m,
+                    color: scheme.onSurfaceVariant,
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+}

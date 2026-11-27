@@ -4051,7 +4051,7 @@ class AppLocalizationsTr extends AppLocalizations {
   }
 
   @override
-  String get personalizeTitle => 'Kişiselleştir';
+  String get personalizeTitle => 'Arayüz düzeni';
 
   @override
   String get personalizeInfo => 'Hangi alan ve düğmeler görünsün, eklentiler';
@@ -9398,4 +9398,105 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get quickDropUrgentHint => '!acil';
+
+  @override
+  String get brightnessModeAuto => 'Otomatik';
+
+  @override
+  String get brightnessModeLight => 'Açık';
+
+  @override
+  String get brightnessModeDark => 'Koyu';
+
+  @override
+  String brightnessModeToggleTooltip(String mode) {
+    return 'Görünüm kipi: $mode';
+  }
+
+  @override
+  String get appearanceTabTheme => 'Tema';
+
+  @override
+  String get appearanceTabBackground => 'Zemin';
+
+  @override
+  String get appearanceTabLayout => 'Düzen';
+
+  @override
+  String get appearanceOpenStudio => 'Zeminler ve görünüm';
+
+  @override
+  String get applyHomeBackgroundToNotes => 'Notlara da uygula';
+
+  @override
+  String get applyHomeBackgroundToNotesInfo =>
+      'Özel zemini olmayan notlar bu zemini kullanır.';
+
+  @override
+  String get noteUseHomeBackground => 'Ana ekran zemini';
+
+  @override
+  String get bgSubTabWallpapers => 'Görseller';
+
+  @override
+  String get bgSubTabIllustrated => 'Çizimli';
+
+  @override
+  String get bgSubTabColors => 'Renkler';
+
+  @override
+  String get bgSubTabPatterns => 'Desenler';
+
+  @override
+  String get bgSubTabFrame => 'Çerçeve';
+
+  @override
+  String get bgSubTabPaper => 'Defter';
+
+  @override
+  String get personalizeGroupEditor => 'Not editörü çubukları';
+
+  @override
+  String get personalizeGroupAddAttach => 'Ekleme ve ekler';
+
+  @override
+  String get personalizeEditBars => 'Not çubuklarını düzenle';
+
+  @override
+  String get attachmentRename => 'Yeniden adlandır';
+
+  @override
+  String get attachmentRenameHint => 'Ek adı';
+
+  @override
+  String attachmentsAllTitle(int count) {
+    return 'Tüm ekler ($count)';
+  }
+
+  @override
+  String get attachmentsAllButton => 'Tümü';
+
+  @override
+  String get attachmentRetryUpload => 'Yeniden dene';
+
+  @override
+  String get pinnedCollapse => 'Küçült';
+
+  @override
+  String get pinnedExpand => 'Genişlet';
+
+  @override
+  String get pinnedHideKeyboard => 'Klavyeyi gizle';
+
+  @override
+  String get floatingSizeSmall => 'Küçük';
+
+  @override
+  String get floatingSizeMedium => 'Orta';
+
+  @override
+  String get floatingSizeLarge => 'Tam';
+
+  @override
+  String get floatingAlignCycle => 'Yatay hiza';
 }

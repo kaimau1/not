@@ -40,15 +40,13 @@ double defaultPinnedHeight(Attachment media, Size screen) {
   // okunur); görsel/video ekranın %45'ini geçmez.
   // 2026-11-21: görsel de ekranın yarısına kadar (kullanıcı: "fazla
   // daraltmasın").
-  final max = screen.height * (pdf || media.kind == AttachmentKind.image
-      ? 0.5
-      : 0.45);
+  final max =
+      screen.height * (pdf || media.kind == AttachmentKind.image ? 0.5 : 0.45);
   return natural.clamp(
     kPinnedMinHeight,
     max < kPinnedMinHeight ? kPinnedMinHeight : max,
   );
 }
-
 
 extension _PinnedMediaPaneSheet on _PinnedMediaPaneState {
   /// bırakma kipi açılır, tür (Balon | Metin) kipin araç kartında seçilir;
@@ -102,13 +100,13 @@ extension _PinnedMediaPaneSheet on _PinnedMediaPaneState {
   }
 
   /// Bırakma kipinin son türü (araç kartında değişebilir).
-  bool get _lastPlain => _canEditBubbles
-      ? _ownController().plainMode
-      : _pdfPlain.value;
+  bool get _lastPlain =>
+      _canEditBubbles ? _ownController().plainMode : _pdfPlain.value;
 
   /// Ek işleri verilmiş mi (salt okunurda kaldır/paylaş yok).
   bool get hasMenu =>
       widget.onRemove != null ||
+      widget.onRename != null ||
       widget.onTranscribe != null ||
       widget.onSaveAs != null ||
       widget.onShare != null;
@@ -134,6 +132,8 @@ extension _PinnedMediaPaneSheet on _PinnedMediaPaneState {
         VideoHubScope.maybeOf(context)?.rotate(widget.media.id);
       case AttachmentAction.caption:
         widget.onCaption?.call();
+      case AttachmentAction.rename:
+        widget.onRename?.call();
       case AttachmentAction.copyLink:
         widget.onCopyLink?.call();
       case AttachmentAction.copy:
@@ -266,12 +266,7 @@ extension _PinnedMediaPaneSheet on _PinnedMediaPaneState {
         bubbles ||
         document.isNotEmpty;
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpace.l,
-        0,
-        AppSpace.l,
-        AppSpace.l,
-      ),
+      padding: const EdgeInsets.fromLTRB(AppSpace.l, 0, AppSpace.l, AppSpace.l),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -359,13 +354,17 @@ extension _PinnedMediaPaneSheet on _PinnedMediaPaneState {
                     const SizedBox(height: AppSpace.s),
                     Row(
                       children: [
-                        for (final (i, target) in PinnedSide.values.indexed) ...[
+                        for (final (i, target)
+                            in PinnedSide.values.indexed) ...[
                           if (i > 0) const SizedBox(width: AppSpace.s),
                           Expanded(
                             child: Semantics(
                               button: true,
                               selected: target == widget.side,
-                              label: _PinnedMediaPaneState._sideLabel(l10n, target),
+                              label: _PinnedMediaPaneState._sideLabel(
+                                l10n,
+                                target,
+                              ),
                               child: Material(
                                 key: ValueKey(
                                   'pinned-side-pick-${target.name}',
@@ -396,7 +395,9 @@ extension _PinnedMediaPaneSheet on _PinnedMediaPaneState {
                                             MainAxisAlignment.center,
                                         children: [
                                           Icon(
-                                            _PinnedMediaPaneState._sideIcon(target),
+                                            _PinnedMediaPaneState._sideIcon(
+                                              target,
+                                            ),
                                             size: AppIconSize.s,
                                             color: target == widget.side
                                                 ? scheme.onPrimaryContainer
@@ -405,7 +406,10 @@ extension _PinnedMediaPaneSheet on _PinnedMediaPaneState {
                                           const SizedBox(width: AppSpace.xs),
                                           Flexible(
                                             child: Text(
-                                              _PinnedMediaPaneState._sideLabel(l10n, target),
+                                              _PinnedMediaPaneState._sideLabel(
+                                                l10n,
+                                                target,
+                                              ),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                               style: text.label.copyWith(
@@ -460,16 +464,10 @@ extension _PinnedMediaPaneSheet on _PinnedMediaPaneState {
                       ),
                       const SizedBox(width: AppSpace.m),
                       Expanded(
-                        child: Text(
-                          l10n.pinnedShrinkToFit,
-                          style: text.label,
-                        ),
+                        child: Text(l10n.pinnedShrinkToFit, style: text.label),
                       ),
                       IgnorePointer(
-                        child: Switch(
-                          value: _shrinkActive,
-                          onChanged: (_) {},
-                        ),
+                        child: Switch(value: _shrinkActive, onChanged: (_) {}),
                       ),
                     ],
                   ),
