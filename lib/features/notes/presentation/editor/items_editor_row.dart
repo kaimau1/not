@@ -153,7 +153,9 @@ extension _ItemsRow on ItemsEditorState {
                         child: Icon(
                           Icons.drag_indicator,
                           size: ItemsEditorState._kHandleIcon,
-                          color: scheme.onSurfaceVariant.withValues(alpha: AppAlpha.muted),
+                          color: scheme.onSurfaceVariant.withValues(
+                            alpha: AppAlpha.muted,
+                          ),
                         ),
                       ),
                     ),
@@ -203,8 +205,9 @@ extension _ItemsRow on ItemsEditorState {
             child: Icon(
               Icons.segment,
               size: AppIconSize.s,
-              color: (_accent?.accent ?? scheme.onSurfaceVariant)
-                  .withValues(alpha: AppAlpha.muted),
+              color: (_accent?.accent ?? scheme.onSurfaceVariant).withValues(
+                alpha: AppAlpha.muted,
+              ),
             ),
           )
         else if (widget.showCheckboxes)
@@ -367,352 +370,385 @@ extension _ItemsRow on ItemsEditorState {
           selected,
           scheme,
           Padding(
-          // Tutamak hep görünürken (web/tablet) soldaki 12 dp boşluğa
-          // yerleşir: yazı neredeyse yerinde kalır.
-          padding: EdgeInsetsDirectional.only(
-            start: _pinHandles && !_selectionMode ? 2 : 12,
-            end: 2,
-          ),
-          // İşaretli satırın soluk hâli KATMANSIZ: yazı, kutucuk ve yıldız
-          // kendi renklerinde soluk çizilir (bkz. [_kCheckedDim]).
-          //
-          // KÖK NEDEN (kullanıcı bulgusu 2026-10-30: "işaretli öğesi çok
-          // olanlarda daha fazla kasma — açıkken, açılıp kapanırken,
-          // kaydırırken"): satır `AnimatedOpacity(0.55)` ile sarılıydı; 1'den
-          // küçük opaklık KALICI bir `OpacityLayer` demek, yani her işaretli
-          // madde her karede ayrı bir saveLayer ile rasterleşiyordu. 80
-          // işaretli maddede kaydırma ve not geçişi kare başına 80 katman
-          // birleştiriyordu. Solma artık rengin alfasında, bedeli sıfır.
-          child: Stack(
-            children: [
-              Row(
-              // Çok satırlı maddelerde kutucuk/numara artık tüm satır
-              // yüksekliğine göre ORTALANMIYOR, ilk satıra hizalanıyor
-              // (kullanıcı isteği). Üst pay [leadingTop] ile HESAPLANIR — bkz.
-              // orada anlatılan hiza kök nedeni.
-              crossAxisAlignment: CrossAxisAlignment.start,
+            // Tutamak hep görünürken (web/tablet) soldaki 12 dp boşluğa
+            // yerleşir: yazı neredeyse yerinde kalır.
+            padding: EdgeInsetsDirectional.only(
+              start: _pinHandles && !_selectionMode ? 2 : 12,
+              end: 2,
+            ),
+            // İşaretli satırın soluk hâli KATMANSIZ: yazı, kutucuk ve yıldız
+            // kendi renklerinde soluk çizilir (bkz. [_kCheckedDim]).
+            //
+            // KÖK NEDEN (kullanıcı bulgusu 2026-10-30: "işaretli öğesi çok
+            // olanlarda daha fazla kasma — açıkken, açılıp kapanırken,
+            // kaydırırken"): satır `AnimatedOpacity(0.55)` ile sarılıydı; 1'den
+            // küçük opaklık KALICI bir `OpacityLayer` demek, yani her işaretli
+            // madde her karede ayrı bir saveLayer ile rasterleşiyordu. 80
+            // işaretli maddede kaydırma ve not geçişi kare başına 80 katman
+            // birleştiriyordu. Solma artık rengin alfasında, bedeli sıfır.
+            child: Stack(
               children: [
-                if (dragHandle != null)
-                  Padding(
-                    padding: EdgeInsets.only(top: handleTop),
-                    child: dragHandle,
-                  ),
-                // Sol bölgenin jestleri. Uzun basış SATIR MENÜSÜNÜ açar (yıldız,
-                // seç, sil): metin alanına uzun basmak Android'in kendi metin
-                // seçimini açtığı için madde jestleri buraya bağlandı, ikisi
-                // çakışmaz. Seçim kipinde dokunuş ve uzun basış doğrudan seçer.
-                // OPAK ve üst payı da kapsar (bkz. [leading] kök neden notu).
-                // Builder: menü satırın KENDİ kutusunu bulsun (F12.7 —
-                // hedef madde vurgulanır, menü maddenin altında açılır).
-                Builder(
-                  builder: (leadContext) => _itemRightClick(
- item,
- anchor: leadContext,
- child: GestureDetector(
-                    behavior: _selectionMode
-                        ? HitTestBehavior.opaque
-                        : HitTestBehavior.deferToChild,
-                    onLongPressStart: (details) {
-                      if (_selectionMode) {
-                        _toggleSelection(item);
-                      } else {
-                        _showItemMenu(
-                          item,
-                          details.globalPosition,
-                          anchor: leadContext,
-                        );
-                      }
-                    },
-                    onTap: _selectionMode
-                        ? () => _toggleSelection(item)
-                        : null,
-                    child: Padding(
-                      padding: EdgeInsets.only(top: leadingTop),
-                      child: leading,
-                    ),
-                  ),
-),
-                ),
-                Expanded(
-                  // Seçim modunda metne dokunmak düzenlemeye değil seçime gider.
-                  // Basılı tutmaya devam → madde seçimi (F60.S6); sarmalayıcı
-                  // koşulsuz (ağaç şekli kiple değişmez).
-                  child: _HoldToSelect(
-                    enabled: !_selectionMode,
-                    onText: () => _holdSelectText(item),
-                    onHold: () => _holdSelect(item),
-                    child: _itemRightClick(
- item,
- child: GestureDetector(
-                    onTap: _selectionMode ? () => _toggleSelection(item) : null,
-                    child: AbsorbPointer(
-                      absorbing: _selectionMode,
-                      child: _wrapped(
-                        controller,
-                        baseStyle,
-                        // **ÜSTÜ ÇİZİLİ GEÇİŞ** (kullanıcı isteği 2026-09-22:
-                        // "liste maddeleri tıklanma geçiş animasyonu"). Çizgi
-                        // eskiden anında beliriyordu; artık çizginin ve yazının
-                        // rengi soluk hâle AKAR. `end` yalnız verildiği için ilk
-                        // kurulumda animasyon oynamaz (eski işaretli madde açılışta
-                        // yeniden çizilmez), yalnız DEĞİŞİMDE oynar.
-                        TweenAnimationBuilder<double>(
-                          tween: Tween<double>(end: checked ? 1 : 0),
-                          duration: _kStrikeDuration,
-                          curve: AppMotion.emphasized,
-                          builder: (context, strike, _) {
-                            // Solma AnimatedOpacity'e bırakıldı (aşağıya bak);
-                            // burada alfa verilirse iki kez soluyor.
-                            final dim = 1 - (1 - _kCheckedDim) * strike;
-                            final fieldStyle = strike == 0
-                                ? baseStyle
-                                : baseStyle.copyWith(
-                                    decoration: TextDecoration.lineThrough,
-                                    decorationColor: Color.lerp(
-                                      Colors.transparent,
-                                      scheme.onSurfaceVariant,
-                                      strike,
-                                    )!.withValues(alpha: strike * _kCheckedDim),
-                                    decorationThickness: 1 + strike,
-                                    color: _dimmed(
-                                      Color.lerp(
-                                        baseStyle.color ?? scheme.onSurface,
-                                        scheme.onSurfaceVariant,
-                                        strike,
-                                      )!,
-                                      dim,
-                                    ),
-                                  );
-                            // Dokunuşun konumu tutulur (etiket önizlemesi,
-                            // bkz. _tapAttachmentTag); sarmalayıcı HEP ağaçta.
-                            // Gömülü yazı çip olarak çizilir (gövdeyle aynı).
-                            final field = _LazyItemField(
-                              controller: controller,
-                              focusNode: _focusFor(item),
-                              style: fieldStyle,
-                              textAlign: textAlign,
-                              strut: wrapStrutStyle(fieldStyle),
-                              verticalPad: fieldPad,
-                              maxLines: widget.expandItems || focused
-                                  ? null
-                                  : 1,
-                              eager: _needsRealField(item),
-                              field: AttachmentTagChips(
-                              controller: controller,
-                              looks: widget.tagLooks,
-                              done: item.checked,
-                              child: _tapPoint.wrap(
-                                // Klavyenin otomatik düzeltmesi uygulamanın
-                                // kipine bağlı (gövdeyle aynı, 2026-11-25).
-                                ValueListenableBuilder<bool>(
-                                valueListenable: AutoSpell.enabled,
-                                builder: (_, autoFix, _) => TextField(
-                                  controller: controller,
-                                  focusNode: _focusFor(item),
-                                  autocorrect: autoFix,
-                                  onChanged: (_) =>
-                                      _updateText(item, controller.logicalText),
-                                  contextMenuBuilder:
-                                      (context, editableState) => _contextMenu(
-                                        context,
-                                        editableState,
-                                        item,
-                                      ),
-                                  contentInsertionConfiguration:
-                                      widget.contentInsertion,
-                                  // Varsayılan "next" davranışı odağı metin dışı bir
-                                  // öğeye taşıyıp klavyeyi kapatıp açıyordu;
-                                  // onEditingComplete onu bastırır, odak doğrudan
-                                  // yeni öğeye geçer.
-                                  onEditingComplete: () => _enterAt(item),
-                                  textInputAction: TextInputAction.next,
-                                  // EK ETİKETİNE DOKUNUNCA ÖNİZLEME — gövdedekiyle
-                                  // aynı kural (bkz. note_editor_screen `bodyField`):
-                                  // düzenlenebilir alanda span'e tanıyıcı bağlanamaz
-                                  // (dokunuş imleci taşımak için EditableText'e
-                                  // gider), bu yüzden dokunuştan SONRA imlecin
-                                  // nereye düştüğüne bakılır.
-                                  onTap: () {
-                                    _tapAttachmentTag(controller, context);
-                                    // Altı çizili kelime: öneri menüsü (Y-4).
-                                    showSpellMenuAfterTap(
-                                      editableTextBelow(context),
-                                    );
-                                  },
-                                  // Tam göster modunda satır sarılıp büyür; "dokununca
-                                  // aç" modunda odaklanınca açılır, aksi hâlde tek satır.
-                                  maxLines: widget.expandItems || focused
-                                      ? null
-                                      : 1,
-                                  // Sarma planı bu stille hesaplanır; TextField'ın örtük
-                                  // varsayılanına bırakılırsa ölçüm ile çizim ayrışır ve
-                                  // satırlar yanlış kırılır (M3 varsayılanı bodyLarge).
-                                  style: fieldStyle,
-                                  textAlign: textAlign,
-                                  // Satır yüksekliği çıpası gövdeyle aynı yerden
-                                  // gelir (bkz. [wrapStrutStyle]): ölçüm ile çizim
-                                  // ayrışmasın.
-                                  strutStyle: wrapStrutStyle(fieldStyle),
-                                  decoration: InputDecoration(
-                                    // Boş maddenin ipucu "Madde yaz" (F12.7):
-                                    // altındaki "+ Yeni öğe" düğmesiyle aynı
-                                    // adı taşıyınca iki "Yeni öğe" görünüyordu.
-                                    hintText: item.header
-                                        ? l10n.itemHeaderHint
-                                        : l10n.itemEmptyHint,
-                                    filled: false,
-                                    border: InputBorder.none,
-                                    isDense: true,
-                                    contentPadding: EdgeInsets.symmetric(
-                                      vertical: fieldPad,
-                                    ),
-                                  ),
-                                ),
-                                ),
-                                // Damgaya/etikete dokunmak klavyeyi açmaz.
-                                focusNode: _focusFor(item),
-                                keepsKeyboardClosed: (global) => linkAtPoint(
-                                  editable: editableTextBelow(context),
-                                  displayText: controller.text,
-                                  global: global,
-                                  timestamps:
-                                      widget.videoTimestamps &&
-                                      widget.onVideoTimestamp != null,
-                                  tagNames: widget.onAttachmentTag == null
-                                      ? const []
-                                      : widget.attachmentNames,
-                                ),
-                              ),
-                              ),
-                            );
-                            // Tek satır kipinde taşan metnin "devamı var"
-                            // göstergesi: TextField kırpar ama üç nokta koyamaz
-                            // (kaydırılabilir alan), kullanıcı metnin bittiğini
-                            // sanıyordu. Taşma ölçülür, taşıyorsa alanın hemen
-                            // sağına "…" konur; odaklanınca satır zaten açılır.
-                            //
-                            // KÖK NEDEN (imleç görünmüyordu) — ağacın ŞEKLİ
-                            // odakla DEĞİŞMEMELİ: eskiden odaksızken
-                            // `LayoutBuilder > Row > Expanded > TextField`,
-                            // odaklanınca çıplak `TextField` dönüyordu. Dokunuş
-                            // odağı verir, gelen yeniden çizimde alanın öğesi
-                            // BAŞKA bir konuma düştüğü için TextField'ın state'i
-                            // (ve içindeki EditableText) sıfırdan kuruluyordu;
-                            // yeni state odağı ZATEN almış bir düğümle açıldığı
-                            // için "odak değişti" olayı hiç gelmiyor ve imlecin
-                            // yanıp sönme zamanlayıcısı başlamıyordu — imleç
-                            // ancak ilk harfte beliriyordu. Yalnız "tam göster"
-                            // (odaktan bağımsız) sarmalayıcıyı belirler; odak
-                            // artık yalnız "…"in görünürlüğünü değiştirir.
-                            if (widget.expandItems) return field;
-                            return LayoutBuilder(
-                              builder: (context, constraints) {
-                                final overflowing =
-                                    !focused &&
-                                    constraints.maxWidth.isFinite &&
-                                    _overflowsLine(
-                                      context,
-                                      item.id,
-                                      controller.text,
-                                      fieldStyle,
-                                      constraints.maxWidth,
-                                    );
-                                return Row(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.baseline,
-                                  textBaseline: TextBaseline.alphabetic,
-                                  children: [
-                                    Expanded(child: field),
-                                    if (overflowing)
-                                      Text(
-                                        '…',
-                                        style: fieldStyle.copyWith(
-                                          color: scheme.onSurfaceVariant,
-                                        ),
-                                      ),
-                                  ],
-                                );
-                              },
-                            );
+                Row(
+                  // Çok satırlı maddelerde kutucuk/numara artık tüm satır
+                  // yüksekliğine göre ORTALANMIYOR, ilk satıra hizalanıyor
+                  // (kullanıcı isteği). Üst pay [leadingTop] ile HESAPLANIR — bkz.
+                  // orada anlatılan hiza kök nedeni.
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (dragHandle != null)
+                      Padding(
+                        padding: EdgeInsets.only(top: handleTop),
+                        child: dragHandle,
+                      ),
+                    // Sol bölgenin jestleri. Uzun basış SATIR MENÜSÜNÜ açar (yıldız,
+                    // seç, sil): metin alanına uzun basmak Android'in kendi metin
+                    // seçimini açtığı için madde jestleri buraya bağlandı, ikisi
+                    // çakışmaz. Seçim kipinde dokunuş ve uzun basış doğrudan seçer.
+                    // OPAK ve üst payı da kapsar (bkz. [leading] kök neden notu).
+                    // Builder: menü satırın KENDİ kutusunu bulsun (F12.7 —
+                    // hedef madde vurgulanır, menü maddenin altında açılır).
+                    Builder(
+                      builder: (leadContext) => _itemRightClick(
+                        item,
+                        anchor: leadContext,
+                        child: GestureDetector(
+                          behavior: _selectionMode
+                              ? HitTestBehavior.opaque
+                              : HitTestBehavior.deferToChild,
+                          onLongPressStart: (details) {
+                            if (_selectionMode) {
+                              _toggleSelection(item);
+                            } else {
+                              _showItemMenu(
+                                item,
+                                details.globalPosition,
+                                anchor: leadContext,
+                              );
+                            }
                           },
+                          onTap: _selectionMode
+                              ? () => _toggleSelection(item)
+                              : null,
+                          child: Padding(
+                            padding: EdgeInsets.only(top: leadingTop),
+                            child: leading,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-),
-                  ),
+                    Expanded(
+                      // Seçim modunda metne dokunmak düzenlemeye değil seçime gider.
+                      // Basılı tutmaya devam → madde seçimi (F60.S6); sarmalayıcı
+                      // koşulsuz (ağaç şekli kiple değişmez).
+                      child: _HoldToSelect(
+                        enabled: !_selectionMode,
+                        onText: () => _holdSelectText(item),
+                        onHold: () => _holdSelect(item),
+                        child: _itemRightClick(
+                          item,
+                          child: GestureDetector(
+                            onTap: _selectionMode
+                                ? () => _toggleSelection(item)
+                                : null,
+                            child: AbsorbPointer(
+                              absorbing: _selectionMode,
+                              child: _wrapped(
+                                controller,
+                                baseStyle,
+                                textTop: fieldPad,
+                                // **ÜSTÜ ÇİZİLİ GEÇİŞ** (kullanıcı isteği 2026-09-22:
+                                // "liste maddeleri tıklanma geçiş animasyonu"). Çizgi
+                                // eskiden anında beliriyordu; artık çizginin ve yazının
+                                // rengi soluk hâle AKAR. `end` yalnız verildiği için ilk
+                                // kurulumda animasyon oynamaz (eski işaretli madde açılışta
+                                // yeniden çizilmez), yalnız DEĞİŞİMDE oynar.
+                                TweenAnimationBuilder<double>(
+                                  tween: Tween<double>(end: checked ? 1 : 0),
+                                  duration: _kStrikeDuration,
+                                  curve: AppMotion.emphasized,
+                                  builder: (context, strike, _) {
+                                    // Solma AnimatedOpacity'e bırakıldı (aşağıya bak);
+                                    // burada alfa verilirse iki kez soluyor.
+                                    final dim = 1 - (1 - _kCheckedDim) * strike;
+                                    final fieldStyle = strike == 0
+                                        ? baseStyle
+                                        : baseStyle.copyWith(
+                                            decoration:
+                                                TextDecoration.lineThrough,
+                                            decorationColor:
+                                                Color.lerp(
+                                                  Colors.transparent,
+                                                  scheme.onSurfaceVariant,
+                                                  strike,
+                                                )!.withValues(
+                                                  alpha: strike * _kCheckedDim,
+                                                ),
+                                            decorationThickness: 1 + strike,
+                                            color: _dimmed(
+                                              Color.lerp(
+                                                baseStyle.color ??
+                                                    scheme.onSurface,
+                                                scheme.onSurfaceVariant,
+                                                strike,
+                                              )!,
+                                              dim,
+                                            ),
+                                          );
+                                    // Dokunuşun konumu tutulur (etiket önizlemesi,
+                                    // bkz. _tapAttachmentTag); sarmalayıcı HEP ağaçta.
+                                    // Gömülü yazı çip olarak çizilir (gövdeyle aynı).
+                                    final field = _LazyItemField(
+                                      controller: controller,
+                                      focusNode: _focusFor(item),
+                                      style: fieldStyle,
+                                      textAlign: textAlign,
+                                      strut: wrapStrutStyle(fieldStyle),
+                                      verticalPad: fieldPad,
+                                      maxLines: widget.expandItems || focused
+                                          ? null
+                                          : 1,
+                                      eager: _needsRealField(item),
+                                      field: AttachmentTagChips(
+                                        controller: controller,
+                                        looks: widget.tagLooks,
+                                        done: item.checked,
+                                        child: _tapPoint.wrap(
+                                          // Klavyenin otomatik düzeltmesi uygulamanın
+                                          // kipine bağlı (gövdeyle aynı, 2026-11-25).
+                                          ValueListenableBuilder<bool>(
+                                            valueListenable: AutoSpell.enabled,
+                                            builder: (_, autoFix, _) =>
+                                                TextField(
+                                                  controller: controller,
+                                                  focusNode: _focusFor(item),
+                                                  autocorrect: autoFix,
+                                                  onChanged: (_) => _updateText(
+                                                    item,
+                                                    controller.logicalText,
+                                                  ),
+                                                  contextMenuBuilder:
+                                                      (
+                                                        context,
+                                                        editableState,
+                                                      ) => _contextMenu(
+                                                        context,
+                                                        editableState,
+                                                        item,
+                                                      ),
+                                                  contentInsertionConfiguration:
+                                                      widget.contentInsertion,
+                                                  // Varsayılan "next" davranışı odağı metin dışı bir
+                                                  // öğeye taşıyıp klavyeyi kapatıp açıyordu;
+                                                  // onEditingComplete onu bastırır, odak doğrudan
+                                                  // yeni öğeye geçer.
+                                                  onEditingComplete: () =>
+                                                      _enterAt(item),
+                                                  textInputAction:
+                                                      TextInputAction.next,
+                                                  // EK ETİKETİNE DOKUNUNCA ÖNİZLEME — gövdedekiyle
+                                                  // aynı kural (bkz. note_editor_screen `bodyField`):
+                                                  // düzenlenebilir alanda span'e tanıyıcı bağlanamaz
+                                                  // (dokunuş imleci taşımak için EditableText'e
+                                                  // gider), bu yüzden dokunuştan SONRA imlecin
+                                                  // nereye düştüğüne bakılır.
+                                                  onTap: () {
+                                                    _tapAttachmentTag(
+                                                      controller,
+                                                      context,
+                                                    );
+                                                    // Altı çizili kelime: öneri menüsü (Y-4).
+                                                    showSpellMenuAfterTap(
+                                                      editableTextBelow(
+                                                        context,
+                                                      ),
+                                                    );
+                                                  },
+                                                  // Tam göster modunda satır sarılıp büyür; "dokununca
+                                                  // aç" modunda odaklanınca açılır, aksi hâlde tek satır.
+                                                  maxLines:
+                                                      widget.expandItems ||
+                                                          focused
+                                                      ? null
+                                                      : 1,
+                                                  // Sarma planı bu stille hesaplanır; TextField'ın örtük
+                                                  // varsayılanına bırakılırsa ölçüm ile çizim ayrışır ve
+                                                  // satırlar yanlış kırılır (M3 varsayılanı bodyLarge).
+                                                  style: fieldStyle,
+                                                  textAlign: textAlign,
+                                                  // Satır yüksekliği çıpası gövdeyle aynı yerden
+                                                  // gelir (bkz. [wrapStrutStyle]): ölçüm ile çizim
+                                                  // ayrışmasın.
+                                                  strutStyle: wrapStrutStyle(
+                                                    fieldStyle,
+                                                  ),
+                                                  decoration: InputDecoration(
+                                                    // Boş maddenin ipucu "Madde yaz" (F12.7):
+                                                    // altındaki "+ Yeni öğe" düğmesiyle aynı
+                                                    // adı taşıyınca iki "Yeni öğe" görünüyordu.
+                                                    hintText: item.header
+                                                        ? l10n.itemHeaderHint
+                                                        : l10n.itemEmptyHint,
+                                                    filled: false,
+                                                    border: InputBorder.none,
+                                                    isDense: true,
+                                                    contentPadding:
+                                                        EdgeInsets.symmetric(
+                                                          vertical: fieldPad,
+                                                        ),
+                                                  ),
+                                                ),
+                                          ),
+                                          // Damgaya/etikete dokunmak klavyeyi açmaz.
+                                          focusNode: _focusFor(item),
+                                          keepsKeyboardClosed: (global) =>
+                                              linkAtPoint(
+                                                editable: editableTextBelow(
+                                                  context,
+                                                ),
+                                                displayText: controller.text,
+                                                global: global,
+                                                timestamps:
+                                                    widget.videoTimestamps &&
+                                                    widget.onVideoTimestamp !=
+                                                        null,
+                                                tagNames:
+                                                    widget.onAttachmentTag ==
+                                                        null
+                                                    ? const []
+                                                    : widget.attachmentNames,
+                                              ),
+                                        ),
+                                      ),
+                                    );
+                                    // Tek satır kipinde taşan metnin "devamı var"
+                                    // göstergesi: TextField kırpar ama üç nokta koyamaz
+                                    // (kaydırılabilir alan), kullanıcı metnin bittiğini
+                                    // sanıyordu. Taşma ölçülür, taşıyorsa alanın hemen
+                                    // sağına "…" konur; odaklanınca satır zaten açılır.
+                                    //
+                                    // KÖK NEDEN (imleç görünmüyordu) — ağacın ŞEKLİ
+                                    // odakla DEĞİŞMEMELİ: eskiden odaksızken
+                                    // `LayoutBuilder > Row > Expanded > TextField`,
+                                    // odaklanınca çıplak `TextField` dönüyordu. Dokunuş
+                                    // odağı verir, gelen yeniden çizimde alanın öğesi
+                                    // BAŞKA bir konuma düştüğü için TextField'ın state'i
+                                    // (ve içindeki EditableText) sıfırdan kuruluyordu;
+                                    // yeni state odağı ZATEN almış bir düğümle açıldığı
+                                    // için "odak değişti" olayı hiç gelmiyor ve imlecin
+                                    // yanıp sönme zamanlayıcısı başlamıyordu — imleç
+                                    // ancak ilk harfte beliriyordu. Yalnız "tam göster"
+                                    // (odaktan bağımsız) sarmalayıcıyı belirler; odak
+                                    // artık yalnız "…"in görünürlüğünü değiştirir.
+                                    if (widget.expandItems) return field;
+                                    return LayoutBuilder(
+                                      builder: (context, constraints) {
+                                        final overflowing =
+                                            !focused &&
+                                            constraints.maxWidth.isFinite &&
+                                            _overflowsLine(
+                                              context,
+                                              item.id,
+                                              controller.text,
+                                              fieldStyle,
+                                              constraints.maxWidth,
+                                            );
+                                        return Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.baseline,
+                                          textBaseline: TextBaseline.alphabetic,
+                                          children: [
+                                            Expanded(child: field),
+                                            if (overflowing)
+                                              Text(
+                                                '…',
+                                                style: fieldStyle.copyWith(
+                                                  color:
+                                                      scheme.onSurfaceVariant,
+                                                ),
+                                              ),
+                                          ],
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // YILDIZ ARTIK DÜĞME DEĞİL, İŞARET (kullanıcı isteği 2026-08-30:
+                    // "yıldızla tuşu maddeler için yerleşimi kötü, basılı tutunca
+                    // gelsin"). Eskiden satır odaklanınca boş bir yıldız düğmesi
+                    // beliriyor, metni daraltıyor ve silme "x"ini içeri itiyordu —
+                    // yazarken satır her odakta yatayda oynuyordu. Yıldızlama sol
+                    // bölgeye uzun basınca açılan menüde ([_showItemMenu]); burada
+                    // yalnız YILDIZLI satırın işareti durur (dokununca kalkar).
+                    // Hatırlatıcı çipi İLK YAZI SATIRININ ORTASINA hizalı
+                    // (kullanıcı isteği 2026-11-08: "satırdaki yazıyla tam hizalı
+                    // olmalı" — satırın tepesine yapışıyordu). Çip sabit 22 dp.
+                    if (!_selectionMode && widget.lineTrailing != null)
+                      Padding(
+                        padding: EdgeInsets.only(
+                          top: math.max(0.0, firstLineCenter - 11),
+                        ),
+                        child: widget.lineTrailing!(item),
+                      ),
+                    if (!_selectionMode && item.starred)
+                      IconButton(
+                        tooltip: l10n.unstar,
+                        icon: const Icon(Icons.star, size: AppIconSize.s),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints.tightFor(
+                          width: 26,
+                          height: 34,
+                        ),
+                        color: checked
+                            ? _dimmed(scheme.tertiary, _kCheckedDim)
+                            : scheme.tertiary,
+                        onPressed: () => _toggleStar(item),
+                      ),
+                    // SİL "x" (2026-10-30 ikinci tur: "madde silme butonu
+                    // kaybolmuş"): odaklı maddede HEP görünür, ama SABİT ve dar
+                    // bir sütunda (40 → 28 dp) — odak değişince satırın genişliği
+                    // değişmez, yazı itilmez. Düğme sütunun içinde yüzer.
+                    const SizedBox(width: ItemsEditorState._kTrailingWidth),
+                  ],
                 ),
-                // YILDIZ ARTIK DÜĞME DEĞİL, İŞARET (kullanıcı isteği 2026-08-30:
-                // "yıldızla tuşu maddeler için yerleşimi kötü, basılı tutunca
-                // gelsin"). Eskiden satır odaklanınca boş bir yıldız düğmesi
-                // beliriyor, metni daraltıyor ve silme "x"ini içeri itiyordu —
-                // yazarken satır her odakta yatayda oynuyordu. Yıldızlama sol
-                // bölgeye uzun basınca açılan menüde ([_showItemMenu]); burada
-                // yalnız YILDIZLI satırın işareti durur (dokununca kalkar).
-                // Hatırlatıcı çipi İLK YAZI SATIRININ ORTASINA hizalı
-                // (kullanıcı isteği 2026-11-08: "satırdaki yazıyla tam hizalı
-                // olmalı" — satırın tepesine yapışıyordu). Çip sabit 22 dp.
-                if (!_selectionMode && widget.lineTrailing != null)
-                  Padding(
-                    padding: EdgeInsets.only(
-                      top: math.max(0.0, firstLineCenter - 11),
+                if (focused && !_selectionMode)
+                  PositionedDirectional(
+                    end: 0,
+                    // İlk satırın ortasına hizalı (kutucukla aynı çizgide).
+                    // 2026-11-01 (kullanıcı isteği: "silme x'ini 2 punto küçült,
+                    // hitbox'ını da daralt"): simge 20 → 18, dokunma alanı
+                    // 30×36 → 24×28 — yazının sonuna dokunurken madde kazara
+                    // silinmesin.
+                    top: math.max(0.0, firstLineCenter - 14),
+                    // WEB'DE × İŞLEMİYORDU (kullanıcı bulgusu 2026-11-10): fare
+                    // basışı "alan dışı" sayılıp odağı düşürüyor, × bırakmadan
+                    // önce kayboluyordu (dokunmatikte alan dışı odağı bırakmaz).
+                    // Bölge alanın parçası sayılır: basış odağı korur.
+                    child: TextFieldTapRegion(
+                      child: IconButton(
+                        key: ValueKey('item-remove-${item.id}'),
+                        tooltip: l10n.removeItem,
+                        icon: const Icon(Icons.close, size: AppIconSize.s),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints.tightFor(
+                          width: ItemsEditorState._kTrailingWidth - 4,
+                          height: 28,
+                        ),
+                        style: const ButtonStyle(
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
+                        onPressed: () => _removeItem(item),
+                      ),
                     ),
-                    child: widget.lineTrailing!(item),
                   ),
-                if (!_selectionMode && item.starred)
-                  IconButton(
-                    tooltip: l10n.unstar,
-                    icon: const Icon(Icons.star, size: AppIconSize.s),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints.tightFor(
-                      width: 26,
-                      height: 34,
-                    ),
-                    color: checked
-                        ? _dimmed(scheme.tertiary, _kCheckedDim)
-                        : scheme.tertiary,
-                    onPressed: () => _toggleStar(item),
-                  ),
-                // SİL "x" (2026-10-30 ikinci tur: "madde silme butonu
-                // kaybolmuş"): odaklı maddede HEP görünür, ama SABİT ve dar
-                // bir sütunda (40 → 28 dp) — odak değişince satırın genişliği
-                // değişmez, yazı itilmez. Düğme sütunun içinde yüzer.
-                const SizedBox(width: ItemsEditorState._kTrailingWidth),
               ],
             ),
-            if (focused && !_selectionMode)
-              PositionedDirectional(
-                end: 0,
-                // İlk satırın ortasına hizalı (kutucukla aynı çizgide).
-                // 2026-11-01 (kullanıcı isteği: "silme x'ini 2 punto küçült,
-                // hitbox'ını da daralt"): simge 20 → 18, dokunma alanı
-                // 30×36 → 24×28 — yazının sonuna dokunurken madde kazara
-                // silinmesin.
-                top: math.max(0.0, firstLineCenter - 14),
-                // WEB'DE × İŞLEMİYORDU (kullanıcı bulgusu 2026-11-10): fare
-                // basışı "alan dışı" sayılıp odağı düşürüyor, × bırakmadan
-                // önce kayboluyordu (dokunmatikte alan dışı odağı bırakmaz).
-                // Bölge alanın parçası sayılır: basış odağı korur.
-                child: TextFieldTapRegion(
-                child: IconButton(
-                  key: ValueKey('item-remove-${item.id}'),
-                  tooltip: l10n.removeItem,
-                  icon: const Icon(Icons.close, size: AppIconSize.s),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints.tightFor(
-                    width: ItemsEditorState._kTrailingWidth - 4,
-                    height: 28,
-                  ),
-                  style: const ButtonStyle(
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
-                  onPressed: () => _removeItem(item),
-                ),
-                ),
-              ),
-          ],
-          ),
           ),
         ),
       ),
@@ -728,8 +764,10 @@ extension _ItemsRow on ItemsEditorState {
         child: _floatRow(
           id: item.id,
           // Görsel maddenin ilk satırından aşağıda başlıyorsa satır kaymaz;
-          // yalnız o hizadaki satırlar sarılır (bkz. `_wrapped`).
-          inlineBelow: ItemsEditorState.itemLineHeight(context, baseStyle),
+          // yalnız o hizadaki satırlar sarılır (bkz. `_wrapped`). İç dolgu
+          // (`fieldPad`) iki katmanın sınırında ölü bölge bırakmasın diye eklenir.
+          inlineBelow:
+              fieldPad + ItemsEditorState.itemLineHeight(context, baseStyle),
           // Satırın metne AYRILAMAYAN payı: yatay dolgu + tutamaç + kutucuk/
           // numara + sil düğmesinin yeri. Sarma kararı bu pay düşülerek
           // verilmeli (bkz. _FloatRow.reserved).

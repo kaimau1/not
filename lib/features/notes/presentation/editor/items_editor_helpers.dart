@@ -97,7 +97,6 @@ double reorderAutoScrollStep({
   return 0;
 }
 
-
 extension ItemsEditorOps on ItemsEditorState {
   /// [target] bu editörün satırlarından biriyse metni O SATIRA, imlecin
   /// yerine ekler ve nota işler; değilse false döner (çağıran gövdeye yazar).
@@ -186,7 +185,6 @@ extension ItemsEditorOps on ItemsEditorState {
     onTag(tag.fileName);
   }
 
-
   void _commit() {
     // Silinen satırların taşma ölçümü sonsuza dek yaşamasın (bkz.
     // [_overflowsLine]); ölçüm satır sayısından çoksa bayatlar ayıklanır.
@@ -229,7 +227,6 @@ extension ItemsEditorOps on ItemsEditorState {
     return value;
   }
 
-
   /// Satırın TAMAMINI (tutamaç + kutucuk + metin + sil düğmesi) görselin
   /// yanına kaydırır. Yalnız metni sarmak yetmiyordu: kutucuk ve tutamaç
   /// satırın sol başında durduğundan görselin ALTINDA kalıyordu.
@@ -269,6 +266,7 @@ extension ItemsEditorOps on ItemsEditorState {
       registry: _floatRowStates,
       initial: id == null ? null : (_pads[id] ?? _padOfNeighbour(id)),
       onMeasured: id == null ? null : (pad) => _pads[id] = pad,
+      onPadChanged: _inlineFloats ? _wrapRemeasure.ping : null,
       child: child,
     );
   }
@@ -321,6 +319,7 @@ extension ItemsEditorOps on ItemsEditorState {
     for (final (_, s) in rows) {
       s._measure();
     }
+    if (_inlineFloats) _wrapRemeasure.ping();
   }
 
   /// Yeni satırın başlangıç tahmini: bir üstündeki maddenin kaydırması
@@ -348,8 +347,9 @@ extension ItemsEditorOps on ItemsEditorState {
   Widget _wrapped(
     WrapTextController controller,
     TextStyle style,
-    Widget field,
-  ) {
+    Widget field, {
+    double textTop = 0,
+  }) {
     final pageBox = widget.pageBox;
     if (pageBox == null) return field;
     return WrapFieldMeasure(
@@ -358,12 +358,13 @@ extension ItemsEditorOps on ItemsEditorState {
       floats: const [],
       // Bant değişince yalnız ölçer; alan ve satır kurulmaz.
       floatsListenable: _floatsL,
+      remeasureListenable: _wrapRemeasure,
+      textTop: textTop,
       minTop: ItemsEditorState.itemLineHeight(context, style),
       pageBox: pageBox,
       child: field,
     );
   }
-
 
   String? itemIdForController(TextEditingController controller) {
     for (final entry in _controllers.entries) {
@@ -576,7 +577,6 @@ extension ItemsEditorOps on ItemsEditorState {
     label: Text(l10n.newItemHint),
   );
 
-
   Widget _packagedRow(List<NoteItem> list, int index, Widget row) {
     final item = list[index];
     final pkg = item.package;
@@ -669,7 +669,6 @@ extension ItemsEditorOps on ItemsEditorState {
     });
     return true;
   }
-
 
   void _disposeRowFor(String id) {
     final controller = _controllers.remove(id);
@@ -790,9 +789,7 @@ extension ItemsEditorOps on ItemsEditorState {
     if (_arriving.contains(id)) return _MovePhase.arriving;
     return _MovePhase.idle;
   }
-
 }
-
 
 /// Madde satırının kutusu, [overlay]in koordinatlarında: [anchor] satırın
 /// sol bölgesinin bağlamı, en yakın [RenderFlex] atası satırın kendisi
@@ -808,7 +805,6 @@ Rect? itemMenuRowRect(BuildContext? anchor, RenderBox overlay) {
 
 /// Üstü çizili geçişin süresi (bkz. `_itemRow`).
 const _kStrikeDuration = Duration(milliseconds: 260);
-
 
 /// "+ Yeni öğe" ile üst üste açılabilecek en çok boş öğe (bkz.
 /// [ItemsEditorState._addItem]).

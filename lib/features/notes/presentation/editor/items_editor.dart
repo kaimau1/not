@@ -3,6 +3,7 @@ import '../../../../core/widgets/back_closes.dart';
 import '../../../../core/widgets/sheet_header.dart';
 import '../../../../core/app_icons.dart';
 import '../../../../core/haptics.dart';
+
 import 'dart:async';
 import 'dart:math' as math;
 
@@ -38,7 +39,8 @@ import 'tag_tap.dart';
 import 'text_wrap.dart';
 import 'notebook_paper.dart' show RuledAnchor;
 import 'stylus_toggle.dart' show StylusGutter;
-import 'windowed_body.dart' show kWindowedCaretMargin, selectWordAt, windowedFieldStyle;
+import 'windowed_body.dart'
+    show kWindowedCaretMargin, selectWordAt, windowedFieldStyle;
 
 part 'items_editor_lazy.dart';
 part 'items_editor_row.dart';
@@ -272,6 +274,10 @@ class ItemsEditorState extends State<ItemsEditor>
   Object? _layoutSig;
   bool _layoutCheckQueued = false;
 
+  /// Satır dolgusu veya liste geometrisi değişince satır içi [WrapFieldMeasure]
+  /// sarmalarını yeniden ölçtüren bildirim.
+  final _wrapRemeasure = _RemeasureSignal();
+
   final Map<String, (Object, Widget)> _rowCache = {};
   Object? _rowCacheEnv;
   bool _rowCacheInline = false;
@@ -479,7 +485,8 @@ class ItemsEditorState extends State<ItemsEditor>
       return;
     }
     setState(() {
-      final next = budget + (budget ~/ 2).clamp(_kRowsPerFrame, _kMaxRowsPerFrame);
+      final next =
+          budget + (budget ~/ 2).clamp(_kRowsPerFrame, _kMaxRowsPerFrame);
       _rowBudget = next >= _items.length ? null : next;
     });
     if (_rowBudget != null) {
@@ -495,6 +502,7 @@ class ItemsEditorState extends State<ItemsEditor>
   /// Durum yalnız bu açılışa ait — not yeniden açılınca yine 10.
   static const _kCheckedStep = 10;
   int _checkedShown = _kCheckedStep;
+
   /// Dışarıdan gelen listeyi yerel duruma alır: checklist'te "işaretsizler
   /// önce" düzenine getirilir (bkz. [normalizeItems] — bozuk kayıt burada
   /// onarılır). Sıralı listede işaret kavramı yok, sıra olduğu gibi kalır.
@@ -514,6 +522,7 @@ class ItemsEditorState extends State<ItemsEditor>
   /// Sürükleme sürüyor mu ve o an kare başına kaç piksel kaydırılacak.
   bool _reordering = false;
   double _autoScrollStep = 0;
+
   /// Kenar kaydırma döngüsü — ilk sürüklemede kurulur (dispose'ta tembel
   /// kurulum bağlam araması yapardı).
   FrameLoop? _autoScroll;
@@ -683,6 +692,7 @@ class ItemsEditorState extends State<ItemsEditor>
   void dispose() {
     _floatsL.removeListener(_onFloats);
     _ownFloats?.dispose();
+    _wrapRemeasure.dispose();
     _budgetTimer?.cancel();
     _autoScroll?.dispose();
     for (final c in _controllers.values) {
@@ -714,59 +724,62 @@ class ItemsEditorState extends State<ItemsEditor>
     return controller;
   }
 
-  _LazyFocusNode _focusFor(NoteItem item) => _focusNodes.putIfAbsent(item.id, () {
-    final node = _LazyFocusNode();
-    // MADDE BAŞINDA GERİ SİL = ÜSTTEKİYLE BİRLEŞ (kullanıcı isteği
-    // 2026-10-28: "Enter madde ekliyorsa diğer maddenin en başından geri
-    // silme üst maddeyle birleştirsin"). Silinecek harf yokken klavye
-    // (Gboard, donanım klavyesi) Backspace'i TUŞ olayı olarak yollar.
-    final id = item.id;
-    node.onKeyEvent = (_, event) {
-      if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
-        return KeyEventResult.ignored;
-      }
-      // OK TUŞLARI (kullanıcı isteği 2026-11-08): satırın ilk/son satırında
-      // ↑/↓ bir önceki/sonraki maddeye geçer.
-      final key = event.logicalKey;
-      if (key == LogicalKeyboardKey.arrowUp ||
-          key == LogicalKeyboardKey.arrowDown) {
-        return moveFocusVertically(id, up: key == LogicalKeyboardKey.arrowUp)
+  _LazyFocusNode _focusFor(NoteItem item) => _focusNodes.putIfAbsent(
+    item.id,
+    () {
+      final node = _LazyFocusNode();
+      // MADDE BAŞINDA GERİ SİL = ÜSTTEKİYLE BİRLEŞ (kullanıcı isteği
+      // 2026-10-28: "Enter madde ekliyorsa diğer maddenin en başından geri
+      // silme üst maddeyle birleştirsin"). Silinecek harf yokken klavye
+      // (Gboard, donanım klavyesi) Backspace'i TUŞ olayı olarak yollar.
+      final id = item.id;
+      node.onKeyEvent = (_, event) {
+        if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+          return KeyEventResult.ignored;
+        }
+        // OK TUŞLARI (kullanıcı isteği 2026-11-08): satırın ilk/son satırında
+        // ↑/↓ bir önceki/sonraki maddeye geçer.
+        final key = event.logicalKey;
+        if (key == LogicalKeyboardKey.arrowUp ||
+            key == LogicalKeyboardKey.arrowDown) {
+          return moveFocusVertically(id, up: key == LogicalKeyboardKey.arrowUp)
+              ? KeyEventResult.handled
+              : KeyEventResult.ignored;
+        }
+        if (key != LogicalKeyboardKey.backspace) {
+          return KeyEventResult.ignored;
+        }
+        return mergeIntoPrevious(id)
             ? KeyEventResult.handled
             : KeyEventResult.ignored;
-      }
-      if (key != LogicalKeyboardKey.backspace) {
-        return KeyEventResult.ignored;
-      }
-      return mergeIntoPrevious(id)
-          ? KeyEventResult.handled
-          : KeyEventResult.ignored;
-    };
-    // Odak değişince (a) "dokununca aç" modunda satır yüksekliği, (b)
-    // silme "x" düğmesinin görünürlüğü değişir; ikisi de YALNIZ o satırı
-    // ilgilendirir — bu yüzden listenin tamamı değil, satırın kendi bayrağı
-    // güncellenir (bkz. [_focusFlags]).
-    node.addListener(() {
-      if (!mounted) return;
-      final controller = _controllerFor(item);
-      if (node.hasFocus) {
-        _lastFocusedItemId = item.id;
-        widget.onFieldFocused?.call(
-          controller,
-          node,
-          () => _updateText(item, controller.logicalText),
-        );
-      } else if (controller.hasPendingFormat) {
-        // Satır odaktan çıkıyor: bekleyen biçim metne YAZILIR. Yoksa "kalın"a
-        // basıp tek kelime yazan ve başka yere dokunan kullanıcı biçmi
-        // sessizce kaybederdi (sarma normalde kelime sınırında yapılıyor —
-        // bkz. WrapTextController._wrapPending).
-        controller.flushPendingFormat();
-        _updateText(item, controller.logicalText);
-      }
-      _focusFlagFor(item.id).value = node.hasFocus;
-    });
-    return node;
-  });
+      };
+      // Odak değişince (a) "dokununca aç" modunda satır yüksekliği, (b)
+      // silme "x" düğmesinin görünürlüğü değişir; ikisi de YALNIZ o satırı
+      // ilgilendirir — bu yüzden listenin tamamı değil, satırın kendi bayrağı
+      // güncellenir (bkz. [_focusFlags]).
+      node.addListener(() {
+        if (!mounted) return;
+        final controller = _controllerFor(item);
+        if (node.hasFocus) {
+          _lastFocusedItemId = item.id;
+          widget.onFieldFocused?.call(
+            controller,
+            node,
+            () => _updateText(item, controller.logicalText),
+          );
+        } else if (controller.hasPendingFormat) {
+          // Satır odaktan çıkıyor: bekleyen biçim metne YAZILIR. Yoksa "kalın"a
+          // basıp tek kelime yazan ve başka yere dokunan kullanıcı biçmi
+          // sessizce kaybederdi (sarma normalde kelime sınırında yapılıyor —
+          // bkz. WrapTextController._wrapPending).
+          controller.flushPendingFormat();
+          _updateText(item, controller.logicalText);
+        }
+        _focusFlagFor(item.id).value = node.hasFocus;
+      });
+      return node;
+    },
+  );
 
   /// Satırların son ölçülen kaydırma değerleri (id → sol/sağ dolgu). Yeni
   /// eklenen satır KOMŞUSUNUN değeriyle doğsun diye tutulur: aksi hâlde satır
@@ -1021,10 +1034,9 @@ class ItemsEditorState extends State<ItemsEditor>
     _commit();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final controller = _controllerFor(_items.firstWhere(
-        (i) => i.id == target.id,
-        orElse: () => target,
-      ));
+      final controller = _controllerFor(
+        _items.firstWhere((i) => i.id == target.id, orElse: () => target),
+      );
       _focusFor(target).requestFocus();
       controller.selection = TextSelection.collapsed(
         offset: controller.text.length,
@@ -1156,9 +1168,7 @@ class ItemsEditorState extends State<ItemsEditor>
     final next = _items[target];
     _focusFor(next).requestFocus();
     final nc = _controllerFor(next);
-    nc.selection = TextSelection.collapsed(
-      offset: up ? nc.text.length : 0,
-    );
+    nc.selection = TextSelection.collapsed(offset: up ? nc.text.length : 0);
     return true;
   }
 
@@ -1169,9 +1179,7 @@ class ItemsEditorState extends State<ItemsEditor>
   /// dağınık seçim ilk seçilenin yerinde toplanır. Zaten paketse çözülür.
   /// false = paketlenecek madde yok.
   bool togglePackage() {
-    final ids = _selected.isNotEmpty
-        ? {..._selected}
-        : {?_lastFocusedItemId};
+    final ids = _selected.isNotEmpty ? {..._selected} : {?_lastFocusedItemId};
     final group = [
       for (final i in _items)
         if (ids.contains(i.id) && !i.header) i,
@@ -1262,4 +1270,8 @@ class ItemsEditorState extends State<ItemsEditor>
   /// blokta durur, sıraları sabittir).
   @override
   Widget build(BuildContext context) => _buildItemsEditor(context);
+}
+
+class _RemeasureSignal extends ChangeNotifier {
+  void ping() => notifyListeners();
 }
