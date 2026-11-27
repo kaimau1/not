@@ -1026,6 +1026,12 @@ void main() {
     ('ana-kart-menu', '/', () => find.byIcon(Icons.more_vert).at(1)),
     ('ana-hizli', '/', () => find.byTooltip('Yeni not — tip seç')),
     ('ana-suz', '/', () => find.byKey(const ValueKey('home-filter-button'))),
+    // 2026-11-27 menü denetimi: alt çubuk ⋯ ve hızlı satır ⋯.
+    ('n4-alt-diger', '/note/n4', () {
+      final f = find.byTooltip('Diğer işlemler');
+      return f.evaluate().isEmpty ? f : f.last;
+    }),
+    ('n4-satir-diger', '/note/n4', () => find.byKey(const ValueKey('quick-row-more'))),
     ('paylasilan', '/', () => find.byKey(const ValueKey('shared-chip-sf1'))),
     // Dar telefonda (360) Paylaş üst çubukta değil, ⋮ menüsünde: `.first`
     // boş bulucuda atar, sahne "dokunulacak öğe yok" diye geçilsin (F66.4).
