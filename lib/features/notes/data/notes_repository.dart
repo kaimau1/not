@@ -173,7 +173,6 @@ class NotesRepository {
     }
   }
 
-
   /// Bulut akışını yerel depoyla birleştirir: bulut ilk kez yayınlayınca ve
   /// sonra iki kaynaktan biri değiştikçe [merge] yeniden çalışır. Yerel
   /// depo yoksa bulut akışı olduğu gibi döner.
@@ -232,7 +231,6 @@ class NotesRepository {
       .doc(uid)
       .collection(AppConstants.notesCollection);
 
-
   Stream<Note?> watchNote(String noteId) => _withLocal(
     _hydratedDoc(noteId),
     (_NoteDocs e) =>
@@ -267,7 +265,10 @@ class NotesRepository {
       if (data['v'] == 1 && b is Blob) {
         out[d.id] = b.bytes;
       } else {
-        ErrorLog.record('ink_v2', 'okunamayan mürekkep belgesi $noteId/${d.id}');
+        ErrorLog.record(
+          'ink_v2',
+          'okunamayan mürekkep belgesi $noteId/${d.id}',
+        );
       }
     }
     return out;
@@ -308,9 +309,7 @@ class NotesRepository {
         ink: ink,
         // v1: bugünkü anlam AYNEN (`heavy != null`; editörün "ağır veri ilk
         // kez geldi" dalı buna bağlı). v2: mürekkep de beklenir.
-        loaded: v2
-            ? (!split || heavy != null) && ink != null
-            : heavy != null,
+        loaded: v2 ? (!split || heavy != null) && ink != null : heavy != null,
       ));
     }
 
@@ -482,6 +481,54 @@ class NotesRepository {
           orderIndex ?? -DateTime.now().millisecondsSinceEpoch.toDouble(),
     );
     // Bekletmeden yaz: çevrimdışıyken de anında açılabilsin.
+    unawaited(
+      doc.set({
+        ...note.toMap(),
+        'updatedBy': editorUid,
+        kSyncAtField: FieldValue.serverTimestamp(),
+        'createdBy': editorUid,
+      }),
+    );
+    return doc.id;
+  }
+
+  /// Hızlı liste ve akıllı çalışma alanlarından doğan zengin maddeleri,
+  /// etiketleri ve aciliyet işaretini TEK atomik yazımda kaydeder.
+  Future<String> createRichNote(
+    NoteType type, {
+    double? orderIndex,
+    String title = '',
+    String body = '',
+    List<NoteItem>? items,
+    List<String> tags = const [],
+    bool urgent = false,
+    String? folderId,
+    DateTime? reminderAt,
+    int listColumns = 1,
+    String? listKind,
+  }) async {
+    final doc = _notes.doc();
+    lastCreatedId = doc.id;
+    final note = Note(
+      id: doc.id,
+      type: type,
+      title: title,
+      body: body,
+      folderId: folderId,
+      reminderAt: reminderAt,
+      tags: tags,
+      urgent: urgent,
+      listColumns: listColumns == 2 ? 2 : 1,
+      listKind: listKind,
+      fontScale: NoteFormatMemory.fontScale,
+      items: items != null && items.isNotEmpty
+          ? items
+          : type == NoteType.text
+          ? const []
+          : [NoteItem(id: _uuid.v4(), text: '')],
+      orderIndex:
+          orderIndex ?? -DateTime.now().millisecondsSinceEpoch.toDouble(),
+    );
     unawaited(
       doc.set({
         ...note.toMap(),
@@ -675,9 +722,7 @@ class NotesRepository {
         ? written.bytes
         : estimateValueBytes(attachmentsField);
     _checkSize(note, fields, attachmentBytes);
-    final writtenCopy = unchanged
-        ? null
-        : copyFirestoreValue(attachmentsField);
+    final writtenCopy = unchanged ? null : copyFirestoreValue(attachmentsField);
     if (unchanged) fields.remove('attachments');
     final Future<void> write;
     final heavyWritten = _writtenHeavy[note.id];
@@ -811,10 +856,7 @@ class NotesRepository {
     _versionAt[note.id] = now;
     _versionBase[note.id] = current;
     unawaited(
-      _addVersion(note.id, {
-        ...base,
-        'reason': last == null ? 'open' : 'auto',
-      }),
+      _addVersion(note.id, {...base, 'reason': last == null ? 'open' : 'auto'}),
     );
   }
 
@@ -832,20 +874,19 @@ class NotesRepository {
   Future<void> _addVersion(String noteId, Map<String, dynamic> payload) async {
     if (isLocal(noteId)) return;
     try {
-      await _versions(noteId).add({
-        ...payload,
-        'by': editorUid,
-        'at': FieldValue.serverTimestamp(),
-      });
+      await _versions(
+        noteId,
+      ).add({...payload, 'by': editorUid, 'at': FieldValue.serverTimestamp()});
       if (editorUid != uid) return;
       // Budama sorgusu en çok 40 belge OKUR; her sürümde koşmak boşa okuma
       // (senkron maliyeti S3, 2026-11-17). Oturumda notun ilk sürümünde ve
       // sonra her 5. sürümde budanır; arada sınır en çok 4 aşılır.
       final n = _versionAdds[noteId] = (_versionAdds[noteId] ?? 0) + 1;
       if (n % 5 != 1) return;
-      final old = await _versions(
-        noteId,
-      ).orderBy('at', descending: true).limit(kMaxVersions + 10).get();
+      final old = await _versions(noteId)
+          .orderBy('at', descending: true)
+          .limit(kMaxVersions + 10)
+          .get();
       for (final doc in old.docs.skip(kMaxVersions)) {
         unawaited(doc.reference.delete());
       }
@@ -857,9 +898,10 @@ class NotesRepository {
 
   /// Notun sürümleri, yeniden eskiye.
   Future<List<NoteVersion>> listVersions(String noteId) async {
-    final snap = await _versions(
-      noteId,
-    ).orderBy('at', descending: true).limit(kMaxVersions).get();
+    final snap = await _versions(noteId)
+        .orderBy('at', descending: true)
+        .limit(kMaxVersions)
+        .get();
     return [
       for (final doc in snap.docs)
         NoteVersion.fromMap(
@@ -956,10 +998,7 @@ class NotesRepository {
   /// `set(merge: true)` çevrimdışıyken de anında yerel önbelleğe yazar ve
   /// dönen Future sunucu onayını bekler — bu yüzden çağıran tarafta zaman
   /// aşımı/hata yutma sorumluluğu kalır (bkz. `updateNote` yorumu).
-  Future<void> updateFieldsAndWait(
-    String noteId,
-    Map<String, dynamic> fields,
-  ) {
+  Future<void> updateFieldsAndWait(String noteId, Map<String, dynamic> fields) {
     if (isLocal(noteId)) {
       local!.merge(noteId, {
         ...fields,
@@ -1131,8 +1170,10 @@ class NotesRepository {
 
   /// Ana ekran kartının çerçeve rengi (editörde çizilmez).
   void setFrameColor(String noteId, NoteColor color, {int? custom}) =>
-      updateFields(noteId, {'frameColor': color.id, 'customFrameColor': custom});
-
+      updateFields(noteId, {
+        'frameColor': color.id,
+        'customFrameColor': custom,
+      });
 
   void setAiSummary(String noteId, AiSummary summary) =>
       updateFields(noteId, {'aiSummary': summary.toMap()});
@@ -1193,20 +1234,20 @@ class NotesRepository {
       return;
     }
     await _firestore.runTransaction((tx) async {
-        final ref = _notes.doc(noteId);
-        final snapshot = await tx.get(ref);
-        if (!snapshot.exists) return;
-        final note = Note.fromDoc(snapshot);
-        final attachments = [
-          for (final a in note.attachments)
-            a.id == updated.id ? a.withUploadOf(updated) : a,
-        ];
-        tx.update(ref, {
-          'attachments': note.attachmentsField(attachments),
+      final ref = _notes.doc(noteId);
+      final snapshot = await tx.get(ref);
+      if (!snapshot.exists) return;
+      final note = Note.fromDoc(snapshot);
+      final attachments = [
+        for (final a in note.attachments)
+          a.id == updated.id ? a.withUploadOf(updated) : a,
+      ];
+      tx.update(ref, {
+        'attachments': note.attachmentsField(attachments),
         'updatedBy': editorUid,
         kSyncAtField: FieldValue.serverTimestamp(),
-        });
       });
+    });
   }
 
   /// Yeni ek senkronunun sonucunu (`sync`) ekin kaydına yazar; başka alana
@@ -1287,7 +1328,8 @@ class NotesRepository {
       note = (await hydrate(note)).copyWith(heavyRef: false);
       final kept = <Attachment>[];
       for (final a in note.attachments) {
-        final hasFile = a.localPath.isNotEmpty && await File(a.localPath).exists();
+        final hasFile =
+            a.localPath.isNotEmpty && await File(a.localPath).exists();
         // Yalnız Drive'da duran ek de (storagePath boş, driveId dolu) İNER:
         // yoksa bu cihazda dosyası olmayan, hiç inmeyecek bir ek kalıyordu
         // (yerel notlar indirme kuyruğunda atlanır) (F5.4).

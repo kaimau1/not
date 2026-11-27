@@ -18,6 +18,7 @@
 library;
 
 import 'quick_entry.dart';
+import 'smart_list.dart';
 
 /// [index]: KESİN hedef (null = metinden çıkmadı). [ties]: başa baş kalan
 /// adaylar (index null iken; kullanıcıya "hangi not?" sorulur). [command]:
@@ -35,6 +36,7 @@ final _trailingCommand = RegExp(
   r'\s*\b(ekle|ekler misin|ekleyin|ekleyelim|ekleyiver|koy|yaz|not et|not al|kaydet)\s*[.!]?\s*$',
   caseSensitive: false,
 );
+
 /// Yalnız "ekle" ailesi tek başına "kullanıcı bir hedef adlandırdı" kanıtıdır.
 /// `koy/yaz/kaydet/not al` gündelik içerikte de geçer ("rapor yaz", "çöpü
 /// kapıya koy"): hedef bulunamadıysa içerikten SİLİNMEZ (H9, 2026-11-17).
@@ -43,7 +45,7 @@ final _addCommand = RegExp(
   caseSensitive: false,
 );
 final _englishAdd = RegExp(
-  r'^\s*(?:please\s+)?add\s+(.+?)\s+to\s+(?:my\s+|the\s+)?(.+?)\s*[.!]?\s*$',
+  r'^\s*(?:please\s+)?(?:add|put|save|append|note)\s+(.+?)\s+(?:to|in|on|into|under)\s+(?:my\s+|the\s+)?(.+?)\s*[.!]?\s*$',
   caseSensitive: false,
 );
 
@@ -62,6 +64,9 @@ const _markers = {
   'icin',
   'list',
   'note',
+  'checklist',
+  'grocery',
+  'todos',
 };
 
 const _dativeSuffixes = {'e', 'a', 'ye', 'ya', 'ne', 'na'};
@@ -155,12 +160,41 @@ bool _dative(String token, String word) =>
     token.startsWith(word) &&
     _dativeSuffixes.contains(token.substring(word.length));
 
+bool _oneEditApart(String a, String b) {
+  final la = a.length;
+  final lb = b.length;
+  if ((la - lb).abs() > 1) return false;
+  var i = 0;
+  var j = 0;
+  var edits = 0;
+  while (i < la && j < lb) {
+    if (a.codeUnitAt(i) == b.codeUnitAt(j)) {
+      i++;
+      j++;
+      continue;
+    }
+    if (++edits > 1) return false;
+    if (la > lb) {
+      i++;
+    } else if (lb > la) {
+      j++;
+    } else {
+      i++;
+      j++;
+    }
+  }
+  if (i < la || j < lb) edits++;
+  return edits <= 1;
+}
+
 /// Sözcük, başlık kelimesiyle aynı mı: birebir, yönelme ekli ("markete"),
-/// ya da aynı köke iniyor ("dosyalara" ↔ "dosyalarımdaki").
+/// aynı köke iniyor ("dosyalara" ↔ "dosyalarımdaki") ya da ≥ 5 harfte 1 harf
+/// yazım farkı var.
 bool _sameWord(String token, String word) =>
     token == word ||
     _dative(token, word) ||
-    (word.length >= 3 && quickStem(token) == quickStem(word));
+    (word.length >= 3 && quickStem(token) == quickStem(word)) ||
+    (word.length >= 5 && token.length >= 4 && _oneEditApart(token, word));
 
 /// Sözcük bir yönelme ekiyle bitiyor mu ("dosyalarA", "siteYE").
 bool _endsDative(String token) {
@@ -238,12 +272,29 @@ QuickDropTarget parseDropTarget(String text, List<String> titles) {
     }
   }
 
-  // 2) "add X to Y"
+  // 2) "add/put/save X to/in/on/into Y"
   final en = _englishAdd.firstMatch(raw);
   if (en != null) {
     final hits = _bestTitles(_words(en.group(2)!), wordsOf);
     if (hits.isNotEmpty) {
       final content = en.group(1)!.trim();
+      return hits.length == 1
+          ? (
+              index: hits.single,
+              content: content,
+              ties: const [],
+              command: true,
+            )
+          : (index: null, content: content, ties: hits, command: true);
+    }
+  }
+
+  // 2.5) "içerik -> hedef" / "içerik → hedef"
+  final arrowMatch = RegExp(r'^(.+?)\s*(?:->|→)\s*(.+?)\s*$').firstMatch(raw);
+  if (arrowMatch != null) {
+    final hits = _bestTitles(_words(arrowMatch.group(2)!), wordsOf);
+    if (hits.isNotEmpty) {
+      final content = arrowMatch.group(1)!.trim();
       return hits.length == 1
           ? (
               index: hits.single,
@@ -379,11 +430,61 @@ String stripDropTargetWords(String content, String title) {
 /// "ve" BÖLMEZ ("kaydet ve raporla" tek iştir).
 String quickDropSeparate(String text) => text.replaceAll(
   RegExp(
-    r'\s+(?:ve\s+)?(?:bir de|ayrıca|ayrica|sonra da|ve sonra|and also|also)\s+',
+    r'\s+(?:ve\s+)?(?:bir de|bi de|ayrıca|ayrica|sonra da|ve sonra|üstüne|ustune|and also|also|plus|as well as)\s+',
     caseSensitive: false,
   ),
   ', ',
 );
+
+final _newSmartListRe = RegExp(
+  r'^(?:yeni\s+(.+?)\s+(?:listesi|listem|listemizi|planı|plani)|new\s+(.+?)\s+list|create\s+(?:a\s+)?(.+?)\s+list|(.+?)\s+listesi\s+(?:oluştur|olustur|aç|ac))\s*:\s*(.*)$',
+  caseSensitive: false,
+  dotAll: true,
+);
+
+/// `yeni bavul listesi: pasaport, şarj` / `new grocery list: milk, bread`
+/// komutunu tanır.
+({SmartListKind kind, String content})? parseNewSmartListCommand(String raw) {
+  final m = _newSmartListRe.firstMatch(raw.trim());
+  if (m == null) return null;
+  final head = (m.group(1) ?? m.group(2) ?? m.group(3) ?? m.group(4) ?? '')
+      .trim();
+  if (head.isEmpty) return null;
+  final kind = smartKindFromPhrase('$head listesi');
+  if (kind == null || kind == SmartListKind.generic) {
+    final fallback = smartKindFromPhrase(head);
+    if (fallback == null || fallback == SmartListKind.generic) return null;
+    return (kind: fallback, content: (m.group(5) ?? '').trim());
+  }
+  return (kind: kind, content: (m.group(5) ?? '').trim());
+}
+
+final _urgentModRe = RegExp(
+  r'(?:^|\s)!(acil|urgent|önemli|onemli|important)(?=\s|$)',
+  caseSensitive: false,
+);
+final _tagModRe = RegExp(r'(?:^|\s)#([a-zA-Z0-9çğıöşüÇĞİÖŞÜ_-]{1,24})(?=\s|$)');
+
+/// Hızlı ekle metninden `#etiket` ve `!acil` / `!urgent` belirteçlerini ayırır.
+({String text, List<String> tags, bool urgent}) extractQuickDropModifiers(
+  String raw,
+) {
+  var urgent = false;
+  var working = raw.replaceAllMapped(_urgentModRe, (m) {
+    urgent = true;
+    return ' ';
+  });
+  final tags = <String>[];
+  final seen = <String>{};
+  working = working.replaceAllMapped(_tagModRe, (m) {
+    final rawTag = m.group(1)!.trim();
+    final lower = quickAscii(rawTag);
+    if (rawTag.isNotEmpty && seen.add(lower)) tags.add(rawTag);
+    return ' ';
+  });
+  final cleaned = working.replaceAll(RegExp(r'\s{2,}'), ' ').trim();
+  return (text: cleaned, tags: tags, urgent: urgent);
+}
 
 /// **HE-5 ÇOKLU HEDEF** (17K §4.2): tek cümlede birden çok hedef not varsa
 /// ("süt markete, fatura yapılacaklara" veya "market: süt; iş: rapor") her

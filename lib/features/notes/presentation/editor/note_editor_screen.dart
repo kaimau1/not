@@ -3,13 +3,13 @@ import 'editor_chrome_palette.dart';
 import 'glyph_button.dart';
 import 'ime_hide_detector.dart';
 import 'store_mode_screen.dart';
+import '../../../smart_lists/presentation/smart_workspace_router.dart';
 import '../../../../core/widgets/back_closes.dart';
 import '../../../../core/widgets/color_fade.dart';
 import '../note_card.dart' show openNoteRoute;
 import '../../domain/note_links.dart';
 import '../reminder_repeat_ui.dart';
-import '../reminders_screen.dart'
-    show maybeShowAutoStartHint;
+import '../reminders_screen.dart' show maybeShowAutoStartHint;
 import '../expiry_sheet.dart';
 import '../reminder_sheet.dart';
 import '../../domain/reminder_repeat.dart';
@@ -17,6 +17,7 @@ import '../../../../app/theme/app_tokens.dart';
 import '../../../../core/a11y/min_tap_target.dart';
 import '../../../../core/app_icons.dart';
 import '../../../../core/haptics.dart';
+
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -128,7 +129,8 @@ import 'note_package.dart';
 import 'editor_quick_row.dart';
 import '../../../calendar/presentation/event_editor.dart';
 import '../../../calendar/domain/agenda.dart' show noteDateSuggestion;
-import '../../../../core/utils/spoken_datetime.dart' show parseSpokenDateTimeNow;
+import '../../../../core/utils/spoken_datetime.dart'
+    show parseSpokenDateTimeNow;
 import '../../data/attachment_repository.dart';
 import '../../data/device_speech.dart';
 import '../../data/document_scan.dart';
@@ -291,6 +293,7 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
     this.startAudioFile = false,
     this.revealItemId,
     this.initialFind,
+    this.startWorkspace = false,
   });
 
   final String noteId;
@@ -324,6 +327,9 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
   /// El yazısı modu: editör açılır açılmaz çizim tuvali gösterilir,
   /// kaydedilen çizim nota görsel eki olarak girer.
   final bool startDrawing;
+
+  /// Akıllı liste / mağaza kipi çalışma alanıyla açılır.
+  final bool startWorkspace;
 
   /// "Ayrı çizim": açılır açılmaz çizim ekranı (sonuç görsel eki olur).
   final bool startSeparateDrawing;
@@ -389,11 +395,12 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
   ConsumerState<NoteEditorScreen> createState() => _NoteEditorScreenState();
 }
 
-
 class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
-    with WidgetsBindingObserver, SingleTickerProviderStateMixin, _NoteEditorFields {
-  void _syncUndoN() =>
-      _undoN.value = (_undoStack.canUndo, _undoStack.canRedo);
+    with
+        WidgetsBindingObserver,
+        SingleTickerProviderStateMixin,
+        _NoteEditorFields {
+  void _syncUndoN() => _undoN.value = (_undoStack.canUndo, _undoStack.canRedo);
 
   void _onAnyFocusChange() => _handleAnyFocusChange();
   void _holdSaveWhileClosing() => _handleHoldSaveWhileClosing();
@@ -616,10 +623,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                   : null,
             ),
           ),
-          onPressed: () => _mutate(
-            (n) => n.copyWith(pinned: !n.pinned),
-            immediate: true,
-          ),
+          onPressed: () =>
+              _mutate((n) => n.copyWith(pinned: !n.pinned), immediate: true),
         );
       },
     ),
@@ -647,10 +652,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
                 size: AppIconSize.xs,
                 color: Colors.amber.shade600,
               ),
-              onPressed: () => _mutate(
-                (n) => n.copyWith(starred: false),
-                immediate: true,
-              ),
+              onPressed: () =>
+                  _mutate((n) => n.copyWith(starred: false), immediate: true),
             )
           : const SizedBox.shrink(),
     ),
@@ -804,7 +807,12 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       ignoreAttachments: inkOnly || tableOnly,
     );
     if (pureTyping) {
-      _applyPureTypingMutate(note, next, inkOnly: inkOnly, tableOnly: tableOnly);
+      _applyPureTypingMutate(
+        note,
+        next,
+        inkOnly: inkOnly,
+        tableOnly: tableOnly,
+      );
     } else {
       setState(() => _note = next);
     }
@@ -989,7 +997,15 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     final dot = name.lastIndexOf('.');
     final ext = dot < 0 ? '' : name.substring(dot + 1).toLowerCase();
     const audio = {
-      'mp3', 'm4a', 'aac', 'wav', 'ogg', 'oga', 'opus', 'flac', 'amr',
+      'mp3',
+      'm4a',
+      'aac',
+      'wav',
+      'ogg',
+      'oga',
+      'opus',
+      'flac',
+      'amr',
     };
     const video = {'mp4', 'mov', 'mkv', '3gp', 'webm', 'm4v'};
     const image = {'jpg', 'jpeg', 'png', 'webp', 'gif', 'heic', 'bmp'};
@@ -1057,8 +1073,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     if (_gestureMode != _GestureMode.off) return;
     // Yalnız bu ekran en üstteyken (levha/menü açıkken dokunuş onlarındır).
     if (ModalRoute.of(context)?.isCurrent == false) return;
-    final document =
-        note.type == NoteType.pdf || note.type == NoteType.slides;
+    final document = note.type == NoteType.pdf || note.type == NoteType.slides;
     if (document) {
       // Balona yazılırken kalem kartın alanlarına dokunuyor olabilir.
       if (_penMode || _immersiveBubble) return;
@@ -1122,8 +1137,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
     // Alt çubuğun iki yeni düğmesi için: sayfada YÜZMEYEN ekler (şerit) ve
     // notun belge notu olup olmadığı (kalem düğmesi yalnız orada anlamlı).
     final fileAttachments = [
-      for (final a in (note?.attachmentsWithoutBackground ??
-          const <Attachment>[]))
+      for (final a
+          in (note?.attachmentsWithoutBackground ?? const <Attachment>[]))
         if (!a.floatsOnPage &&
             !_inPinnedPane(note!, a) &&
             !note.hidesDerivedDocument(a))
@@ -1189,7 +1204,8 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       onClearPendingEmbed: () => setState(() => _pendingEmbed = null),
     );
     final fullscreenNow = ref.watch(noteFullscreenProvider);
-    final PreferredSizeWidget? topAppBar = _pagePen && !_secondary && fullscreenNow
+    final PreferredSizeWidget? topAppBar =
+        _pagePen && !_secondary && fullscreenNow
         ? null
         : HomeInBar(
             appBar: _buildEditorTopBar(

@@ -338,7 +338,8 @@ abstract final class ShopAisleProfile {
     QuickAisle.pet: 'Evcil hayvan mama ve kumu',
   };
 
-  static String input(String itemName) => 'Market ürünü: "${_cut(itemName, 60)}"';
+  static String input(String itemName) =>
+      'Market ürünü: "${_cut(itemName, 60)}"';
 
   static Map<String, DecisionQuestion> get questions => {
     'reyon': ChoiceQuestion(
@@ -458,6 +459,14 @@ abstract final class ListClassifyProfile {
     SmartListKind.camping: 'Kamp / doğa hazırlık listesi',
     SmartListKind.baby: 'Bebek bakım / çantası listesi',
     SmartListKind.sport: 'Spor çantası / antrenman listesi',
+    SmartListKind.moving: 'Taşınma / ev değiştirme planı',
+    SmartListKind.cleaning: 'Ev temizliği kontrol listesi',
+    SmartListKind.habits: 'Alışkanlık takibi / günlük rutin',
+    SmartListKind.workout: 'Antrenman / egzersiz programı',
+    SmartListKind.gifts: 'Hediye listesi / fikirleri',
+    SmartListKind.watchlist: 'İzlenecek film / dizi / kitap',
+    SmartListKind.event: 'Etkinlik / parti / davet hazırlığı',
+    SmartListKind.expense: 'Bütçe / fatura / harcama listesi',
   };
 
   static final List<SmartListKind> _kinds = [

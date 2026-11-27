@@ -103,30 +103,46 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     final args = smartListArgs(context);
     final result = await showQuickList(context, args);
     if (result == null || !mounted) return;
-    await _createFromOutcome(
-      (content: result.content, open: result.open, quick: true),
+    await _createFromOutcome((
+      content: result.content,
+      open: result.open,
+      quick: true,
       listKind: result.listKind,
-    );
+      richItems: result.richItems.isEmpty ? null : result.richItems,
+      openWorkspace: result.openWorkspace,
+    ));
   }
 
-  Future<void> _createFromOutcome(
-    TemplateOutcome outcome, {
-    String? listKind,
-  }) async {
+  Future<void> _createFromOutcome(TemplateOutcome outcome) async {
     final content = outcome.content;
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
-    final id = await repo.createNote(
-      content.type,
-      title: content.title,
-      body: content.body,
-      items: content.items,
-      folderId: quickAddFolderId,
-      listColumns: content.columns,
-      listKind: listKind,
-    );
+    final rich = outcome.richItems;
+    final id = (rich != null && rich.isNotEmpty)
+        ? await repo.createRichNote(
+            content.type,
+            title: content.title,
+            body: content.body,
+            items: rich,
+            folderId: quickAddFolderId,
+            listColumns: content.columns,
+            listKind: outcome.listKind,
+          )
+        : await repo.createNote(
+            content.type,
+            title: content.title,
+            body: content.body,
+            items: content.items,
+            folderId: quickAddFolderId,
+            listColumns: content.columns,
+            listKind: outcome.listKind,
+          );
     if (outcome.open) {
-      await openNewNote(id, type: content.type);
+      await openNewNote(
+        id,
+        query: outcome.openWorkspace ? '?workspace=1' : '',
+        type: content.type,
+      );
       return;
     }
     // Hızlı liste: liste sayfada kuruldu, not kaydedildi — editör ayrıca
@@ -155,10 +171,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     if (repo == null) return;
     // Klasör TEK yazımda: createNote + ayrı updateFields arasında doküman bir
     // an klasörsüz/boş kalıyordu (bkz. NotesRepository.createNote yorumu).
-    final id = await repo.createNote(
-      type,
-      folderId: quickAddFolderId,
-    );
+    final id = await repo.createNote(type, folderId: quickAddFolderId);
     await openNewNote(id, type: type);
     // Dönüşte notu GİZLEYECEK süzgeçler temizlenir — hızlı yakalama satırında
     // çözülen kök neden ("Yıldızlı"/etiket/arama açıkken yeni not listede hiç
@@ -185,7 +198,6 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
       ref.read(searchQueryProvider.notifier).set('');
     }
   }
-
 
   /// **DEFTER** (F3.5): Defter görünümünde (kâğıt desenli, sayfalı) metin
   /// notu.
@@ -449,8 +461,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   /// "Sunum ekle not al": PDF yolunun slayt eşi.
   Future<void> createSlidesNote({CaptureChoice? preset}) async {
     final choice =
-        preset ??
-        await _askCaptureMode(context.l10n.newSlidesNote, 'slides');
+        preset ?? await _askCaptureMode(context.l10n.newSlidesNote, 'slides');
     if (choice == null || !mounted) return;
     await _openBlankNote(
       choice.mode == CaptureMode.bubbles ? NoteType.slides : NoteType.text,
@@ -557,9 +568,9 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
         return;
       }
     }
-    final stored = ref.read(sharedPreferencesProvider).getString(
-      captureModeDefaultKey,
-    );
+    final stored = ref
+        .read(sharedPreferencesProvider)
+        .getString(captureModeDefaultKey);
     final preferred = CaptureMode.values
         .where((m) => m.name == stored)
         .firstOrNull;
@@ -629,10 +640,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   }) async {
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
-    final id = await repo.createNote(
-      type,
-      folderId: quickAddFolderId,
-    );
+    final id = await repo.createNote(type, folderId: quickAddFolderId);
     if (title.isNotEmpty) repo.updateFields(id, {'title': title});
     await openNewNote(id, query: query);
   }
@@ -852,9 +860,7 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     final perms = ref.read(permissionsServiceProvider);
     if (!await perms.cameraGranted() && !await perms.requestCamera()) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showMessage(l10n.permCameraInfo);
+        ScaffoldMessenger.of(context).showMessage(l10n.permCameraInfo);
       }
       return;
     }

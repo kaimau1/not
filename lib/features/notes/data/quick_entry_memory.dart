@@ -106,7 +106,10 @@ class QuickEntryMemory {
     }
     if (days.length > _maxTrackedDays) {
       final sorted = days.entries.toList()
-        ..sort((a, b) => (a.value.lastOrNull ?? 0).compareTo(b.value.lastOrNull ?? 0));
+        ..sort(
+          (a, b) =>
+              (a.value.lastOrNull ?? 0).compareTo(b.value.lastOrNull ?? 0),
+        );
       for (final e in sorted.take(days.length - _maxTrackedDays)) {
         days.remove(e.key);
       }
@@ -293,6 +296,12 @@ final quickDropKeyboardProvider = boolPref(
 /// Hızlı ekle: hedef bulunamayınca/başa baş kalınca yapay zekâya sorsun mu
 /// (kullanıcı isteği 2026-11-16; yalnız not başlıkları gider).
 final quickDropAiProvider = boolPref('quick_drop_ai', defaultValue: true);
+
+/// Hızlı ekle v2: ekledikten sonra levhayı açık bırak (seri giriş).
+final quickDropKeepOpenProvider = boolPref(
+  'quick_drop_keep_open',
+  defaultValue: false,
+);
 
 /// Hızlı liste ekranı: reyon sırasına dizsin mi, kaç sütun.
 final quickListAisleSortProvider = boolPref(

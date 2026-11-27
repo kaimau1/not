@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/l10n_ext.dart';
@@ -11,14 +12,19 @@ import '../../../core/widgets/sheet_keyboard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../ai/data/decisions/decision_profiles.dart';
 import '../../ai/data/decisions/decision_service.dart';
+import '../../shopping/domain/shop_item_meta.dart';
+import '../../smart_lists/presentation/smart_wizards.dart';
 import '../data/notes_repository.dart';
 import '../data/quick_entry_memory.dart';
 import '../domain/note.dart';
+import '../domain/note_item.dart';
 import '../domain/note_templates.dart';
 import '../domain/note_type.dart';
 import '../domain/quick_entry.dart';
+import '../domain/smart_lexicon_v2.dart';
 import '../domain/smart_list.dart';
 import 'quick_entry_bar.dart';
+import 'quick_list_catalog_sheet.dart';
 
 /// Hızlı liste ekranının girdisi: hangi şablon, hangi öneriler.
 @immutable
@@ -35,6 +41,7 @@ class QuickListArgs {
     this.grocery = false,
     this.smart = false,
     this.packingGroups = const [],
+    this.initialKind,
   });
 
   /// Hafıza anahtarı (`b:shopping`, `u:<kimlik>`): sık eklenenler buna göre.
@@ -64,6 +71,9 @@ class QuickListArgs {
   final bool smart;
 
   final List<TemplateSuggestionGroup> packingGroups;
+
+  /// Belirli bir şablondan açılırken başlangıç akıllı liste türü (v2).
+  final SmartListKind? initialKind;
 }
 
 @immutable
@@ -71,7 +81,9 @@ class QuickListResult {
   const QuickListResult(
     this.content, {
     this.open = false,
+    this.openWorkspace = false,
     this.items = const [],
+    this.richItems = const [],
     this.listKind,
   });
 
@@ -80,7 +92,13 @@ class QuickListResult {
   /// Not oluşunca editörde açılsın mı ("Notta aç").
   final bool open;
 
+  /// Not oluşunca doğrudan çalışma alanında açılsın mı.
+  final bool openWorkspace;
+
   final List<QuickItem> items;
+
+  /// Zengin meta verili (`NoteItem.extras`) maddeler (v2).
+  final List<NoteItem> richItems;
 
   /// AL-2: notun akıllı liste türü (`Note.listKind`).
   final String? listKind;
@@ -161,10 +179,11 @@ List<String> quickLeftoversWhere(
 }
 
 class _Row {
-  _Row(this.id, this.item);
+  _Row(this.id, this.item, {this.extras = const {}});
 
   final int id;
   QuickItem item;
+  Map<String, dynamic> extras;
 
   /// Sütun değiştirse de (iki sütunda yarı sınırı kayar) aynı öğe kalır:
   /// giriş animasyonu yeniden oynamaz.
@@ -277,10 +296,7 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
         bavul,
         memory.top(base, count: 16),
       ]),
-      _ => quickInterleave([
-        due,
-        memory.top(smartMemoryKind(base, kind)),
-      ]),
+      _ => quickInterleave([due, memory.top(smartMemoryKind(base, kind))]),
     };
   }
 
@@ -301,13 +317,13 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
       (n) =>
           smartListKindFromId(n.listKind) == kind ||
           smartKindOf([
-            for (final i in n.items)
-              if (!i.header && i.text.trim().isNotEmpty)
-                (
-                  grocery: known(_grocery, i.text),
-                  packing: known(_packing, i.text),
-                ),
-          ]) ==
+                for (final i in n.items)
+                  if (!i.header && i.text.trim().isNotEmpty)
+                    (
+                      grocery: known(_grocery, i.text),
+                      packing: known(_packing, i.text),
+                    ),
+              ]) ==
               kind,
     );
   }
@@ -334,22 +350,42 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
   int _packingGroupOf(QuickItem i) => _packing?.groupOf(i.name) ?? -1;
   int _groceryGroupOf(QuickItem i) => _grocery?.groupOf(i.name) ?? -1;
 
+  String _kindTitle(AppLocalizations l10n, SmartListKind kind) =>
+      switch (kind) {
+        SmartListKind.shopping => l10n.tplShoppingName,
+        SmartListKind.packing => l10n.smartListPacking,
+        SmartListKind.pharmacy => l10n.smartListPharmacy,
+        SmartListKind.stationery => l10n.smartListStationery,
+        SmartListKind.hardware => l10n.smartListHardware,
+        SmartListKind.camping => l10n.smartListCamping,
+        SmartListKind.baby => l10n.smartListBaby,
+        SmartListKind.sport => l10n.smartListSport,
+        SmartListKind.moving => l10n.smartListMoving,
+        SmartListKind.cleaning => l10n.smartListCleaning,
+        SmartListKind.habits => l10n.smartListHabits,
+        SmartListKind.workout => l10n.smartListWorkout,
+        SmartListKind.gifts => l10n.smartListGifts,
+        SmartListKind.watchlist => l10n.smartListWatchlist,
+        SmartListKind.event => l10n.smartListEvent,
+        SmartListKind.expense => l10n.smartListExpense,
+        SmartListKind.generic => l10n.smartListGeneric,
+      };
+
+  IconData _kindIcon(SmartListKind kind) =>
+      kSmartKindSpecs[kind]?.icon ?? widget.args.icon;
+
+  SmartListKind get _effectiveKind {
+    if (widget.args.smart) return _kind.value;
+    if (widget.args.initialKind != null) return widget.args.initialKind!;
+    return widget.args.grocery ? SmartListKind.shopping : SmartListKind.generic;
+  }
+
   void _applyKind(SmartListKind kind) {
     if (kind == _kind.value) return;
     _kind.value = kind;
     _tab.value = 0;
     final l10n = context.l10n;
-    final title = switch (kind) {
-      SmartListKind.shopping => l10n.tplShoppingName,
-      SmartListKind.packing => l10n.smartListPacking,
-      SmartListKind.pharmacy => l10n.smartListPharmacy,
-      SmartListKind.stationery => l10n.smartListStationery,
-      SmartListKind.hardware => l10n.smartListHardware,
-      SmartListKind.camping => l10n.smartListCamping,
-      SmartListKind.baby => l10n.smartListBaby,
-      SmartListKind.sport => l10n.smartListSport,
-      SmartListKind.generic => l10n.smartListGeneric,
-    };
+    final title = _kindTitle(l10n, kind);
     if (_title.text.trim() == _autoTitle.trim()) _title.text = title;
     _autoTitle = title;
     // Sıra türe bağlı (bavulda bakım grubu, markette kişisel bakım reyonu).
@@ -360,16 +396,107 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
     if (!widget.args.smart) return;
     final kind =
         _kindSaid ??
-        smartKindOf([
-          for (final r in _rows)
-            (
-              grocery: _groceryGroupOf(r.item) >= 0,
-              packing: _packingGroupOf(r.item) >= 0,
-            ),
-        ]);
+        detectSmartKindFromItems([
+          for (final r in _rows) r.item.name,
+        ], locale: context.l10n.localeName);
     _applyKind(kind);
-    if (_kindSaid == null && kind == SmartListKind.generic && _rows.length >= 3) {
+    if (_kindSaid == null &&
+        kind == SmartListKind.generic &&
+        _rows.length >= 3) {
       unawaited(_maybeClassifyList());
+    }
+  }
+
+  Future<void> _pickKind() async {
+    final chosen = await showSmartKindPickerSheet(
+      context,
+      current: _effectiveKind,
+    );
+    if (chosen == null || !mounted) return;
+    _kindSaid = chosen;
+    _applyKind(chosen);
+  }
+
+  Future<void> _openCatalog() async {
+    await showQuickListCatalogSheet(
+      context,
+      kind: _effectiveKind,
+      hasItem: _hasRow,
+      onAddItems: (entries) {
+        for (final entry in entries) {
+          final priced = extractInlinePrice(entry.text);
+          final base = quickBaseName(priced.text);
+          final qty = priced.text == base
+              ? ''
+              : priced.text
+                    .substring(base.length)
+                    .trim()
+                    .replaceAll(_outerParensRe, '');
+          final ex = <String, dynamic>{...entry.extras};
+          if (priced.price != null) ex['p'] = priced.price;
+          final lexHit =
+              _lexicon?.exact(base) ??
+              lexiconForSmartKind(
+                _effectiveKind,
+                context.l10n.localeName,
+              ).exact(base);
+          _add([
+            QuickItem(
+              name: base,
+              qty: qty,
+              group: lexHit?.group ?? -1,
+              how: QuickHow.exact,
+              typed: entry.text,
+            ),
+          ], extrasByKey: ex.isEmpty ? null : {quickItemKey(base): ex});
+        }
+      },
+      onRemoveItem: (text) {
+        final existing = _find(text);
+        if (existing != null) _remove(existing);
+      },
+    );
+  }
+
+  Future<void> _openTripWizard() async {
+    final generated = await showTripPackingWizardSheet(context);
+    if (generated == null || !mounted) return;
+    if (widget.args.smart) {
+      _kindSaid = SmartListKind.packing;
+      _applyKind(SmartListKind.packing);
+    }
+    for (final g in generated) {
+      final base = quickBaseName(g.text);
+      final qty = g.text == base
+          ? ''
+          : g.text.substring(base.length).trim().replaceAll(_outerParensRe, '');
+      _add([
+        QuickItem(
+          name: base,
+          qty: qty,
+          group: _packing?.groupOf(base) ?? -1,
+          how: QuickHow.exact,
+          typed: g.text,
+        ),
+      ], extrasByKey: g.extras.isEmpty ? null : {quickItemKey(base): g.extras});
+    }
+  }
+
+  Future<void> _openEventWizard() async {
+    final generated = await showEventWizardSheet(context);
+    if (generated == null || !mounted) return;
+    if (widget.args.smart) {
+      _kindSaid = SmartListKind.event;
+      _applyKind(SmartListKind.event);
+    }
+    for (final g in generated) {
+      final base = quickBaseName(g.text);
+      final qty = g.text == base
+          ? ''
+          : g.text.substring(base.length).trim().replaceAll(_outerParensRe, '');
+      _add([
+        QuickItem(name: base, qty: qty, how: QuickHow.exact, typed: g.text),
+      ], extrasByKey: g.extras.isEmpty ? null : {quickItemKey(base): g.extras});
     }
   }
 
@@ -400,6 +527,11 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
   @override
   void initState() {
     super.initState();
+    final initK = widget.args.initialKind;
+    if (initK != null && initK != SmartListKind.generic) {
+      _kind.value = initK;
+      _kindSaid = initK;
+    }
     _twoColumns = ValueNotifier(ref.read(quickListTwoColumnsProvider));
     _aisle = ValueNotifier(ref.read(quickListAisleSortProvider));
     for (final t in widget.args.initialItems) {
@@ -414,8 +546,9 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
     super.didChangeDependencies();
     if (_parser != null) return;
     final memory = ref.read(quickEntryMemoryProvider);
+    final locale = context.l10n.localeName;
     final lex = buildQuickLexicon(
-      locale: context.l10n.localeName,
+      locale: locale,
       // Akıllı liste market sözlüğünü de ayrıştırıcıya katar (hata
       // 2026-11-17: `smartListArgs` grocery vermiyordu; "süt yumurta ekmek"
       // üç yerine TEK madde oluyordu, yakın eşleşme düzeltmesi çalışmıyordu).
@@ -432,12 +565,21 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
     if (widget.args.smart) {
       // Market önce eklendi: iki sözlükte de olan madde (şampuan) market
       // reyonunu taşır; bavul sırası ayrı sözlükten okunur.
-      for (final (text, group) in packingEntries(context.l10n.localeName)) {
+      for (final (text, group) in packingEntries(locale)) {
         lex.add(text, group: group);
       }
       lex.addAll([for (final g in widget.args.packingGroups) ...g.items]);
-      _packing = packingLexicon(context.l10n.localeName);
-      _grocery = groceryLexicon(context.l10n.localeName);
+      _packing = packingLexicon(locale);
+      _grocery = groceryLexicon(locale);
+    } else if (widget.args.initialKind != null &&
+        widget.args.initialKind != SmartListKind.shopping &&
+        widget.args.initialKind != SmartListKind.generic) {
+      for (final (text, group) in extraListEntries(
+        widget.args.initialKind!,
+        locale,
+      )) {
+        lex.add(text, group: group);
+      }
     }
     _lexicon = lex;
     _parser = buildQuickParser(lex, memory: memory);
@@ -485,17 +627,62 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
     return null;
   }
 
-  void _add(List<QuickItem> items) {
+  void _add(
+    List<QuickItem> items, {
+    Map<String, Map<String, dynamic>>? extrasByKey,
+  }) {
     _Row? touched;
     var said = false;
-    for (final item in items) {
+    final kindNow = _effectiveKind;
+    final locale = mounted ? context.l10n.localeName : 'tr';
+    final kindLex = kindNow == SmartListKind.generic
+        ? null
+        : lexiconForSmartKind(kindNow, locale);
+    for (final rawItem in items) {
       // "Bavul listesi", "alışveriş listesi": madde değil, listenin türü.
       if (widget.args.smart) {
-        final k = smartKindFromPhrase(item.name);
+        final k = smartKindFromPhrase(rawItem.name);
         if (k != null) {
           _kindSaid = k;
           said = true;
           continue;
+        }
+      }
+      var item = rawItem;
+      final itemExtras = <String, dynamic>{
+        ...?extrasByKey?[quickItemKey(rawItem.name)],
+        ...?extrasByKey?[quickItemKey(rawItem.text)],
+      };
+      if ((kindNow == SmartListKind.shopping ||
+              kindNow == SmartListKind.expense) &&
+          !itemExtras.containsKey('p') &&
+          !itemExtras.containsKey('exCost')) {
+        final priced = extractInlinePrice(rawItem.name);
+        if (priced.price != null && priced.text.isNotEmpty) {
+          item = QuickItem(
+            name: quickCapitalize(priced.text),
+            qty: rawItem.qty,
+            group: rawItem.group,
+            how: rawItem.how,
+            typed: rawItem.typed,
+          );
+          if (kindNow == SmartListKind.shopping) {
+            itemExtras['p'] = priced.price;
+          } else {
+            itemExtras['exCost'] = priced.price;
+          }
+        }
+      }
+      if (item.group < 0 && kindLex != null) {
+        final g = kindLex.groupOf(item.name);
+        if (g >= 0) {
+          item = QuickItem(
+            name: item.name,
+            qty: item.qty,
+            group: g,
+            how: item.how,
+            typed: item.typed,
+          );
         }
       }
       final existing = _find(item.text);
@@ -504,11 +691,14 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
         if (item.qty.isNotEmpty && item.qty != existing.item.qty) {
           existing.item = existing.item.withQty(item.qty);
         }
+        if (itemExtras.isNotEmpty) {
+          existing.extras = {...existing.extras, ...itemExtras};
+        }
         _pulse.value = (existing.id, _pulse.value.$2 + 1);
         touched = existing;
         continue;
       }
-      final row = _Row(_seq++, item);
+      final row = _Row(_seq++, item, extras: itemExtras);
       _rows.add(row);
       _lastId = row.id;
       touched = row;
@@ -589,19 +779,32 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
       return quickSortByGroup(_rows, (r) => r.item.group);
     }
     final kind = _kind.value;
+    final locale = context.l10n.localeName;
+    final extraLex =
+        (kind != SmartListKind.shopping &&
+            kind != SmartListKind.packing &&
+            kind != SmartListKind.generic)
+        ? lexiconForSmartKind(kind, locale)
+        : null;
     return quickSortByGroup(
       _rows,
-      (r) => smartRank(
-        kind,
-        grocery: _groceryGroupOf(r.item),
-        packing: _packingGroupOf(r.item),
-      ),
+      (r) => extraLex != null
+          ? extraLex.groupOf(r.item.name)
+          : smartRank(
+              kind,
+              grocery: _groceryGroupOf(r.item),
+              packing: _packingGroupOf(r.item),
+            ),
     );
   }
 
   // ── Bitiş ─────────────────────────────────────────────────────────────
 
-  Future<void> _finish({bool open = false, bool discard = false}) async {
+  Future<void> _finish({
+    bool open = false,
+    bool openWorkspace = false,
+    bool discard = false,
+  }) async {
     if (_done) return;
     _entry.currentState?.flush();
     if (discard || _rows.isEmpty) {
@@ -612,6 +815,31 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
     _done = true;
     final ordered = _ordered();
     final items = [for (final r in ordered) r.item];
+    final effectiveKind = _effectiveKind;
+    final uuid = const Uuid();
+    final richItems = <NoteItem>[
+      for (final r in ordered)
+        () {
+          var item = NoteItem(
+            id: uuid.v4(),
+            text: r.item.text,
+            extras: r.extras,
+          );
+          if (effectiveKind == SmartListKind.shopping &&
+              r.extras['p'] is num &&
+              !r.extras.containsKey('q')) {
+            final parsedQty = parseQuickQty(r.item.qty);
+            if (parsedQty != null && parsedQty.value > 0) {
+              item = ShopItemMeta(
+                qty: parsedQty.value,
+                unit: parsedQty.rawUnit,
+                unitPrice: (r.extras['p'] as num).toDouble(),
+              ).applyToItem(item);
+            }
+          }
+          return item;
+        }(),
+    ];
     final title = _title.text.trim().isEmpty
         ? widget.args.title
         : _title.text.trim();
@@ -620,9 +848,6 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
       [for (final i in items) i.name],
     );
     teachSpellFromQuickItems(items);
-    final effectiveKind = widget.args.smart
-        ? _kind.value
-        : (widget.args.grocery ? SmartListKind.shopping : SmartListKind.generic);
     final result = QuickListResult(
       (
         type: widget.args.type,
@@ -631,8 +856,10 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
         items: [for (final i in items) i.text],
         columns: _twoColumns.value ? 2 : 1,
       ),
-      open: open,
+      open: open || openWorkspace,
+      openWorkspace: openWorkspace,
       items: items,
+      richItems: richItems,
       listKind: smartListKindId(effectiveKind),
     );
     // NOTA DÖNÜŞÜM: giriş satırı ve öneriler solar, liste yerinde kalır —
@@ -648,6 +875,41 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
 
   final Map<int, (QuickItem, Widget)> _rowCache = {};
 
+  Color? _dotColorFor(_Row row) {
+    final kind = _effectiveKind;
+    if (kind == SmartListKind.generic) return null;
+    final spec = kSmartKindSpecs[kind];
+    if (spec == null || spec.groups.isEmpty) return null;
+    final g = row.item.group;
+    if (g >= 0 && g < spec.groups.length) return spec.groups[g].color;
+    return null;
+  }
+
+  Future<void> _editRow(_Row row) async {
+    final res = await showQuickItemEditSheet(
+      context,
+      name: row.item.name,
+      qty: row.item.qty,
+    );
+    if (res == null || !mounted) return;
+    if (res.remove) {
+      _remove(row);
+      return;
+    }
+    final cleanName = res.name.trim();
+    if (cleanName.isEmpty) return;
+    final cleanQty = res.qty.trim();
+    row.item = QuickItem(
+      name: quickCapitalize(cleanName),
+      qty: cleanQty,
+      group: row.item.group,
+      how: QuickHow.exact,
+      typed: row.item.typed,
+    );
+    _pulse.value = (row.id, _pulse.value.$2 + 1);
+    _rev.value++;
+  }
+
   Widget _rowFor(_Row row) {
     final hit = _rowCache[row.id];
     if (hit != null && identical(hit.$1, row.item)) return hit.$2;
@@ -655,9 +917,11 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
       key: row.key,
       id: row.id,
       item: row.item,
+      dotColor: _dotColorFor(row),
       pulse: _pulse,
       onRemove: () => _remove(row),
       onRevert: () => _revert(row),
+      onEdit: () => unawaited(_editRow(row)),
     );
     _rowCache[row.id] = (row.item, w);
     return w;
@@ -689,33 +953,28 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
 
   /// Öneri grupları: akıllı listede türe göre (düz listede ikisi de).
   List<TemplateSuggestionGroup> _groupsFor(SmartListKind? kind) {
-    if (!widget.args.smart) return widget.args.groups;
-    final k = kind ?? _kind.value;
-    return switch (k) {
-      SmartListKind.shopping => widget.args.groups,
-      SmartListKind.packing => widget.args.packingGroups,
-      SmartListKind.generic => [
-        ...widget.args.groups,
-        ...widget.args.packingGroups,
-      ],
-      _ => [
-        (
-          label: switch (k) {
-            SmartListKind.pharmacy => context.l10n.smartListPharmacy,
-            SmartListKind.stationery => context.l10n.smartListStationery,
-            SmartListKind.hardware => context.l10n.smartListHardware,
-            SmartListKind.camping => context.l10n.smartListCamping,
-            SmartListKind.baby => context.l10n.smartListBaby,
-            SmartListKind.sport => context.l10n.smartListSport,
-            _ => context.l10n.smartListGeneric,
-          },
-          items: [
-            for (final (text, _) in extraListEntries(k, context.l10n.localeName))
-              text,
-          ].take(20).toList(),
-        ),
-      ],
-    };
+    if (!widget.args.smart && widget.args.initialKind == null) {
+      return widget.args.groups;
+    }
+    final k = kind ?? _effectiveKind;
+    if (k == SmartListKind.shopping && widget.args.groups.isNotEmpty) {
+      return widget.args.groups;
+    }
+    if (k == SmartListKind.packing && widget.args.packingGroups.isNotEmpty) {
+      return widget.args.packingGroups;
+    }
+    if (k == SmartListKind.generic) {
+      return [...widget.args.groups, ...widget.args.packingGroups];
+    }
+    final spec = kSmartKindSpecs[k];
+    if (spec != null && spec.groups.isNotEmpty) {
+      final isTr = context.l10n.localeName.startsWith('tr');
+      return [
+        for (final g in spec.groups)
+          (label: g.label(isTr: isTr), items: g.items(isTr: isTr)),
+      ];
+    }
+    return widget.args.groups;
   }
 
   @override
@@ -861,6 +1120,7 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
         child: Scaffold(
           resizeToAvoidBottomInset: false,
           appBar: AppBar(
+            actionsPadding: const EdgeInsets.only(right: AppSpace.s),
             leading: IconButton(
               tooltip: l10n.back,
               icon: const Icon(Icons.arrow_back),
@@ -870,22 +1130,18 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
             title: Row(
               children: [
                 if (widget.args.smart)
-                  ValueListenableBuilder<SmartListKind>(
-                    valueListenable: _kind,
-                    builder: (context, kind, _) => Icon(
-                      switch (kind) {
-                        SmartListKind.shopping => Icons.shopping_cart_outlined,
-                        SmartListKind.packing => Icons.luggage_outlined,
-                        SmartListKind.pharmacy => Icons.local_pharmacy_outlined,
-                        SmartListKind.stationery => Icons.edit_note_outlined,
-                        SmartListKind.hardware => Icons.handyman_outlined,
-                        SmartListKind.camping => Icons.cabin_outlined,
-                        SmartListKind.baby => Icons.child_friendly_outlined,
-                        SmartListKind.sport => Icons.fitness_center_outlined,
-                        SmartListKind.generic => widget.args.icon,
-                      },
-                      color: widget.args.accent,
-                      size: AppIconSize.m,
+                  Listener(
+                    key: const ValueKey('quick-list-kind-pill'),
+                    behavior: HitTestBehavior.opaque,
+                    onPointerUp: (_) => unawaited(_pickKind()),
+                    child: ValueListenableBuilder<SmartListKind>(
+                      valueListenable: _kind,
+                      builder: (context, kind, _) => Icon(
+                        _kindIcon(kind),
+                        color:
+                            kSmartKindSpecs[kind]?.accent ?? widget.args.accent,
+                        size: AppIconSize.m,
+                      ),
                     ),
                   )
                 else
@@ -894,7 +1150,6 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
                     color: widget.args.accent,
                     size: AppIconSize.m,
                   ),
-                const SizedBox(width: AppSpace.s),
                 Expanded(
                   child: TextField(
                     key: const ValueKey('quick-list-title'),
@@ -903,6 +1158,9 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
                     textCapitalization: TextCapitalization.sentences,
                     decoration: InputDecoration(
                       hintText: l10n.titleHint,
+                      contentPadding: const EdgeInsetsDirectional.only(
+                        start: AppSpace.s,
+                      ),
                       border: InputBorder.none,
                       isDense: true,
                     ),
@@ -911,6 +1169,13 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
               ],
             ),
             actions: [
+              if (widget.args.smart || _effectiveKind != SmartListKind.generic)
+                Listener(
+                  key: const ValueKey('quick-list-catalog'),
+                  behavior: HitTestBehavior.opaque,
+                  onPointerUp: (_) => unawaited(_openCatalog()),
+                  child: const Icon(Icons.apps_rounded, size: AppIconSize.l),
+                ),
               ValueListenableBuilder<bool>(
                 valueListenable: _twoColumns,
                 builder: (context, two, _) => IconButton(
@@ -938,6 +1203,14 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
                           .set(_aisle.value);
                     case 'open':
                       unawaited(_finish(open: true));
+                    case 'wizard':
+                      if (_effectiveKind == SmartListKind.packing) {
+                        unawaited(_openTripWizard());
+                      } else if (_effectiveKind == SmartListKind.event) {
+                        unawaited(_openEventWizard());
+                      }
+                    case 'workspace':
+                      unawaited(_finish(openWorkspace: true));
                     case 'discard':
                       unawaited(_finish(discard: true));
                   }
@@ -949,6 +1222,21 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
                       checked: _aisle.value,
                       child: Text(l10n.quickListAisleSort),
                     ),
+                  if (_effectiveKind == SmartListKind.packing)
+                    PopupMenuItem(
+                      value: 'wizard',
+                      child: Text(l10n.smartListTripWizard),
+                    ),
+                  if (_effectiveKind == SmartListKind.event)
+                    PopupMenuItem(
+                      value: 'wizard',
+                      child: Text(l10n.smartListEventWizard),
+                    ),
+                  if (_effectiveKind != SmartListKind.generic)
+                    PopupMenuItem(
+                      value: 'workspace',
+                      child: Text(l10n.smartListOpenWorkspace),
+                    ),
                   PopupMenuItem(
                     value: 'open',
                     child: Text(l10n.quickListOpenInNote),
@@ -959,24 +1247,20 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
                   ),
                 ],
               ),
-              Padding(
-                padding: const EdgeInsets.only(right: AppSpace.s),
-                child: FilledButton(
-                  key: const ValueKey('quick-list-done'),
-                  onPressed: _finish,
-                  child: Text(l10n.quickListDone),
-                ),
+              FilledButton(
+                key: const ValueKey('quick-list-done'),
+                onPressed: _finish,
+                child: Text(l10n.quickListDone),
               ),
             ],
           ),
           // Alt güvenli alan payını [KeyboardSlide] veriyor (gezinme çubuğu,
           // klavye açıkken 0): burada uygulanırsa iki kez sayılırdı.
-          body: SafeArea(
-            top: false,
-            bottom: false,
-            child: KeyboardSnap(
-              builder: (context, inset) => Padding(
-                padding: EdgeInsets.only(bottom: inset),
+          body: KeyboardSnap(
+            builder: (context, inset) {
+              final pad = MediaQuery.paddingOf(context);
+              return Padding(
+                padding: EdgeInsets.fromLTRB(pad.left, 0, pad.right, inset),
                 child: Center(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 720),
@@ -990,8 +1274,8 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
                     ),
                   ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ),
       ),
@@ -1007,16 +1291,20 @@ class _QuickRow extends StatefulWidget {
     super.key,
     required this.id,
     required this.item,
+    required this.dotColor,
     required this.pulse,
     required this.onRemove,
     required this.onRevert,
+    required this.onEdit,
   });
 
   final int id;
   final QuickItem item;
+  final Color? dotColor;
   final ValueListenable<(int, int)> pulse;
   final VoidCallback onRemove;
   final VoidCallback onRevert;
+  final VoidCallback onEdit;
 
   @override
   State<_QuickRow> createState() => _QuickRowState();
@@ -1066,6 +1354,8 @@ class _QuickRowState extends State<_QuickRow> with TickerProviderStateMixin {
     unawaited(_tint.forward(from: 0).then((_) => _tint.reverse()));
   }
 
+  Offset? _tapDown;
+
   @override
   void dispose() {
     widget.pulse.removeListener(_onPulse);
@@ -1088,17 +1378,33 @@ class _QuickRowState extends State<_QuickRow> with TickerProviderStateMixin {
         Icon(
           Icons.check_box_outline_blank,
           size: AppIconSize.m,
-          color: scheme.onSurfaceVariant,
+          color: widget.dotColor ?? scheme.onSurfaceVariant,
         ),
-        const SizedBox(width: AppSpace.s),
         Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: AppSpace.s),
-            child: Text(
-              item.text,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: text.rowTitle,
+          child: Listener(
+            behavior: HitTestBehavior.opaque,
+            onPointerDown: (e) => _tapDown = e.position,
+            onPointerUp: (e) {
+              final down = _tapDown;
+              _tapDown = null;
+              if (down != null && (e.position - down).distance < 12) {
+                widget.onEdit();
+              }
+            },
+            onPointerCancel: (_) => _tapDown = null,
+            child: Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(
+                AppSpace.s,
+                AppSpace.s,
+                0,
+                AppSpace.s,
+              ),
+              child: Text(
+                item.text,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: text.rowTitle,
+              ),
             ),
           ),
         ),

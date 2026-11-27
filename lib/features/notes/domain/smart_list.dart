@@ -16,6 +16,7 @@ import 'note.dart';
 import 'note_item.dart';
 import 'quick_entry.dart';
 import 'quick_lexicon_data.dart';
+import 'smart_lexicon_v2.dart';
 
 enum SmartListKind {
   generic,
@@ -27,6 +28,14 @@ enum SmartListKind {
   camping,
   baby,
   sport,
+  moving,
+  cleaning,
+  habits,
+  workout,
+  gifts,
+  watchlist,
+  event,
+  expense,
 }
 
 /// Kalıcı `Note.listKind` kimliği (null = sıradan/genel liste).
@@ -214,6 +223,21 @@ const Map<SmartListKind, List<String>> kExtraListLexiconsEn = {
 /// gibi iki dilde de tanır).
 Iterable<(String, int)> packingEntries(String locale) sync* {
   final tr = locale.startsWith('tr');
+  final spec = kSmartKindSpecs[SmartListKind.packing];
+  if (spec != null) {
+    final seen = <String>{};
+    for (final first in [tr, !tr]) {
+      for (var g = 0; g < spec.groups.length; g++) {
+        for (final item in spec.groups[g].items(isTr: first)) {
+          final key = quickAscii(item);
+          if (key.isNotEmpty && seen.add(key)) {
+            yield (item, kPackingGroupBase + g);
+          }
+        }
+      }
+    }
+    return;
+  }
   for (final data
       in tr
           ? [kPackingLexiconTr, kPackingLexiconEn]
@@ -227,14 +251,31 @@ Iterable<(String, int)> packingEntries(String locale) sync* {
   }
 }
 
-/// AL-3: [kind] türü için sözlük girdileri (grup numarası [kExtraGroupBase] +
-/// tür/alt-grup sırası).
+/// AL-3 / v2: [kind] türü için sözlük girdileri (grup numarası
+/// [kExtraGroupBase] + tür/alt-grup sırası).
 Iterable<(String, int)> extraListEntries(
   SmartListKind kind,
   String locale,
 ) sync* {
   final tr = locale.startsWith('tr');
   final base = kExtraGroupBase + kind.index * 10;
+  final spec = kSmartKindSpecs[kind];
+  if (spec != null &&
+      kind != SmartListKind.shopping &&
+      kind != SmartListKind.packing) {
+    final seen = <String>{};
+    for (final first in [tr, !tr]) {
+      for (var g = 0; g < spec.groups.length; g++) {
+        for (final item in spec.groups[g].items(isTr: first)) {
+          final key = quickAscii(item);
+          if (key.isNotEmpty && seen.add(key)) {
+            yield (item, base + g);
+          }
+        }
+      }
+    }
+    return;
+  }
   for (final data
       in tr
           ? [kExtraListLexiconsTr, kExtraListLexiconsEn]
@@ -250,42 +291,54 @@ Iterable<(String, int)> extraListEntries(
   }
 }
 
+final Map<String, QuickLexicon> _packingCache = {};
+final Map<String, QuickLexicon> _groceryCache = {};
+final Map<(SmartListKind, String), QuickLexicon> _kindLexCache = {};
+
 /// Yalnız bavul maddelerini tanıyan sözlük (sıralama ve tür için).
 QuickLexicon packingLexicon(String locale) {
-  final lex = QuickLexicon();
-  for (final (text, group) in packingEntries(locale)) {
-    lex.add(text, group: group);
-  }
-  return lex;
+  final lang = locale.startsWith('tr') ? 'tr' : 'en';
+  return _packingCache[lang] ??= () {
+    final lex = QuickLexicon();
+    for (final (text, group) in packingEntries(locale)) {
+      lex.add(text, group: group);
+    }
+    return lex;
+  }();
 }
 
 QuickLexicon _groceryLex(String locale) {
-  final lex = QuickLexicon();
-  final tr = locale.startsWith('tr');
-  for (final data
-      in tr
-          ? [kQuickLexiconTr, kQuickLexiconEn]
-          : [kQuickLexiconEn, kQuickLexiconTr]) {
-    for (final e in data.entries) {
-      for (final item in e.value.split(',')) {
-        lex.add(item, group: e.key.index);
+  final lang = locale.startsWith('tr') ? 'tr' : 'en';
+  return _groceryCache[lang] ??= () {
+    final lex = QuickLexicon();
+    final tr = lang == 'tr';
+    for (final data
+        in tr
+            ? [kQuickLexiconTr, kQuickLexiconEn]
+            : [kQuickLexiconEn, kQuickLexiconTr]) {
+      for (final e in data.entries) {
+        for (final item in e.value.split(',')) {
+          lex.add(item, group: e.key.index);
+        }
       }
     }
-  }
-  return lex;
+    return lex;
+  }();
 }
 
-/// [kind] türüne özel sözlük (AL-2/AL-3 sıralama ve grup çözümü).
+/// [kind] türüne özel sözlük (AL-2/AL-3/v2 sıralama ve grup çözümü).
 QuickLexicon lexiconForSmartKind(SmartListKind kind, String locale) {
   if (kind == SmartListKind.shopping) return _groceryLex(locale);
   if (kind == SmartListKind.packing) return packingLexicon(locale);
-  final lex = QuickLexicon();
-  if (kind != SmartListKind.generic) {
+  if (kind == SmartListKind.generic) return QuickLexicon();
+  final lang = locale.startsWith('tr') ? 'tr' : 'en';
+  return _kindLexCache[(kind, lang)] ??= () {
+    final lex = QuickLexicon();
     for (final (text, group) in extraListEntries(kind, locale)) {
       lex.add(text, group: group);
     }
-  }
-  return lex;
+    return lex;
+  }();
 }
 
 const _packingWords = {
@@ -313,6 +366,7 @@ const _shoppingWords = {
   'shopping',
   'grocery',
   'groceries',
+  'supermarket',
 };
 
 const _pharmacyWords = {
@@ -325,6 +379,7 @@ const _pharmacyWords = {
   'medicine',
   'medicines',
   'firstaid',
+  'health',
 };
 
 const _stationeryWords = {
@@ -348,11 +403,94 @@ const _hardwareWords = {
   'diy',
 };
 
-const _campingWords = {'kamp', 'dogayuruyusu', 'camping', 'camp'};
+const _campingWords = {'kamp', 'dogayuruyusu', 'camping', 'camp', 'outdoor'};
 
-const _babyWords = {'bebek', 'baby', 'diaper'};
+const _babyWords = {'bebek', 'baby', 'diaper', 'nursery'};
 
-const _sportWords = {'spor', 'gym', 'fitness', 'workout', 'antreman', 'antrenman'};
+const _sportWords = {
+  'spor',
+  'gym',
+  'fitness',
+  'workout',
+  'antreman',
+  'antrenman',
+  'egzersiz',
+  'exercise',
+};
+
+const _movingWords = {
+  'tasinma',
+  'nakliye',
+  'evtasima',
+  'moving',
+  'relocation',
+  'move',
+};
+
+const _cleaningWords = {
+  'temizlik',
+  'evtemizligi',
+  'cleaning',
+  'chores',
+  'housework',
+};
+
+const _habitWords = {
+  'aliskanlik',
+  'rutin',
+  'rutinim',
+  'habit',
+  'habits',
+  'routine',
+  'dailyroutine',
+};
+
+const _giftWords = {
+  'hediye',
+  'hediyeler',
+  'gift',
+  'gifts',
+  'presents',
+  'present',
+};
+
+const _watchlistWords = {
+  'izlenecekler',
+  'izlenecek',
+  'film',
+  'dizi',
+  'watchlist',
+  'movies',
+  'shows',
+};
+
+const _eventWords = {
+  'etkinlik',
+  'parti',
+  'davet',
+  'dogumgunu',
+  'kutlama',
+  'piknik',
+  'party',
+  'event',
+  'birthday',
+  'picnic',
+  'celebration',
+};
+
+const _expenseWords = {
+  'butce',
+  'harcama',
+  'harcamalar',
+  'gider',
+  'giderler',
+  'fatura',
+  'faturalar',
+  'budget',
+  'expense',
+  'expenses',
+  'bills',
+};
 
 /// Türü adlandıran sözcüğün ardından gelebilenler ("bavul LİSTESİ",
 /// "tatil İÇİN", "market ALIŞVERİŞİ", "ecza DOLABI").
@@ -368,13 +506,35 @@ const _kindMarkers = {
   'icin',
   'alisverisi',
   'malzemeleri',
+  'ekipman',
+  'ekipmani',
+  'ekipmanlari',
   'esyalari',
+  'plani',
+  'planim',
+  'plan',
+  'planner',
+  'programi',
+  'program',
+  'takibi',
+  'takip',
+  'tracker',
+  'checklist',
+  'routine',
+  'schedule',
+  'planning',
+  'kit',
+  'ideas',
+  'fikirleri',
   'for',
+  'ev',
+  'home',
 };
 
 /// Yazılan/söylenen öbek liste TÜRÜNÜ mü adlandırıyor ("bavul listesi",
-/// "alışveriş listesi", "eczane", "kamp listesi"). Öyleyse madde değil başlık
-/// sayılır. En çok üç kelime; madde gibi duran uzun cümle tür değildir.
+/// "alışveriş listesi", "eczane", "kamp listesi", "taşınma planı"). Öyleyse
+/// madde değil başlık sayılır. En çok üç kelime; madde gibi duran uzun cümle
+/// tür değildir.
 SmartListKind? smartKindFromPhrase(String text) {
   final words = [
     for (final w in quickAscii(text).split(RegExp(r'[^a-z0-9]+')))
@@ -394,7 +554,29 @@ SmartListKind? smartKindFromPhrase(String text) {
   if (_hardwareWords.contains(w)) return SmartListKind.hardware;
   if (_campingWords.contains(w)) return SmartListKind.camping;
   if (_babyWords.contains(w)) return SmartListKind.baby;
-  if (_sportWords.contains(w)) return SmartListKind.sport;
+  if (_movingWords.contains(w)) return SmartListKind.moving;
+  if (_cleaningWords.contains(w)) return SmartListKind.cleaning;
+  if (_habitWords.contains(w)) return SmartListKind.habits;
+  if (_giftWords.contains(w)) return SmartListKind.gifts;
+  if (_watchlistWords.contains(w)) return SmartListKind.watchlist;
+  if (_eventWords.contains(w)) return SmartListKind.event;
+  if (_expenseWords.contains(w)) return SmartListKind.expense;
+  if (_sportWords.contains(w)) {
+    // "antrenman" / "workout" / "exercise" → workout, "spor çantası" / "gym bag" → sport.
+    if (w == 'workout' ||
+        w == 'exercise' ||
+        w == 'antrenman' ||
+        w == 'antreman') {
+      return SmartListKind.workout;
+    }
+    if (words.contains('cantasi') ||
+        words.contains('canta') ||
+        words.contains('bag')) {
+      return SmartListKind.sport;
+    }
+    if (w == 'spor' && words.length == 1) return SmartListKind.sport;
+    return SmartListKind.sport;
+  }
   return null;
 }
 
@@ -413,39 +595,37 @@ SmartListKind smartKindOf(Iterable<({bool grocery, bool packing})> items) {
   return SmartListKind.generic;
 }
 
-/// Bir notun akıllı liste türünü bulur (AL-2): önce kayıtlı `note.listKind`,
-/// yoksa başlık öbeği (`smartKindFromPhrase`), yoksa maddelerin eşleşmesi.
-SmartListKind detectNoteListKind(Note note, {required String locale}) {
-  final saved = smartListKindFromId(note.listKind);
-  if (saved != SmartListKind.generic) return saved;
-  final fromTitle = smartKindFromPhrase(note.displayTitle);
-  if (fromTitle != null) return fromTitle;
+/// Tüm 16 akıllı tür arasında maddelerden en iyi türü bulur (v2).
+///
+/// Önce alışveriş/bavul özel kontrolü (tek türe özgü maddelerle karar),
+/// ardından bütün ek türlerde ≥ 2 eşleşme ile en yüksek puanlı tür seçilir.
+SmartListKind detectSmartKindFromItems(
+  Iterable<String> itemTexts, {
+  required String locale,
+}) {
   final texts = [
-    for (final i in note.items)
-      if (!i.header && i.text.trim().isNotEmpty) i.text,
+    for (final t in itemTexts)
+      if (t.trim().isNotEmpty) t.trim(),
   ];
   if (texts.isEmpty) return SmartListKind.generic;
   final gLex = _groceryLex(locale);
   final pLex = packingLexicon(locale);
-  final base = smartKindOf([
-    for (final t in texts)
-      (
-        grocery: gLex.groupOf(t) >= 0,
-        packing: pLex.groupOf(t) >= 0,
-      ),
-  ]);
-  if (base != SmartListKind.generic) return base;
-  // Ek türler (AL-3): en az 2 eşleşme ile tanınır.
-  SmartListKind bestKind = SmartListKind.generic;
+  var gOnly = 0;
+  var pOnly = 0;
+  for (final t in texts) {
+    final g = gLex.groupOf(t) >= 0;
+    final p = pLex.groupOf(t) >= 0;
+    if (g && !p) gOnly++;
+    if (p && !g) pOnly++;
+  }
+  var bestKind = SmartListKind.generic;
   var bestHits = 1;
-  for (final kind in const [
-    SmartListKind.pharmacy,
-    SmartListKind.stationery,
-    SmartListKind.hardware,
-    SmartListKind.camping,
-    SmartListKind.baby,
-    SmartListKind.sport,
-  ]) {
+  for (final kind in SmartListKind.values) {
+    if (kind == SmartListKind.generic ||
+        kind == SmartListKind.shopping ||
+        kind == SmartListKind.packing) {
+      continue;
+    }
     final lex = lexiconForSmartKind(kind, locale);
     var hits = 0;
     for (final t in texts) {
@@ -456,7 +636,26 @@ SmartListKind detectNoteListKind(Note note, {required String locale}) {
       bestKind = kind;
     }
   }
-  return bestKind;
+  if (bestHits >= 2 && bestHits >= gOnly && bestHits >= pOnly) {
+    return bestKind;
+  }
+  if (pOnly > gOnly) return SmartListKind.packing;
+  if (gOnly > 0) return SmartListKind.shopping;
+  return SmartListKind.generic;
+}
+
+/// Bir notun akıllı liste türünü bulur (AL-2 + v2): önce kayıtlı
+/// `note.listKind`, yoksa başlık öbeği (`smartKindFromPhrase`), yoksa
+/// maddelerin eşleşmesi.
+SmartListKind detectNoteListKind(Note note, {required String locale}) {
+  final saved = smartListKindFromId(note.listKind);
+  if (saved != SmartListKind.generic) return saved;
+  final fromTitle = smartKindFromPhrase(note.displayTitle);
+  if (fromTitle != null) return fromTitle;
+  return detectSmartKindFromItems([
+    for (final i in note.items)
+      if (!i.header && i.text.trim().isNotEmpty) i.text,
+  ], locale: locale);
 }
 
 /// Sıralama anahtarı: türün kendi grupları önce (reyon/bavul sırası), öbür
@@ -498,8 +697,9 @@ List<NoteItem> sortItemsBySmartGroup(
   Map<String, int> learnedGroups = const {},
 }) {
   if (items.length < 2) return items;
-  final effectiveKind =
-      kind == SmartListKind.generic ? SmartListKind.shopping : kind;
+  final effectiveKind = kind == SmartListKind.generic
+      ? SmartListKind.shopping
+      : kind;
   final gLex = _groceryLex(locale);
   final pLex = packingLexicon(locale);
   final extraLex =

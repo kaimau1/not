@@ -4534,5 +4534,357 @@
   "lockForgotConfirmBody": "Mevcut şifrenle şifrelenmiş eski kilitli notların metni eski şifre olmadan bir daha çözülemez. Yine de kilit sıfırlansın mı?",
   "lockForgotConfirmAction": "Sıfırla",
   "starterShoppingTitle": "🛒 Örnek market listesi",
-  "starterWelcomeTitle": "⚡ Hızlı başlangıç"
+  "starterWelcomeTitle": "⚡ Hızlı başlangıç",
+  "smartListMoving": "Taşınma planı",
+  "smartListCleaning": "Ev temizliği",
+  "smartListHabits": "Alışkanlık takibi",
+  "smartListWorkout": "Antrenman programı",
+  "smartListGifts": "Hediye planlayıcı",
+  "smartListWatchlist": "İzlenecekler",
+  "smartListEvent": "Etkinlik ve davet",
+  "smartListExpense": "Bütçe ve harcama",
+  "smartListKindSelect": "Liste türünü seç",
+  "smartListCatalog": "Paketler ve katalog",
+  "smartListSearchCatalog": "Madde veya grup ara…",
+  "smartListStarterPacks": "Hazır başlangıç paketleri",
+  "smartListOpenWorkspace": "Çalışma alanında aç",
+  "smartListTripWizard": "Seyahat sihirbazı",
+  "smartListEventWizard": "Davet sihirbazı",
+  "smartListWizardDays": "Kaç gün?",
+  "smartListWizardWeather": "Hava durumu",
+  "smartListWeatherHot": "Sıcak",
+  "smartListWeatherMild": "Ilık",
+  "smartListWeatherCold": "Soğuk",
+  "smartListWeatherRainy": "Yağmurlu",
+  "smartListWizardStyle": "Seyahat türü",
+  "smartListStyleBeach": "Deniz ve plaj",
+  "smartListStyleCity": "Şehir gezisi",
+  "smartListStyleBusiness": "İş seyahati",
+  "smartListStyleIntl": "Yurt dışı",
+  "smartListStyleCamp": "Kamp",
+  "smartListWizardGuests": "Kaç kişi?",
+  "smartListEventStyle": "Etkinlik türü",
+  "smartListEventBirthday": "Doğum günü",
+  "smartListEventDinner": "Akşam yemeği",
+  "smartListEventPicnic": "Piknik",
+  "smartListApplyPlan": "Listeye ekle ({count} madde)",
+  "@smartListApplyPlan": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "smartListPackAdded": "“{name}” paketi eklendi",
+  "@smartListPackAdded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "smartListEditItem": "Maddeyi düzenle",
+  "smartListItemNameHint": "Madde adı",
+  "smartListItemQty": "Miktar",
+  "smartListItemUnit": "Birim",
+  "smartListAll": "Tümü",
+  "smartListResetDone": "Liste sıfırlandı",
+  "smartListWorkspaceEmpty": "Henüz madde yok; aşağıdan ekle veya hazır paket seç.",
+  "smartWorkspaceOpen": "Çalışma alanını aç",
+  "smartPillHabit": "Alışkanlık · {done}/{total} bugün",
+  "@smartPillHabit": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "smartPillMoving": "Taşınma · {done}/{total} hazır",
+  "@smartPillMoving": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "smartPillPacking": "Bavul · {done}/{total} hazır",
+  "@smartPillPacking": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "smartPillWorkout": "Antrenman · {done}/{total} egzersiz",
+  "@smartPillWorkout": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "smartPillCleaning": "Temizlik · {done}/{total} tamam",
+  "@smartPillCleaning": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "smartPillGifts": "Hediyeler · {done}/{total} hazır",
+  "@smartPillGifts": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "smartPillWatchlist": "İzlenecekler · {count} bekliyor",
+  "@smartPillWatchlist": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "smartPillExpense": "Bütçe · {total} ₺",
+  "@smartPillExpense": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "smartPillDefault": "Akıllı çalışma alanı ({count} kalan)",
+  "@smartPillDefault": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "habitDoneToday": "{done}/{total} bugün",
+  "@habitDoneToday": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "habitBestStreak": "En iyi seri: {days} gün",
+  "@habitBestStreak": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "habitStreakDays": "{days} gün seri",
+  "@habitStreakDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "habitWeeklyGoal": "Haftalık hedef",
+  "habitWeeklyProgress": "{done}/{goal} bu hafta",
+  "@habitWeeklyProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "goal": {
+        "type": "int"
+      }
+    }
+  },
+  "habitTimeMorning": "Sabah",
+  "habitTimeAfternoon": "Öğle",
+  "habitTimeEvening": "Akşam",
+  "habitFilterRemaining": "Bugün kalan",
+  "habitLast30Days": "Son 30 gün",
+  "habitAddHint": "Yeni alışkanlık ekle…",
+  "habitPrevWeek": "Önceki hafta",
+  "habitNextWeek": "Sonraki hafta",
+  "movingViewTimeline": "Zaman çizelgesi",
+  "movingViewRooms": "Oda ve koliler",
+  "movingPhaseMonth": "1 ay önce",
+  "movingPhaseWeek": "1 hafta önce",
+  "movingPhaseDay": "Taşınma günü",
+  "movingPhaseNewHome": "Yeni evde",
+  "movingRoomKitchen": "Mutfak",
+  "movingRoomLiving": "Salon",
+  "movingRoomBedroom": "Yatak odası",
+  "movingRoomBath": "Banyo",
+  "movingRoomStudy": "Çalışma",
+  "movingRoomGeneral": "Genel",
+  "movingBoxesCount": "{count} koli",
+  "@movingBoxesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "movingFragileCount": "{count} kırılacak",
+  "@movingFragileCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "movingFragile": "Kırılacak",
+  "movingOpenFirst": "Önce aç",
+  "movingBoxNumber": "Koli no (ör. #1)",
+  "movingAddHint": "Taşınma adımı veya koli ekle…",
+  "packingBagChecked": "Valiz",
+  "packingBagCabin": "El bagajı",
+  "packingBagWear": "Üstümde",
+  "packingReset": "Bavulu sıfırla",
+  "packingAddHint": "Eşya ekle (ör. 3 tişört)…",
+  "workoutSetsCount": "{done}/{total} set",
+  "@workoutSetsCount": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutRestTimer": "Dinlenme sayacı",
+  "workoutRestSeconds": "{sec} sn",
+  "@workoutRestSeconds": {
+    "placeholders": {
+      "sec": {
+        "type": "int"
+      }
+    }
+  },
+  "workoutAutoTimer": "Set sonrası otomatik başlat",
+  "workoutSetsLabel": "Set",
+  "workoutRepsLabel": "Tekrar / süre",
+  "workoutWeightLabel": "Ağırlık (ör. 20 kg)",
+  "workoutZoneWarmup": "Isınma",
+  "workoutZoneUpper": "Üst",
+  "workoutZoneLower": "Alt",
+  "workoutZoneCore": "Merkez",
+  "workoutZoneCardio": "Kardiyo",
+  "workoutZoneStretch": "Esneme",
+  "workoutReset": "Antrenmanı sıfırla",
+  "workoutAddHint": "Egzersiz ekle…",
+  "cleaningFreqDaily": "Günlük",
+  "cleaningFreqWeekly": "Haftalık",
+  "cleaningFreqMonthly": "Aylık",
+  "cleaningReset": "Döngüyü sıfırla",
+  "cleaningAddHint": "Temizlik adımı ekle…",
+  "giftStageIdea": "Fikir",
+  "giftStageBought": "Alındı",
+  "giftStageWrapped": "Paketlendi",
+  "giftStageGiven": "Verildi",
+  "giftRecipient": "Kime",
+  "giftPrice": "Bütçe (₺)",
+  "giftSummaryPlanned": "Toplam: {total} ₺ · Alınan: {bought} ₺",
+  "@giftSummaryPlanned": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      },
+      "bought": {
+        "type": "String"
+      }
+    }
+  },
+  "giftAddHint": "Hediye veya kişi ekle…",
+  "watchTypeMovie": "Film",
+  "watchTypeSeries": "Dizi",
+  "watchTypeBook": "Kitap",
+  "watchTypeDoc": "Belgesel",
+  "watchTypePodcast": "Podcast",
+  "watchStatusQueued": "Sırada",
+  "watchStatusWatching": "Devam ediyor",
+  "watchStatusDone": "Bitti",
+  "watchPlatform": "Platform veya yazar",
+  "watchRating": "Puanın",
+  "watchAddHint": "Film, dizi veya kitap ekle…",
+  "expenseCatMarket": "Market",
+  "expenseCatBills": "Fatura",
+  "expenseCatTransport": "Ulaşım",
+  "expenseCatFood": "Yemek",
+  "expenseCatHome": "Ev",
+  "expenseCatHealth": "Sağlık",
+  "expenseCatFun": "Keyif",
+  "expenseCatOther": "Diğer",
+  "expenseSummaryBar": "Toplam: {total} ₺ · Ödenen: {paid} ₺ · Kalan: {left} ₺",
+  "@expenseSummaryBar": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      },
+      "paid": {
+        "type": "String"
+      },
+      "left": {
+        "type": "String"
+      }
+    }
+  },
+  "expenseAmountHint": "Tutar (₺)",
+  "expenseAddHint": "Kalem ekle (ör. Elektrik 850)…",
+  "domainGearReset": "Listeyi sıfırla",
+  "domainAddHint": "Yeni madde ekle…",
+  "quickDropKeepOpen": "Seri ekle (ekledikten sonra açık kal)",
+  "quickDropSmartListChip": "Akıllı liste",
+  "quickDropPreviewSmartList": "✨ Yeni {kind}: {items}",
+  "@quickDropPreviewSmartList": {
+    "placeholders": {
+      "kind": {
+        "type": "String"
+      },
+      "items": {
+        "type": "String"
+      }
+    }
+  },
+  "quickDropSavedSmartList": "“{title}” akıllı listesi oluşturuldu",
+  "@quickDropSavedSmartList": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "quickDropAddedSerial": "Eklendi: “{title}”",
+  "@quickDropAddedSerial": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "quickDropUrgentBadge": "Acil"
 }

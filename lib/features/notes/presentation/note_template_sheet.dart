@@ -14,8 +14,10 @@ import '../../../core/utils/search_fold.dart';
 import '../data/quick_entry_memory.dart';
 import '../data/user_templates.dart';
 import '../domain/note.dart';
+import '../domain/note_item.dart';
 import '../domain/note_templates.dart';
 import '../domain/note_type.dart';
+import '../domain/smart_list.dart';
 import 'template_editor_screen.dart';
 import '../../../core/widgets/app_sheet.dart';
 import '../../../core/widgets/undo_snackbar.dart';
@@ -46,7 +48,14 @@ Future<T?> _showTemplateSheet<T>(BuildContext context, Widget sheet) =>
 
 /// Şablon seçiminin sonucu: [open] — not oluşunca editörde açılsın mı;
 /// [quick] — hızlı liste ekranından geldi (kayıt bildirimi gösterilir).
-typedef TemplateOutcome = ({NoteTemplateContent content, bool open, bool quick});
+typedef TemplateOutcome = ({
+  NoteTemplateContent content,
+  bool open,
+  bool quick,
+  String? listKind,
+  List<NoteItem>? richItems,
+  bool openWorkspace,
+});
 
 /// **AKILLI LİSTE** girdisi (kullanıcı isteği 2026-11-16): tek tip liste;
 /// market + bavul sözlüğü birlikte, tür yazılanlardan bulunur. Öneriler
@@ -74,6 +83,7 @@ QuickListArgs? quickListArgsFor(
   if (builtin != null) {
     final c = buildNoteTemplate(builtin, l10n);
     if (c.type != NoteType.checklist && c.type != NoteType.ordered) return null;
+    final sk = builtin.smartKind;
     return QuickListArgs(
       kind: 'b:${builtin.key}',
       title: c.title,
@@ -83,6 +93,7 @@ QuickListArgs? quickListArgsFor(
       seedItems: c.items,
       groups: templateSuggestions(builtin, l10n),
       grocery: builtin == NoteTemplate.shopping,
+      initialKind: sk == SmartListKind.generic ? null : sk,
     );
   }
   if (user != null && user.isList) {
@@ -118,7 +129,14 @@ Future<TemplateOutcome?> pickTemplate(
     final sheet = NoteTemplateSheet(initial: initial, initialUser: initialUser);
     final picked = await _showTemplateSheet<Object>(context, sheet);
     if (picked is NoteTemplateContent) {
-      return (content: picked, open: true, quick: false);
+      return (
+        content: picked,
+        open: true,
+        quick: false,
+        listKind: null,
+        richItems: null,
+        openWorkspace: false,
+      );
     }
     if (picked is! QuickListArgs || !context.mounted) return null;
     args = picked;
@@ -126,7 +144,14 @@ Future<TemplateOutcome?> pickTemplate(
   final result = await showQuickList(context, args);
   if (result == null) return null;
   ref.read(recentTemplatesProvider.notifier).remember(args.kind);
-  return (content: result.content, open: result.open, quick: true);
+  return (
+    content: result.content,
+    open: result.open,
+    quick: true,
+    listKind: result.listKind,
+    richItems: result.richItems.isEmpty ? null : result.richItems,
+    openWorkspace: result.openWorkspace,
+  );
 }
 
 /// Galeride seçilen şablon: hazır ya da kullanıcının kendi şablonu.

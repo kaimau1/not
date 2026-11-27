@@ -8910,4 +8910,488 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get starterWelcomeTitle => '⚡ Quick start';
+
+  @override
+  String get smartListMoving => 'Moving planner';
+
+  @override
+  String get smartListCleaning => 'Home cleaning';
+
+  @override
+  String get smartListHabits => 'Habit tracker';
+
+  @override
+  String get smartListWorkout => 'Workout planner';
+
+  @override
+  String get smartListGifts => 'Gift planner';
+
+  @override
+  String get smartListWatchlist => 'Watchlist';
+
+  @override
+  String get smartListEvent => 'Event & party';
+
+  @override
+  String get smartListExpense => 'Budget & expenses';
+
+  @override
+  String get smartListKindSelect => 'Choose list type';
+
+  @override
+  String get smartListCatalog => 'Packs & catalog';
+
+  @override
+  String get smartListSearchCatalog => 'Search items or groups…';
+
+  @override
+  String get smartListStarterPacks => 'Starter packs';
+
+  @override
+  String get smartListOpenWorkspace => 'Open in workspace';
+
+  @override
+  String get smartListTripWizard => 'Trip wizard';
+
+  @override
+  String get smartListEventWizard => 'Event wizard';
+
+  @override
+  String get smartListWizardDays => 'How many days?';
+
+  @override
+  String get smartListWizardWeather => 'Weather';
+
+  @override
+  String get smartListWeatherHot => 'Hot';
+
+  @override
+  String get smartListWeatherMild => 'Mild';
+
+  @override
+  String get smartListWeatherCold => 'Cold';
+
+  @override
+  String get smartListWeatherRainy => 'Rainy';
+
+  @override
+  String get smartListWizardStyle => 'Trip style';
+
+  @override
+  String get smartListStyleBeach => 'Beach';
+
+  @override
+  String get smartListStyleCity => 'City';
+
+  @override
+  String get smartListStyleBusiness => 'Business';
+
+  @override
+  String get smartListStyleIntl => 'International';
+
+  @override
+  String get smartListStyleCamp => 'Camping';
+
+  @override
+  String get smartListWizardGuests => 'How many guests?';
+
+  @override
+  String get smartListEventStyle => 'Event style';
+
+  @override
+  String get smartListEventBirthday => 'Birthday';
+
+  @override
+  String get smartListEventDinner => 'Dinner party';
+
+  @override
+  String get smartListEventPicnic => 'Picnic';
+
+  @override
+  String smartListApplyPlan(int count) {
+    return 'Add to list ($count items)';
+  }
+
+  @override
+  String smartListPackAdded(String name) {
+    return 'Added “$name” pack';
+  }
+
+  @override
+  String get smartListEditItem => 'Edit item';
+
+  @override
+  String get smartListItemNameHint => 'Item name';
+
+  @override
+  String get smartListItemQty => 'Quantity';
+
+  @override
+  String get smartListItemUnit => 'Unit';
+
+  @override
+  String get smartListAll => 'All';
+
+  @override
+  String get smartListResetDone => 'List reset';
+
+  @override
+  String get smartListWorkspaceEmpty =>
+      'No items yet; add below or pick a starter pack.';
+
+  @override
+  String get smartWorkspaceOpen => 'Open workspace';
+
+  @override
+  String smartPillHabit(int done, int total) {
+    return 'Habits · $done/$total today';
+  }
+
+  @override
+  String smartPillMoving(int done, int total) {
+    return 'Moving · $done/$total ready';
+  }
+
+  @override
+  String smartPillPacking(int done, int total) {
+    return 'Packing · $done/$total packed';
+  }
+
+  @override
+  String smartPillWorkout(int done, int total) {
+    return 'Workout · $done/$total done';
+  }
+
+  @override
+  String smartPillCleaning(int done, int total) {
+    return 'Cleaning · $done/$total done';
+  }
+
+  @override
+  String smartPillGifts(int done, int total) {
+    return 'Gifts · $done/$total ready';
+  }
+
+  @override
+  String smartPillWatchlist(int count) {
+    return 'Watchlist · $count queued';
+  }
+
+  @override
+  String smartPillExpense(String total) {
+    return 'Budget · $total ₺';
+  }
+
+  @override
+  String smartPillDefault(int count) {
+    return 'Smart workspace ($count left)';
+  }
+
+  @override
+  String habitDoneToday(int done, int total) {
+    return '$done/$total today';
+  }
+
+  @override
+  String habitBestStreak(int days) {
+    return 'Best streak: $days days';
+  }
+
+  @override
+  String habitStreakDays(int days) {
+    return '${days}d streak';
+  }
+
+  @override
+  String get habitWeeklyGoal => 'Weekly target';
+
+  @override
+  String habitWeeklyProgress(int done, int goal) {
+    return '$done/$goal this week';
+  }
+
+  @override
+  String get habitTimeMorning => 'Morning';
+
+  @override
+  String get habitTimeAfternoon => 'Afternoon';
+
+  @override
+  String get habitTimeEvening => 'Evening';
+
+  @override
+  String get habitFilterRemaining => 'Due today';
+
+  @override
+  String get habitLast30Days => 'Last 30 days';
+
+  @override
+  String get habitAddHint => 'Add a new habit…';
+
+  @override
+  String get habitPrevWeek => 'Previous week';
+
+  @override
+  String get habitNextWeek => 'Next week';
+
+  @override
+  String get movingViewTimeline => 'Timeline';
+
+  @override
+  String get movingViewRooms => 'Rooms & boxes';
+
+  @override
+  String get movingPhaseMonth => '1 month out';
+
+  @override
+  String get movingPhaseWeek => '1 week out';
+
+  @override
+  String get movingPhaseDay => 'Moving day';
+
+  @override
+  String get movingPhaseNewHome => 'New home';
+
+  @override
+  String get movingRoomKitchen => 'Kitchen';
+
+  @override
+  String get movingRoomLiving => 'Living room';
+
+  @override
+  String get movingRoomBedroom => 'Bedroom';
+
+  @override
+  String get movingRoomBath => 'Bathroom';
+
+  @override
+  String get movingRoomStudy => 'Study';
+
+  @override
+  String get movingRoomGeneral => 'General';
+
+  @override
+  String movingBoxesCount(int count) {
+    return '$count boxes';
+  }
+
+  @override
+  String movingFragileCount(int count) {
+    return '$count fragile';
+  }
+
+  @override
+  String get movingFragile => 'Fragile';
+
+  @override
+  String get movingOpenFirst => 'Open first';
+
+  @override
+  String get movingBoxNumber => 'Box # (e.g. #1)';
+
+  @override
+  String get movingAddHint => 'Add moving task or box…';
+
+  @override
+  String get packingBagChecked => 'Checked';
+
+  @override
+  String get packingBagCabin => 'Carry-on';
+
+  @override
+  String get packingBagWear => 'Wearing';
+
+  @override
+  String get packingReset => 'Reset packing';
+
+  @override
+  String get packingAddHint => 'Add item (e.g. 3 t-shirts)…';
+
+  @override
+  String workoutSetsCount(int done, int total) {
+    return '$done/$total sets';
+  }
+
+  @override
+  String get workoutRestTimer => 'Rest timer';
+
+  @override
+  String workoutRestSeconds(int sec) {
+    return '${sec}s';
+  }
+
+  @override
+  String get workoutAutoTimer => 'Auto-start after set';
+
+  @override
+  String get workoutSetsLabel => 'Sets';
+
+  @override
+  String get workoutRepsLabel => 'Reps / time';
+
+  @override
+  String get workoutWeightLabel => 'Weight (e.g. 20 kg)';
+
+  @override
+  String get workoutZoneWarmup => 'Warm-up';
+
+  @override
+  String get workoutZoneUpper => 'Upper';
+
+  @override
+  String get workoutZoneLower => 'Lower';
+
+  @override
+  String get workoutZoneCore => 'Core';
+
+  @override
+  String get workoutZoneCardio => 'Cardio';
+
+  @override
+  String get workoutZoneStretch => 'Stretch';
+
+  @override
+  String get workoutReset => 'Reset workout';
+
+  @override
+  String get workoutAddHint => 'Add exercise…';
+
+  @override
+  String get cleaningFreqDaily => 'Daily';
+
+  @override
+  String get cleaningFreqWeekly => 'Weekly';
+
+  @override
+  String get cleaningFreqMonthly => 'Monthly';
+
+  @override
+  String get cleaningReset => 'Reset cycle';
+
+  @override
+  String get cleaningAddHint => 'Add cleaning task…';
+
+  @override
+  String get giftStageIdea => 'Idea';
+
+  @override
+  String get giftStageBought => 'Bought';
+
+  @override
+  String get giftStageWrapped => 'Wrapped';
+
+  @override
+  String get giftStageGiven => 'Given';
+
+  @override
+  String get giftRecipient => 'Recipient';
+
+  @override
+  String get giftPrice => 'Budget (₺)';
+
+  @override
+  String giftSummaryPlanned(String total, String bought) {
+    return 'Total: $total ₺ · Bought: $bought ₺';
+  }
+
+  @override
+  String get giftAddHint => 'Add gift or recipient…';
+
+  @override
+  String get watchTypeMovie => 'Movie';
+
+  @override
+  String get watchTypeSeries => 'Series';
+
+  @override
+  String get watchTypeBook => 'Book';
+
+  @override
+  String get watchTypeDoc => 'Documentary';
+
+  @override
+  String get watchTypePodcast => 'Podcast';
+
+  @override
+  String get watchStatusQueued => 'Queued';
+
+  @override
+  String get watchStatusWatching => 'In progress';
+
+  @override
+  String get watchStatusDone => 'Finished';
+
+  @override
+  String get watchPlatform => 'Platform or author';
+
+  @override
+  String get watchRating => 'Your rating';
+
+  @override
+  String get watchAddHint => 'Add movie, series or book…';
+
+  @override
+  String get expenseCatMarket => 'Groceries';
+
+  @override
+  String get expenseCatBills => 'Bills';
+
+  @override
+  String get expenseCatTransport => 'Transport';
+
+  @override
+  String get expenseCatFood => 'Dining';
+
+  @override
+  String get expenseCatHome => 'Home';
+
+  @override
+  String get expenseCatHealth => 'Health';
+
+  @override
+  String get expenseCatFun => 'Fun';
+
+  @override
+  String get expenseCatOther => 'Other';
+
+  @override
+  String expenseSummaryBar(String total, String paid, String left) {
+    return 'Total: $total ₺ · Paid: $paid ₺ · Left: $left ₺';
+  }
+
+  @override
+  String get expenseAmountHint => 'Amount (₺)';
+
+  @override
+  String get expenseAddHint => 'Add item (e.g. Electric 850)…';
+
+  @override
+  String get domainGearReset => 'Reset list';
+
+  @override
+  String get domainAddHint => 'Add new item…';
+
+  @override
+  String get quickDropKeepOpen => 'Keep open (rapid-fire)';
+
+  @override
+  String get quickDropSmartListChip => 'Smart list';
+
+  @override
+  String quickDropPreviewSmartList(String kind, String items) {
+    return '✨ New $kind: $items';
+  }
+
+  @override
+  String quickDropSavedSmartList(String title) {
+    return 'Created “$title” smart list';
+  }
+
+  @override
+  String quickDropAddedSerial(String title) {
+    return 'Added to “$title”';
+  }
+
+  @override
+  String get quickDropUrgentBadge => 'Urgent';
 }
