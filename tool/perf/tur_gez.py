@@ -89,7 +89,7 @@ def main():
             step(nm, lambda lab=lab, nm=nm: rail(lab, p + nm))
         # ayar alt sayfaları
         for sub, nm in [("Görünüm", "16_gorunum"), ("Güvenlik", "17_guvenlik"), ("Kalem, yazım", "18_kalem"),
-                        ("Notlar ve klasörler", "19_notlar_klasorler"), ("Kişiselleştir", "20_kisisel"),
+                        ("Notlar ve klasörler", "19_notlar_klasorler"), ("(Arayüz düzeni|Kişiselleştir)", "20_kisisel"),
                         ("Sesli dinle", "22_ses")]:
             def f(sub=sub, nm=nm):
                 tap_label(r"^" + sub, wait=2.2)

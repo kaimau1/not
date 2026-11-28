@@ -5,11 +5,15 @@ işaretle (`[x]`) ya da bana "3. madde tamam / bozuk" de. Bozuksa: ekran görün
 ekran kaydı alıp gönder, hangi notta olduğunu söyle. Yapamadığını silme, "denemedim" yaz.
 
 (Her maddenin adım adım uzun hâli geliştirici belgelerindeki "cihaz turu" listesinde; gerekmedikçe
-oraya bakman gerekmez. Son güncelleme: 27 Kasım 2026.)
+oraya bakman gerekmez. Son güncelleme: 28 Kasım 2026.)
 
 ## Telefonda bak
 
-- [ ] **Süz levhası, Antalia'nın kaldırılması, yazım önerileri, 3 yeni dil (27 Kasım, bulutta yazıldı — cihazda doğrulanmadı; A/B yapılamadı, cihaz yoktu)**
+- [ ] **Birleşik Görünüm stüdyosu, Arayüz düzeni, Ekler yenilemesi ve sabit medya klavyesi (28 Kasım — MatePad 11 tablet `9006`/`9007` ve Chrome Web'de doğrulandı; Android telefon kontrolü açık)**
+  Nerede/Nasıl: (1) Ana ekran / Ayarlar / Takvim / Not içinden Görünüm stüdyosunu aç → her temada **Otomatik / Açık / Koyu** tek satırda taşmadan duruyor mu (`360 dp` dahil); **"Notlara da uygula"** açıkken özel zemini olmayan notlar ana ekran zeminini alıyor mu. (2) Ayarlar → **Arayüz düzeni** → 4 katlanabilir başlık temiz görünüyor mu. (3) Telefonda sabit görsel/PDF varken klavyeyi aç → yazı alanı ferah mı, **Küçült** ve **Klavyeyi gizle** düğmeleri çalışıyor mu; karışık çoklu ek seçimi, tüm yüzeylerde yeniden adlandırma ve ek şeridi **Tümü** yöneticisi düzgün mü.
+  Yanlışsa: ekran görüntüsü at. *(Not: MatePad 11 `9007`'de stüdyo, Arayüz düzeni, Şablonlar v2, Akıllı Liste v2 ve sabit PDF `Küçült`/`Klavyeyi gizle` ile Chrome Web'de sol ray kip geçişi/`"Botanik bahçe"` zemin yayılımı/ekler akışı doğrulandı; dar ekran `"Otomatik"` satır sarma düzeltmesi `9007`'de doğrulandı.)*
+
+- [ ] **Süz levhası, Antalia'nın kaldırılması, yazım önerileri, 3 yeni dil (27 Kasım — MatePad 11 `9006`/`9007`'de `Görünüm ve süz`, `Antalia'nın kaldırılması`, `Notlar ve klasörler` ve `Arapça RTL` [Ayarlar + Ana ekran] doğrulandı; telefon, dikte ve yazım önerisi açık)**
   Nerede/Nasıl: (1) Ana ekran → arama kutusundaki süz düğmesi → "Görünüm ve süz" not menüsüne benziyor mu; üstteki tutamaktan aşağı çekince kapanıyor mu. (2) Ayarlar → Sesli dinle ve dikte → "Türkçe ses" seçeneği yok mu, "Ses seçimi"nde Türkçe/İngilizce/Arapça/Endonezce/Malayca sesler listeleniyor ve örnek cümle okunuyor mu; Ayarlar → Hakkında'da APK sürümü yeni, telefon depolamasında uygulama ~50 MB küçüldü mü. (3) Yazım "Yalnız göster": "lütfn", "hseap", "akşma" yazıp kelimeye dokun → öneride "lütfen", "hesap", "akşam" var mı; "çoğalt", "çevrilir" çizilmiyor mu; not ⋮ → Yazımı denetle aynı önerileri veriyor mu. (4) Ayarlar → Görünüm → Dil → Bahasa Melayu / Bahasa Indonesia / العربية: metinler o dilde mi; Arapçada ekran sağdan sola doğru diziliyor ve hiçbir yer taşmıyor mu; dikte o dilde dinliyor mu; Endonezce yazarken Türkçe düzeltme ("saya → şaya") olmuyor mu. (5) Ayarlar → Notlar ve klasörler: başlıklı gruplar (Hareketler, Takvim, Sıralama ve görünüm, Paylaşılan notlar, Ekler) görünüyor mu.
   Yanlışsa: madde numarasını yaz, ekran görüntüsü at.
 
@@ -440,19 +444,19 @@ oraya bakman gerekmez. Son güncelleme: 27 Kasım 2026.)
 
 ## Bilgisayarda (web) bak
 
-- [ ] **P77 web bulguları** — yazıldı, tarayıcıda doğrulanmadı *(Chrome misafir doğrulaması `2026-11-27`: `1440x900` şeftali misafir afişi, not içinde ince şerit, çoğaltma bildirimi sağ altta rayı örtmeden, `Ayarlar`/`Gizlilik` 640 px ortalı, `360x800` taşmasız; OS koyu tema / yeni profil yazı boyutu + Firefox/Safari açık)*
+- [ ] **P77 web bulguları** — yazıldı, tarayıcıda doğrulanmadı *(Chrome `web/_headers` tam CSP misafir doğrulaması `2026-11-27` & `2026-11-28`: `0` CSP/konsol hatası, `1440x900` şeftali misafir afişi, not içinde ince şerit, çoğaltma bildirimi sağ altta rayı örtmeden, sol ray Açık/Koyu/Otomatik hızlı geçişi, Görünüm stüdyosu + `"Notlara da uygula"`, `#/personalize` `3` profil + `4` grup, `Ayarlar`/`Gizlilik` 640 px ortalı, kontrol listesi tıklamasında yukarı kayma yok, `360x800` dar ekran taşmasız [Otomatik tek satır düzeltmesi `9007` ile doğrulandı]; OS koyu tema / yeni profil yazı boyutu + Firefox/Safari açık)*
   Nerede: web, geniş pencere (1440+) ve 360 dar pencere.
   Nasıl: "Yenilikler" / "Silindi" bildirimi sağ altta mı (sol rayı örtmüyor); misafir hesapta afiş mor değil, geniş ekranda düğmeler metnin yanında, not açıkken ince şerit; Premium ve Ayarlar ortada; Gizlilik başlıklı ve dar ekranda düzgün; işletim sistemi koyuyken açılış açık (uygulama Koyu seçili değilse); yeni tarayıcı profilinde yazı boyu "Büyük".
   Doğruysa: hiçbir bildirim rayı örtmüyor, satırlar yarım kalmıyor, açılışta beyaz/koyu sıçrama yok.
 
-- [ ] **Masaüstünde "Görünüm ve süz" levhası ortada, en çok 560 dp (KT-2); dar pencerede takvim şeridinde tek harf gün adı yok (KT-3); `/delete-account` sayfası (oturumsuz açınca giriş sonrası oraya döner) (P64/P69)** *(Chrome `2026-11-27`: `KT-2` 560 px ortalı, `KT-3` `27 Cum/28 Cmt...` 3 harfli adlar, `#/delete-account` sayfası ve `0` CSP hatası doğrulandı; Google girişiyle `/delete-account` dönüşü kullanıcı hesabıyla açık)*
+- [ ] **Masaüstünde "Görünüm ve süz" levhası ortada, en çok 560 dp (KT-2); dar pencerede takvim şeridinde tek harf gün adı yok (KT-3); `/delete-account` sayfası (oturumsuz açınca giriş sonrası oraya döner) (P64/P69)** *(Chrome `2026-11-27` & `2026-11-28`: `KT-2` 560 px ortalı, `KT-3` `27 Cum/28 Cmt...` 3 harfli adlar, `#/delete-account` sayfası ve `0` CSP/konsol hatası doğrulandı; Google girişiyle `/delete-account` dönüşü kullanıcı hesabıyla açık)*
 
-- [ ] **21. Web temel tur** *(Chrome `2026-11-27`: IndexedDB yenilemede `"IndexedDB Kalici Test"` korundu ve Mağaza Kipi v2 çalıştı; Google girişiyle telefona senkron kullanıcı hesabıyla açık)*
+- [ ] **21. Web temel tur** *(Chrome `2026-11-27` & `2026-11-28`: `IndexedDB` yenilemede `"IndexedDB Kalici Test"` korundu; Şablonlar v2, Akıllı Liste v2, Hızlı Ekle ve Mağaza Kipi v2 çalıştı; Google girişiyle telefona senkron kullanıcı hesabıyla açık)*
   Nerede: tarayıcıda uygulama.
   Nasıl: aç, giriş yap, not yaz → telefonda görünüyor mu; pencereyi daralt-genişlet; yedek kaydet/geri yükle.
   Doğruysa: not 20 sn içinde telefonda; liste ve açık not yerinde kalıyor.
 
-- [ ] **22. Klavye ve fare** *(Chrome `2026-11-27`: `Tab` ile erişilebilirlik düğümlerine geçiş + sol ray `Klavye kısayolları` penceresi doğrulandı; `Ctrl+/` Türkçe Q `Ctrl+Shift+/` + `Ctrl+NumpadDivide` yedekleri `AppShortcuts`'a eklendi; `Ctrl+tekerlek` ve madde metni seçimi elle bakılacak)*
+- [ ] **22. Klavye ve fare** *(Chrome `2026-11-27` & `2026-11-28`: `Tab` ile erişilebilirlik düğümlerine geçiş + sol ray `Klavye kısayolları` + `Ctrl+/` kısayol penceresi doğrulandı; `Ctrl+/` Türkçe Q `Ctrl+Shift+/` + `Ctrl+NumpadDivide` yedekleri `AppShortcuts`'a eklendi; `Ctrl+tekerlek` ve madde metni seçimi elle bakılacak)*
   Nerede: web.
   Nasıl: Ctrl+/ ile kısayol penceresini aç, listedeki tuşları dene; Tab ile gez; Ctrl+tekerlek; madde metnini fareyle seç.
   Doğruysa: kısayollar çalışıyor, odak halkası görünüyor, Ctrl+tekerlek sayfayı değil sütunları büyütüyor; seçim yalnız açık yeşil.

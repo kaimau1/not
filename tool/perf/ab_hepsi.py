@@ -152,11 +152,12 @@ def _confirm_installer(stop, marker="Ölçüm"):
 def install(apk, marker="Ölçüm"):
     import threading
     wake()   # ekran kapalıyken kurulum pencereleri görünmez → adb install 300 sn asılıyordu (2026-11-18)
+    sh("wm dismiss-keyguard")
     stop = threading.Event()
     th = threading.Thread(target=_confirm_installer, args=(stop, marker), daemon=True)
     th.start()
     try:
-        r = subprocess.run([ADB, "install", "-r", apk], capture_output=True,
+        r = subprocess.run([ADB, "install", "-r", "-d", apk], capture_output=True,
                            text=True, timeout=300)
     finally:
         stop.set(); th.join(timeout=5)

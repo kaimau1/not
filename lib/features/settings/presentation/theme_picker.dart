@@ -53,17 +53,26 @@ class ThemeBrightnessSegmented extends ConsumerWidget {
             Icons.brightness_auto_outlined,
             size: AppIconSize.xs,
           ),
-          label: Text(l10n.brightnessModeAuto),
+          label: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(l10n.brightnessModeAuto, maxLines: 1, softWrap: false),
+          ),
         ),
         ButtonSegment(
           value: AppBrightnessMode.light,
           icon: const Icon(Icons.light_mode_outlined, size: AppIconSize.xs),
-          label: Text(l10n.brightnessModeLight),
+          label: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(l10n.brightnessModeLight, maxLines: 1, softWrap: false),
+          ),
         ),
         ButtonSegment(
           value: AppBrightnessMode.dark,
           icon: const Icon(Icons.dark_mode_outlined, size: AppIconSize.xs),
-          label: Text(l10n.brightnessModeDark),
+          label: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(l10n.brightnessModeDark, maxLines: 1, softWrap: false),
+          ),
         ),
       ],
       selected: {mode},

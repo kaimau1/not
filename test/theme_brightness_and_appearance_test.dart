@@ -191,6 +191,14 @@ void main() {
         find.byKey(const ValueKey('appearance-tab-layout')),
         findsOneWidget,
       );
+      if (size.width <= 360 && mode != AppearanceContext.note) {
+        // 360 dp dar ekranda "Otomatik | Açık | Koyu" tek satırda kalmalı.
+        final autoFinder = find.text('Otomatik').last;
+        final autoLabel = tester.widget<Text>(autoFinder);
+        expect(autoLabel.maxLines, 1);
+        expect(autoLabel.softWrap, isFalse);
+        expect(tester.getSize(autoFinder).height, lessThanOrEqualTo(24));
+      }
 
       await tester.tap(find.byKey(const ValueKey('appearance-tab-background')));
       await tester.pumpAndSettle();
@@ -200,6 +208,7 @@ void main() {
     }
 
     await pumpStudio(const Size(360, 800), AppearanceContext.home);
+
     await pumpStudio(const Size(1280, 800), AppearanceContext.calendar);
     await pumpStudio(
       const Size(360, 800),
