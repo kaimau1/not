@@ -200,6 +200,23 @@ extension _NoteEditorBottomBarBuild on _NoteEditorScreenState {
                 // şerit (kullanıcı bulgusu 2026-11-02: "ekler hâlâ webte
                 // gelmiyor").
                 if (kIsWeb) WebAttachmentsBanner(attachments: note.attachments),
+                // ALIŞVERİŞ ÖZET ÇUBUĞU: sabit yükseklik (44 dp), animasyonsuz;
+                // klavye açıkken KeyboardSwitch ile gizlenir (S17 uyumlu).
+                if (!_readOnly &&
+                    note.type == NoteType.checklist &&
+                    note.listMode == ListMode.shopping)
+                  KeyboardSwitch(
+                    open: const SizedBox.shrink(),
+                    closed: NoteSlice<List<NoteItem>>(
+                      source: _noteN,
+                      select: (n) => n.items,
+                      builder: (context, items) => ShoppingSummaryBar(
+                        items: items,
+                        accentColor: NoteAccent.maybeOf(context)?.accent,
+                        onFinishChecked: _finishShoppingList,
+                      ),
+                    ),
+                  ),
                 // Yatay ekranda klavye + çubuk ekranı aşabilir; çubuk taşmak
                 // yerine kendi içinde kaydırılır (Flexible + kaydırma).
                 //

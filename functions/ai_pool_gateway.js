@@ -123,6 +123,7 @@ exports.sharedAiPoolGenerate = onCall(
         cost,
         sanitized.appId,
         new Date(),
+        sanitized.taskProfile || null,
       );
       if (!r.ok) {
         if (!poolSnap.exists) {
@@ -150,6 +151,9 @@ exports.sharedAiPoolGenerate = onCall(
     if (!reservation.ok) {
       if (reservation.reason === "rate-limited") {
         throw new HttpsError("resource-exhausted", "rate-limited");
+      }
+      if (reservation.reason === "daily-quota-exceeded") {
+        throw new HttpsError("resource-exhausted", "daily-quota-exceeded");
       }
       throw new HttpsError("resource-exhausted", "insufficient-credits");
     }

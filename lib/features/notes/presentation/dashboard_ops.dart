@@ -9,17 +9,20 @@ extension _DashboardOps on _DashboardScreenState {
     Note note, {
     required bool searching,
     DateTime? calendarDay,
+    bool contextNow = false,
   }) {
     final hit = _cardCache[note.id];
     if (hit != null &&
         identical(hit.$1, note) &&
         hit.$2 == searching &&
-        hit.$3 == calendarDay) {
-      return hit.$4;
+        hit.$3 == calendarDay &&
+        hit.$4 == contextNow) {
+      return hit.$5;
     }
     final card = NoteCard(
       note: note,
       calendarDay: calendarDay,
+      contextNow: contextNow,
       liveQuery: searching ? _liveQuery : null,
       frame: (child, {required focused, required open}) => _FocusHalo(
         focused: focused,
@@ -28,7 +31,7 @@ extension _DashboardOps on _DashboardScreenState {
         child: child,
       ),
     );
-    _cardCache[note.id] = (note, searching, calendarDay, card);
+    _cardCache[note.id] = (note, searching, calendarDay, contextNow, card);
     return card;
   }
 

@@ -112,7 +112,7 @@ QuickListArgs? quickListArgsFor(
   return null;
 }
 
-/// Bu liste şablonları kendi etkileşimli çalışma alanını doğrudan açar (v2).
+/// Bu liste şablonları kendi liste kipiyle doğrudan not editöründe açılır.
 bool _opensDirectWorkspace(NoteTemplate t) => switch (t) {
   NoteTemplate.habits ||
   NoteTemplate.moving ||
@@ -151,9 +151,9 @@ class _DirectWorkspacePick {
   final String? recentKey;
 }
 
-/// **ŞABLONDAN NOT — TEK KAPI** (kullanıcı isteği 2026-11-15). Uzmanlaşmış v2
-/// şablonları (alışkanlık, taşınma, bavul, antrenman, temizlik, hediye,
-/// izleme, harcama) tek dokunuşla doğrudan kendi çalışma alanına açılır;
+/// **ŞABLONDAN NOT — TEK KAPI** (kullanıcı isteği 2026-11-15). Uzmanlaşmış
+/// şablonlar (alışkanlık, taşınma, bavul, antrenman, temizlik, hediye,
+/// izleme, harcama) doğrudan kendi liste kipiyle not editöründe açılır;
 /// alışveriş/yapılacaklar/kişisel listeler hızlı listeye, yazı şablonları
 /// önizlemeye gider.
 Future<TemplateOutcome?> pickTemplate(
@@ -177,7 +177,7 @@ Future<TemplateOutcome?> pickTemplate(
       quick: false,
       listKind: smartListKindId(initial.smartKind),
       richItems: null,
-      openWorkspace: true,
+      openWorkspace: false,
     );
   }
   var args = quickListArgsFor(context, builtin: initial, user: initialUser);
@@ -213,7 +213,7 @@ Future<TemplateOutcome?> pickTemplate(
         quick: false,
         listKind: smartListKindId(picked.kind),
         richItems: null,
-        openWorkspace: true,
+        openWorkspace: false,
       );
     }
     if (picked is! QuickListArgs || !context.mounted) return null;
@@ -228,7 +228,7 @@ Future<TemplateOutcome?> pickTemplate(
     quick: true,
     listKind: result.listKind,
     richItems: result.richItems.isEmpty ? null : result.richItems,
-    openWorkspace: result.openWorkspace,
+    openWorkspace: false,
   );
 }
 

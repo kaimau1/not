@@ -192,6 +192,7 @@ class FoldersRepository {
     String icon = NoteFolder.defaultIcon,
     bool hidden = false,
     int? color,
+    String systemRole = '',
   }) async {
     final doc = _folders.doc();
     unawaited(
@@ -203,10 +204,39 @@ class FoldersRepository {
           hidden: hidden,
           color: color,
           ownerId: uid,
+          systemRole: systemRole,
         ).toMap(),
       ),
     );
     return doc.id;
+  }
+
+  /// "Hızlı Not" sistem klasörünü bulur; yoksa `'bolt'` simgesi ve
+  /// [NoteFolder.roleQuickInbox] rolüyle oluşturup kimliğini döndürür.
+  Future<String> ensureQuickInboxFolder({
+    required String name,
+    Iterable<NoteFolder> existingFolders = const [],
+  }) async {
+    for (final f in existingFolders) {
+      if (f.isQuickInbox) return f.id;
+    }
+    final normalized = name.trim().toLowerCase();
+    for (final f in existingFolders) {
+      if (f.name.trim().toLowerCase() == normalized) {
+        unawaited(
+          _folders.doc(f.id).set({
+            'systemRole': NoteFolder.roleQuickInbox,
+          }, SetOptions(merge: true)),
+        );
+        return f.id;
+      }
+    }
+    return createFolder(
+      name,
+      icon: 'bolt',
+      color: 0,
+      systemRole: NoteFolder.roleQuickInbox,
+    );
   }
 
   void updateFolder(

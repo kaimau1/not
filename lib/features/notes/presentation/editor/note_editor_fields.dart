@@ -21,6 +21,10 @@ mixin _NoteEditorFields on ConsumerState<NoteEditorScreen> {
   /// En son çizilen ek sayısı — artışı yakalamak için (silme yanıp sönmez).
   int? _lastAttachmentCount;
 
+  /// Akıllı liste üst şeridi önbelleği: düz madde ekle/sil işlemlerinde
+  /// (özellikle `ListMode.general`) başlık ağacı yeniden kurulmaz (S50 bütçesi).
+  (Object, Widget)? _modeHeaderCache;
+
   /// Ek sayısı arttıysa rozeti iki kez yakar.
   /// Denetleyicilerin en son beslendiği not ve tema parlaklığı (bkz.
   /// build'deki besleme bloğu).
@@ -83,8 +87,6 @@ mixin _NoteEditorFields on ConsumerState<NoteEditorScreen> {
 
   AttachmentRepository? _attachmentRepo;
 
-  DecisionService? _decisions;
-
   /// Süren DOSYA işinin adı (kopyalama, yapıştırma, ek hazırlama).
   ///
   /// KÖK NEDEN (kullanıcı bulgusu 2026-08-10: "görüntü kopyalanırken veya
@@ -127,7 +129,21 @@ mixin _NoteEditorFields on ConsumerState<NoteEditorScreen> {
 
   bool _pendingAudioFile = false;
 
-  bool _pendingWorkspace = false;
+  /// Alışveriş kipinde reyon gruplama açık mı (yerel ValueNotifier: editör
+  /// kökünü yeniden kurmaz).
+  final _shopGroupedN = ValueNotifier<bool>(true);
+
+  /// Proje kipinde 3 maddelik Odak Modu açık mı.
+  final _projectFocusN = ValueNotifier<bool>(false);
+
+  /// Proje kipinde elle seçilen odak madde kimlikleri (en çok 3).
+  final _projectFocusIdsN = ValueNotifier<Set<String>>(const {});
+
+  /// Genel kipte "Alışveriş/Rutin kipine geç?" önerisi kapatıldı mı.
+  final _modeNudgeDismissedN = ValueNotifier<bool>(false);
+
+  /// Kural 1: 24 saatliğine kapatılmış geçici hayalet öneri anahtarları (UI-only).
+  final _ghostDismissedN = ValueNotifier<Set<String>>(const {});
 
   /// Yeni ek hazırlarken kullanılacak depo: paylaşılan notta SAHİBİN yolu.
   ///

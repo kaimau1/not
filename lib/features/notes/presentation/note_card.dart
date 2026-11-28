@@ -33,6 +33,7 @@ import 'app_background_layers.dart';
 import '../data/note_shares_repository.dart';
 import '../data/notes_repository.dart';
 import '../domain/archive_paper.dart';
+import '../domain/list_mode.dart';
 import '../domain/note.dart';
 import 'expiry_sheet.dart' show noteExpiryLeft;
 import '../domain/note_item.dart';
@@ -112,9 +113,14 @@ class NoteCard extends ConsumerWidget {
     this.showFolder = true,
     this.frame,
     this.calendarDay,
+    this.contextNow = false,
   });
 
   final Note note;
+
+  /// Günün saat dilimine veya kullanım alışkanlığına göre şu an öne çıkan
+  /// kilitli olmayan not kartında ince "Şimdi" rozeti gösterir (Faz 3).
+  final bool contextNow;
 
   /// Not takvimde bir GÜNE bağlıysa o gün: alt satırda "📅 27 Kas" hapı
   /// (kullanıcı isteği 2026-11-22: takvimden geldiği belli olsun).
@@ -646,6 +652,23 @@ class NoteCard extends ConsumerWidget {
                 showMoreCount: display.moreCount,
                 collapseChecked: !display.checked,
               ),
+              if ((contextNow ||
+                      (note.type == NoteType.checklist &&
+                          note.listMode != ListMode.general)) &&
+                  squeeze < 2) ...[
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
+                  children: [
+                    if (note.type == NoteType.checklist &&
+                        note.listMode != ListMode.general)
+                      _ListModeBadge(note: note, accent: accent),
+                    if (contextNow)
+                      _ContextNowBadge(accent: accent),
+                  ],
+                ),
+              ],
               // Ekler: belge kartı, küçük karolar, dosya/ses satırları (kapak
               // ayrıca kartın tepesinde). Zemin görseli ek sayılmaz.
               if (media != null &&
@@ -1372,5 +1395,109 @@ class _NotePreview extends StatelessWidget {
           ],
         );
     }
+  }
+}
+
+/// Ana ekran kartında salt okunur akıllı liste kipi ve ilerleme rozeti.
+class _ListModeBadge extends StatelessWidget {
+  const _ListModeBadge({required this.note, this.accent});
+
+  final Note note;
+  final Color? accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = _cardThemeOf(context);
+    final scheme = theme.colorScheme;
+    final l10n = context.l10n;
+    final color = accent ?? scheme.primary;
+    final items = [
+      for (final i in note.items)
+        if (!i.header && i.text.trim().isNotEmpty) i,
+    ];
+    final total = items.length;
+    final done = items.where((i) => i.checked).length;
+
+    final (icon, modeText) = switch (note.listMode) {
+      ListMode.shopping => (Icons.shopping_cart_outlined, l10n.listModeShopping),
+      ListMode.routine => (Icons.repeat_rounded, l10n.listModeRoutine),
+      ListMode.template => (Icons.fact_check_outlined, l10n.listModeTemplate),
+      ListMode.project => (Icons.flag_outlined, l10n.listModeProject),
+      ListMode.general => (Icons.checklist_rounded, l10n.listModeGeneral),
+    };
+    final detail = total == 0
+        ? modeText
+        : note.listMode == ListMode.project
+        ? '$modeText · ${(done * 100 / total).round()}%'
+        : '$modeText · $done/$total';
+
+    return DecoratedBox(
+      key: ValueKey('card-mode-${note.listMode.name}'),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(AppRadius.s),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 12, color: color),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                detail,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: color,
+                  fontWeight: AppWeight.strong,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Günün saat dilimine uyan kilitli olmayan kartlarda ince "Şimdi" rozeti.
+class _ContextNowBadge extends StatelessWidget {
+  const _ContextNowBadge({this.accent});
+
+  final Color? accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = _cardThemeOf(context);
+    final scheme = theme.colorScheme;
+    final color = accent ?? scheme.tertiary;
+    return DecoratedBox(
+      key: const ValueKey('card-context-now'),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(AppRadius.s),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.schedule_outlined, size: 11, color: color),
+            const SizedBox(width: 3),
+            Text(
+              context.l10n.contextNowBadge,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: color,
+                fontWeight: AppWeight.strong,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -13,9 +13,11 @@ import 'package:notlar/features/notes/data/quick_entry_memory.dart';
 import 'package:notlar/features/notes/domain/note_item.dart';
 import 'package:notlar/features/notes/domain/quick_entry.dart';
 import 'package:notlar/features/notes/domain/quick_lexicon_data.dart';
+import 'package:notlar/features/notes/domain/list_mode.dart';
 import 'package:notlar/features/notes/domain/text_merge.dart';
+import 'package:notlar/features/notes/presentation/editor/items_editor.dart';
 import 'package:notlar/features/notes/presentation/editor/note_editor_screen.dart';
-import 'package:notlar/features/notes/presentation/editor/store_mode_screen.dart';
+import 'package:notlar/features/notes/presentation/editor/shopping_summary_bar.dart';
 import 'package:notlar/features/shopping/data/barcode_lookup.dart';
 import 'package:notlar/features/shopping/data/receipt_ocr_parser.dart';
 import 'package:notlar/features/shopping/data/shop_memory.dart';
@@ -34,19 +36,23 @@ void main() {
         unitPrice: 38.5,
         store: 'bim',
       ).applyToItem(base);
-      expect(updated.extras['p'], 38.5);
+      expect(updated.price, 38.5);
+      expect(updated.quantity, 2.0);
+      expect(updated.extras.containsKey('p'), isFalse);
       expect(updated.extras['s'], 'bim');
       expect(sameItems([base], [updated]), isFalse);
       expect(sameItemsVisually([base], [updated]), isFalse);
 
-      // 3-yönlü birleştirme: yerel extras değişikliği korunur.
+      // 3-yönlü birleştirme: yerel alanlar ve extras değişikliği korunur.
       final merged = mergeItems3([base], [updated], [base]);
-      expect(merged.single.extras['p'], 38.5);
+      expect(merged.single.price, 38.5);
       expect(merged.single.extras['s'], 'bim');
 
-      // Varsayılana dönünce extras tamamen temizlenir (S16 +0 bayt).
+      // Varsayılana dönünce extras ve fiyat tamamen temizlenir (S16 +0 bayt).
       final cleared = const ShopItemMeta().applyToItem(updated);
       expect(cleared.extras, isEmpty);
+      expect(cleared.price, isNull);
+      expect(cleared.toMap().containsKey('price'), isFalse);
       expect(cleared.toMap().containsKey('p'), isFalse);
     });
   });
@@ -338,166 +344,76 @@ KART *47,50
     });
   });
 
-  group('Mağaza Kipi v2 widget akışları', () {
-    Widget wrap(Widget child) => MaterialApp(
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      locale: const Locale('tr'),
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: child,
-    );
-
+  group('Doğrudan not üzerinde alışveriş kipi widget akışları', () {
     testWidgets(
-      'reyon başlıkları, atlama, −/+ adım, sola kaydır Yoktu koruma, bütçe ve tarif',
+      'daraltılabilir reyon başlıkları, Kural 5 ID bazlı −/+ miktar ve canlı özet',
       (tester) async {
         tester.view.physicalSize = const Size(412, 915);
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.reset);
 
         var items = <NoteItem>[
-          const NoteItem(id: '1', text: 'Domates (1 kg)'),
-          const NoteItem(id: '2', text: 'Süt (1 lt)'),
-        ];
-        final memoryN = ValueNotifier<ShopMemory>(
-          const ShopMemory(
-            budgets: {'n1': 500},
-            prices: {
-              'sut': [ShopPriceEntry(price: 38, store: 'bim', epochDay: 20780)],
-            },
+          const NoteItem(
+            id: '1',
+            text: 'Süt (1 lt)',
+            quantity: 1,
+            unit: 'lt',
+            price: 38,
           ),
-        );
-        addTearDown(memoryN.dispose);
-        var notifiedAtStore = false;
+          const NoteItem(
+            id: '2',
+            text: 'Domates (1 kg)',
+            quantity: 1,
+            unit: 'kg',
+            price: 40,
+          ),
+        ];
 
         await tester.pumpWidget(
-          wrap(
-            StoreModeScreen(
-              title: 'Haftalık Market',
-              noteId: 'n1',
-              isShared: true,
-              currentUserName: 'Fatih',
-              initialItems: items,
-              shopMemoryListenable: memoryN,
-              dueItems: const [(name: 'Ekmek', avgDays: 2, daysSince: 3)],
-              onToggleItem: (id) {
-                items = [
-                  for (final i in items)
-                    if (i.id == id) i.copyWith(checked: !i.checked) else i,
-                ];
-                return items;
-              },
-              onUpdateItem: (updated) {
-                items = [
-                  for (final i in items)
-                    if (i.id == updated.id) updated else i,
-                ];
-                return items;
-              },
-              onReplaceItems: (next) => items = next,
-              onAddItem: (raw) {
-                items = [
-                  ...items,
-                  NoteItem(id: 'added-${items.length}', text: raw),
-                ];
-                return items;
-              },
-              onSortByGroup: () => items,
-              onFinishChecked: () {
-                items = [
-                  for (final i in items)
-                    if (!i.checked) i,
-                ];
-                return items;
-              },
-              onRecordPrice: (t, p, {store = '', unit = ''}) {
-                memoryN.value = memoryN.value.withRecordedPrice(
-                  t,
-                  p,
-                  store: store,
-                  unit: unit,
-                );
-              },
-              onNotifyAtStore: () async {
-                notifiedAtStore = true;
-              },
+          StatefulBuilder(
+            builder: (ctx, setState) => MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              locale: const Locale('tr'),
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(
+                body: Column(
+                  children: [
+                    Expanded(
+                      child: ItemsEditor(
+                        items: items,
+                        showCheckboxes: true,
+                        listMode: ListMode.shopping,
+                        groupByAisle: true,
+                        onChanged: (next) => setState(() => items = next),
+                      ),
+                    ),
+                    ShoppingSummaryBar(items: items),
+                  ],
+                ),
+              ),
             ),
           ),
         );
         await tester.pumpAndSettle();
 
-        // Reyon başlıkları ve atlama çipleri görünür.
-        expect(
-          find.byKey(const ValueKey('store-aisle-header-0')),
-          findsOneWidget,
-        );
-        expect(
-          find.byKey(const ValueKey('store-aisle-header-2')),
-          findsOneWidget,
-        );
-        expect(find.byKey(const ValueKey('store-jump-0')), findsOneWidget);
-        expect(
-          find.byKey(const ValueKey('shop-budget-est-text')),
-          findsOneWidget,
-        );
+        // Reyon başlıkları görünür (Manav = 0, Süt & Kahvaltılık = 2).
+        expect(find.byKey(const ValueKey('aisle-header-0')), findsOneWidget);
+        expect(find.byKey(const ValueKey('aisle-header-2')), findsOneWidget);
+        expect(find.text('Toplam: 78 ₺'), findsOneWidget);
 
-        // + miktar adımı: Domates 1 kg -> 1,5 kg.
-        await tester.tap(find.byKey(const ValueKey('store-qty-plus-1')));
+        // Kural 5: Domates backing listede indeks 1'de, görselde Manav (0)
+        // altında ilk sırada; + dokunuşu id='2' üzerinden doğru satırı günceller!
+        await tester.tap(find.byKey(const ValueKey('shop-qty-inc-2')));
         await tester.pumpAndSettle();
-        expect(items.first.text, 'Domates (1,5 kg)');
+        expect(items.firstWhere((i) => i.id == '2').text, 'Domates (1,5 kg)');
+        expect(items.firstWhere((i) => i.id == '1').text, 'Süt (1 lt)');
+        expect(find.text('Toplam: 98 ₺'), findsOneWidget);
 
-        // Fiyat gir: Domates'e 40 ₺ yaz.
-        await tester.tap(find.byKey(const ValueKey('store-price-btn-1')));
+        // Manav başlığını daralt → Domates gizlenir, Süt görünür kalır.
+        await tester.tap(find.byKey(const ValueKey('aisle-header-0')));
         await tester.pumpAndSettle();
-        await tester.enterText(
-          find.byKey(const ValueKey('shop-price-input')),
-          '40',
-        );
-        await tester.tap(find.byKey(const ValueKey('shop-price-save')));
-        await tester.pumpAndSettle();
-        expect(ShopItemMeta.fromItem(items.first).unitPrice, 40);
-
-        // Süt'ü sepete at -> Fatih aldı rozeti ve Sepet: 38 ₺.
-        await tester.tap(find.byKey(const ValueKey('store-item-2')));
-        await tester.pumpAndSettle();
-        expect(ShopItemMeta.fromItem(items[1]).takenBy, 'Fatih');
-
-        // Domates'i sola kaydır -> Yoktu / Sonraya.
-        await tester.drag(
-          find.byKey(const ValueKey('store-item-1')),
-          const Offset(-400, 0),
-        );
-        await tester.pumpAndSettle();
-        expect(ShopItemMeta.fromItem(items.first).isUnavailable, isTrue);
-
-        // Alışverişi Bitir -> sepetteki Süt silinir, Yoktu işaretli Domates kalır!
-        await tester.tap(find.byKey(const ValueKey('store-mode-finish')));
-        await tester.pumpAndSettle();
-        expect(items.any((i) => i.id == '1'), isTrue);
-        expect(items.any((i) => i.id == '2'), isFalse);
-
-        // Bitmiş olabilir şeridinden Ekmek ekle.
-        await tester.tap(find.byKey(const ValueKey('shop-due-Ekmek')));
-        await tester.pumpAndSettle();
-        expect(items.any((i) => i.text == 'Ekmek'), isTrue);
-
-        // Marketteyim bildirimi tetiklenir.
-        await tester.tap(find.byKey(const ValueKey('store-mode-at-store')));
-        await tester.pumpAndSettle();
-        expect(notifiedAtStore, isTrue);
-
-        // Tarif paketleri levhasından Menemen ekle -> 4 → 5 kişi ölçekle ve listeye ekle.
-        await tester.tap(find.byKey(const ValueKey('store-mode-recipes')));
-        await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const ValueKey('shop-recipe-menemen')));
-        await tester.pumpAndSettle();
-        await tester.tap(
-          find.byKey(const ValueKey('shop-recipe-servings-plus')),
-        );
-        await tester.pumpAndSettle();
-        await tester.tap(
-          find.byKey(const ValueKey('shop-recipe-add-selected')),
-        );
-        await tester.pumpAndSettle();
-        expect(items.any((i) => i.text.startsWith('Yumurta')), isTrue);
+        expect(find.byKey(const ValueKey('shop-qty-inc-2')), findsNothing);
+        expect(find.byKey(const ValueKey('shop-qty-inc-1')), findsOneWidget);
       },
     );
   });

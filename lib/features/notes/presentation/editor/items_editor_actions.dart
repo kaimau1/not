@@ -79,6 +79,7 @@ extension _ItemsActions on ItemsEditorState {
     // ayarları, çizgiyi kaldır, taşı, sil). Artık iki sıra: üstte madde işleri
     // simge düğmeleri, altta çizgi türleri — aynı türe yeniden basmak çizgiyi
     // kaldırır, ayar düğmesi renk/kalınlık levhasını açar.
+    final liveItem = _items.where((i) => i.id == item.id).firstOrNull ?? item;
     final _ItemAction? choice;
     try {
       choice = await showMenu<_ItemAction>(
@@ -86,20 +87,36 @@ extension _ItemsActions on ItemsEditorState {
       position: position,
       items: [
         _ItemMenuPanel(
-          starred: item.starred,
+          starred: liveItem.starred,
           canMove: widget.onMoveToPage != null,
-          canMoveUp: _canStepItem(item, -1),
-          canMoveDown: _canStepItem(item, 1),
+          canMoveUp: !_isGroupedShopping && !_isProjectFocused && _canStepItem(liveItem, -1),
+          canMoveDown: !_isGroupedShopping && !_isProjectFocused && _canStepItem(liveItem, 1),
           canTask:
               widget.onMakeTask != null &&
-              !item.header &&
-              item.text.trim().isNotEmpty,
+              !liveItem.header &&
+              liveItem.text.trim().isNotEmpty,
           canRemind:
               widget.onLineReminder != null &&
-              !item.header &&
-              item.text.trim().isNotEmpty,
-          header: item.header,
-          align: item.align,
+              !liveItem.header &&
+              liveItem.text.trim().isNotEmpty,
+          canQuickMeta:
+              widget.showCheckboxes &&
+              !liveItem.header &&
+              liveItem.text.trim().isNotEmpty,
+          canFocus:
+              widget.listMode == ListMode.project &&
+              widget.onToggleFocusItem != null &&
+              !liveItem.header &&
+              !liveItem.checked &&
+              liveItem.text.trim().isNotEmpty,
+          focusedInProject: widget.focusIds.contains(liveItem.id),
+          canBreakdown:
+              widget.onBreakdownItem != null &&
+              !liveItem.header &&
+              !liveItem.checked &&
+              liveItem.text.trim().isNotEmpty,
+          header: liveItem.header,
+          align: liveItem.align,
         ),
       ],
     );
@@ -108,6 +125,17 @@ extension _ItemsActions on ItemsEditorState {
     }
     if (!mounted || choice == null) return;
     switch (choice) {
+      case _ItemAction.postponeTomorrow:
+        _postponeItemTomorrowById(item.id);
+      case _ItemAction.meta:
+        unawaited(_openItemMetaById(item.id));
+      case _ItemAction.focus:
+        final current = _items.where((i) => i.id == item.id).firstOrNull;
+        if (current != null) widget.onToggleFocusItem?.call(current);
+      case _ItemAction.breakdown:
+        _commit();
+        final current = _items.where((i) => i.id == item.id).firstOrNull;
+        if (current != null) widget.onBreakdownItem?.call(current);
       case _ItemAction.star:
         _toggleStar(item);
       case _ItemAction.copyItem:

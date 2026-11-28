@@ -62,19 +62,21 @@ class HabitItemMeta {
   factory HabitItemMeta.fromItem(NoteItem item) {
     final ex = item.extras;
     final rawDays = ex[keyDays];
-    final days = <String>{
+    final days = NoteItem.normalizeDoneDays([
+      ...item.doneDays,
       if (rawDays is List)
         for (final d in rawDays)
           if (d is String && d.isNotEmpty) d,
-    }.toList()..sort();
+    ]);
     final rawF = (ex[keyFreq] as num?)?.toInt() ?? 7;
+    final cat = item.category.isNotEmpty
+        ? item.category
+        : (ex[keyCategory] as String? ?? '').trim();
     return HabitItemMeta(
-      doneDays: days.length > maxDays
-          ? days.sublist(days.length - maxDays)
-          : days,
+      doneDays: days,
       weeklyTarget: rawF.clamp(1, 7),
       timeOfDay: (ex[keyTime] as String? ?? '').trim(),
-      category: (ex[keyCategory] as String? ?? '').trim(),
+      category: cat,
     );
   }
 
@@ -95,12 +97,7 @@ class HabitItemMeta {
   HabitItemMeta toggledOn(String dayKey) {
     final next = {...doneDays};
     if (!next.add(dayKey)) next.remove(dayKey);
-    final sorted = next.toList()..sort();
-    return copyWith(
-      doneDays: sorted.length > maxDays
-          ? sorted.sublist(sorted.length - maxDays)
-          : sorted,
-    );
+    return copyWith(doneDays: NoteItem.normalizeDoneDays(next));
   }
 
   /// [today] dahil ya da dünden başlayarak ardışık gün serisi.
@@ -156,17 +153,19 @@ class HabitItemMeta {
   }
 
   NoteItem applyToItem(NoteItem item, {String? todayKey}) {
-    final next = Map<String, dynamic>.from(item.extras);
-    final sorted = doneDays.toSet().toList()..sort();
-    final capped = sorted.length > maxDays
-        ? sorted.sublist(sorted.length - maxDays)
-        : sorted;
-    _setOrRemove(next, keyDays, capped);
+    final next = Map<String, dynamic>.from(item.extras)
+      ..remove(keyDays)
+      ..remove(keyCategory);
+    final capped = NoteItem.normalizeDoneDays(doneDays);
     _setOrRemove(next, keyFreq, weeklyTarget == 7 ? null : weeklyTarget);
     _setOrRemove(next, keyTime, timeOfDay.trim());
-    _setOrRemove(next, keyCategory, category.trim());
     final checked = todayKey != null ? capped.contains(todayKey) : item.checked;
-    return item.copyWith(checked: checked, extras: next);
+    return item.copyWith(
+      checked: checked,
+      doneDays: capped,
+      category: category.trim(),
+      extras: next,
+    );
   }
 }
 
@@ -266,7 +265,10 @@ class PackingItemMeta {
     final bag = (ex[keyBag] as String? ?? 'checked').trim();
     return PackingItemMeta(
       bag: bags.contains(bag) ? bag : 'checked',
-      qty: rawQ is num ? rawQ.toDouble() : parsed?.value,
+      qty:
+          item.quantity ??
+          (rawQ is num ? rawQ.toDouble() : null) ??
+          parsed?.value,
     );
   }
 
@@ -277,18 +279,22 @@ class PackingItemMeta {
       );
 
   NoteItem applyToItem(NoteItem item, {bool syncTextQty = false}) {
-    final next = Map<String, dynamic>.from(item.extras);
+    final next = Map<String, dynamic>.from(item.extras)..remove(keyQty);
     _setOrRemove(next, keyBag, bag == 'checked' ? null : bag);
-    _setOrRemove(next, keyQty, qty != null && qty! > 1 ? qty : null);
+    final validQty = qty != null && qty! > 1 ? qty : null;
     var nextText = item.text;
     if (syncTextQty) {
       final base = quickBaseName(item.text);
-      final q = qty;
-      nextText = q != null && q > 1
-          ? quickCompose(base, formatQuickNumber(q))
+      nextText = validQty != null
+          ? quickCompose(base, formatQuickNumber(validQty))
           : base;
     }
-    return item.copyWith(text: nextText, extras: next);
+    return item.copyWith(
+      text: nextText,
+      quantity: validQty,
+      clearQuantity: validQty == null,
+      extras: next,
+    );
   }
 }
 
@@ -432,7 +438,7 @@ class GiftItemMeta {
     final rawP = ex[keyPrice];
     return GiftItemMeta(
       recipient: (ex[keyRecipient] as String? ?? '').trim(),
-      price: rawP is num ? rawP.toDouble() : null,
+      price: item.price ?? (rawP is num ? rawP.toDouble() : null),
       stage: stage,
     );
   }
@@ -455,12 +461,17 @@ class GiftItemMeta {
   }
 
   NoteItem applyToItem(NoteItem item) {
-    final next = Map<String, dynamic>.from(item.extras);
+    final next = Map<String, dynamic>.from(item.extras)..remove(keyPrice);
     _setOrRemove(next, keyRecipient, recipient.trim());
-    _setOrRemove(next, keyPrice, price != null && price! > 0 ? price : null);
     _setOrRemove(next, keyStage, stage == 'idea' ? null : stage);
+    final validPrice = price != null && price! > 0 ? price : null;
     final done = stage == 'bought' || stage == 'wrapped' || stage == 'given';
-    return item.copyWith(checked: done, extras: next);
+    return item.copyWith(
+      checked: done,
+      price: validPrice,
+      clearPrice: validPrice == null,
+      extras: next,
+    );
   }
 }
 
@@ -552,7 +563,7 @@ class ExpenseItemMeta {
     final rawP = ex[keyAmount];
     final cat = (ex[keyCategory] as String? ?? 'other').trim();
     return ExpenseItemMeta(
-      amount: rawP is num ? rawP.toDouble() : null,
+      amount: item.price ?? (rawP is num ? rawP.toDouble() : null),
       category: categories.contains(cat) ? cat : 'other',
     );
   }
@@ -567,14 +578,14 @@ class ExpenseItemMeta {
   );
 
   NoteItem applyToItem(NoteItem item) {
-    final next = Map<String, dynamic>.from(item.extras);
-    _setOrRemove(
-      next,
-      keyAmount,
-      amount != null && amount! > 0 ? amount : null,
-    );
+    final next = Map<String, dynamic>.from(item.extras)..remove(keyAmount);
     _setOrRemove(next, keyCategory, category == 'other' ? null : category);
-    return item.copyWith(extras: next);
+    final validAmount = amount != null && amount! > 0 ? amount : null;
+    return item.copyWith(
+      price: validAmount,
+      clearPrice: validAmount == null,
+      extras: next,
+    );
   }
 }
 

@@ -9,6 +9,7 @@ import '../../../l10n/generated/app_localizations_tr.dart';
 import '../../auth/presentation/auth_providers.dart';
 import '../../folders/data/folders_repository.dart';
 import '../../settings/settings_providers.dart';
+import '../domain/list_mode.dart';
 import '../domain/note.dart';
 import '../domain/note_item.dart';
 import '../domain/note_type.dart';
@@ -16,7 +17,7 @@ import 'notes_repository.dart';
 
 /// Faz 4 — **İlk 60 saniye "Vay Be" başlangıç notları** (PLAN §7.3):
 /// Yepyeni boş hesapta 2 etkileşimli örnek not hazır gelir:
-///  1. `🛒 Örnek Market Listesi` (3 reyonlu, hemen Mağaza Kipi'ni denetir)
+///  1. `🛒 Örnek Market Listesi` (3 reyonlu, doğrudan not üzerinde alışveriş kipi)
 ///  2. `⚡ Hızlı Başlangıç` (sesle ekle, belge tara, defterde çiz)
 ///
 /// Yalnızca hesap başına bir kez (`starterNotesSeededKeyFor`) ve not/klasör
@@ -43,6 +44,7 @@ List<Note> buildStarterNotes({bool english = false}) {
         id: 'starter_shopping',
         type: NoteType.checklist,
         listKind: 'shopping',
+        listMode: ListMode.shopping,
         title: l10n.starterShoppingTitle,
         tags: const ['shopping'],
         orderIndex: -now.millisecondsSinceEpoch.toDouble(),
@@ -50,22 +52,30 @@ List<Note> buildStarterNotes({bool english = false}) {
           NoteItem(
             id: 's1',
             text: 'Milk (2 lt)',
-            extras: {'q': 2, 'u': 'lt', 'g': 2},
+            quantity: 2,
+            unit: 'lt',
+            category: 'breakfast',
           ),
           NoteItem(
             id: 's2',
             text: 'Tomatoes (1 kg)',
-            extras: {'q': 1, 'u': 'kg', 'g': 0},
+            quantity: 1,
+            unit: 'kg',
+            category: 'produce',
           ),
           NoteItem(
             id: 's3',
             text: 'Sourdough bread (1 adet)',
-            extras: {'q': 1, 'u': 'adet', 'g': 1},
+            quantity: 1,
+            unit: 'adet',
+            category: 'bakery',
           ),
           NoteItem(
             id: 's4',
             text: 'Eggs (12 adet)',
-            extras: {'q': 12, 'u': 'adet', 'g': 2},
+            quantity: 12,
+            unit: 'adet',
+            category: 'breakfast',
           ),
         ],
       ),
@@ -77,7 +87,7 @@ List<Note> buildStarterNotes({bool english = false}) {
         items: const [
           NoteItem(
             id: 'w1',
-            text: 'Tap Store Mode above your shopping list for one-hand aisles & budget',
+            text: 'Manage aisles, quantities, and totals directly inside your shopping note',
           ),
           NoteItem(
             id: 'w2',
@@ -96,6 +106,7 @@ List<Note> buildStarterNotes({bool english = false}) {
       id: 'starter_shopping',
       type: NoteType.checklist,
       listKind: 'shopping',
+      listMode: ListMode.shopping,
       title: l10n.starterShoppingTitle,
       tags: const ['alışveriş'],
       orderIndex: -now.millisecondsSinceEpoch.toDouble(),
@@ -103,22 +114,30 @@ List<Note> buildStarterNotes({bool english = false}) {
         NoteItem(
           id: 's1',
           text: 'Süt (2 lt)',
-          extras: {'q': 2, 'u': 'lt', 'g': 2},
+          quantity: 2,
+          unit: 'lt',
+          category: 'breakfast',
         ),
         NoteItem(
           id: 's2',
           text: 'Domates (1 kg)',
-          extras: {'q': 1, 'u': 'kg', 'g': 0},
+          quantity: 1,
+          unit: 'kg',
+          category: 'produce',
         ),
         NoteItem(
           id: 's3',
           text: 'Ekşi maya ekmek (1 adet)',
-          extras: {'q': 1, 'u': 'adet', 'g': 1},
+          quantity: 1,
+          unit: 'adet',
+          category: 'bakery',
         ),
         NoteItem(
           id: 's4',
           text: 'Yumurta (15 adet)',
-          extras: {'q': 15, 'u': 'adet', 'g': 2},
+          quantity: 15,
+          unit: 'adet',
+          category: 'breakfast',
         ),
       ],
     ),

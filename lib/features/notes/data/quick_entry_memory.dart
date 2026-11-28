@@ -8,6 +8,7 @@ import '../../settings/settings_providers.dart';
 import '../domain/note_templates.dart';
 import '../domain/quick_entry.dart';
 import '../domain/quick_lexicon_data.dart';
+import '../domain/quick_suggestion_sanitizer.dart';
 import '../presentation/editor/auto_spell.dart';
 
 /// **HIZLI GİRİŞ HAFIZASI** (kullanıcı isteği 2026-11-15: "kişinin en çok
@@ -57,7 +58,9 @@ class QuickEntryMemory {
     final entries =
         [
           for (final e in (kinds[kind] ?? const {}).values)
-            if (e.$2 >= min) e,
+            if (e.$2 >= min &&
+                QuickSuggestionSanitizer.cleanItem(e.$1) != null)
+              (QuickSuggestionSanitizer.cleanItem(e.$1)!, e.$2),
         ]..sort((a, b) {
           final c = b.$2.compareTo(a.$2);
           return c != 0 ? c : quickAscii(a.$1).compareTo(quickAscii(b.$1));
@@ -82,7 +85,8 @@ class QuickEntryMemory {
     };
     final day = at != null ? _epochDay(at) : null;
     for (final raw in items) {
-      final name = quickBaseName(raw);
+      final name = QuickSuggestionSanitizer.cleanItem(raw);
+      if (name == null) continue;
       final key = quickAscii(name);
       if (key.isEmpty) continue;
       final old = next[key];
@@ -256,11 +260,22 @@ final quickEntryMemoryProvider =
 
 class QuickEntryMemoryNotifier extends Notifier<QuickEntryMemory> {
   static const _key = 'quick_entry_memory_v1';
+  static const _sanitizedKey = 'quick_entry_memory_sanitized_v1';
 
   @override
-  QuickEntryMemory build() => QuickEntryMemory.decode(
-    ref.watch(sharedPreferencesProvider).getString(_key),
-  );
+  QuickEntryMemory build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final raw = prefs.getString(_key);
+    final decoded = QuickEntryMemory.decode(raw);
+    if (raw != null && !(prefs.getBool(_sanitizedKey) ?? false)) {
+      final clean = QuickSuggestionSanitizer.sanitizeMemory(decoded);
+      prefs.setBool(_sanitizedKey, true);
+      final encoded = clean.encode();
+      if (encoded != raw) prefs.setString(_key, encoded);
+      return clean;
+    }
+    return decoded;
+  }
 
   void _save(QuickEntryMemory next) {
     state = next;

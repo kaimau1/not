@@ -395,6 +395,24 @@ extension _ItemsRow on ItemsEditorState {
                   // orada anlatılan hiza kök nedeni.
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Alt adım girintisi (Proje kipi AI bölme: parentId doluysa).
+                    if (item.extras['parentId'] != null)
+                      Padding(
+                        padding: EdgeInsetsDirectional.only(
+                          start: 16,
+                          end: 4,
+                          top: math.max(0.0, firstLineCenter - 9),
+                        ),
+                        child: Container(
+                          width: 2,
+                          height: 18,
+                          decoration: BoxDecoration(
+                            color: (_accent?.accent ?? scheme.primary)
+                                .withValues(alpha: 0.45),
+                            borderRadius: BorderRadius.circular(1),
+                          ),
+                        ),
+                      ),
                     if (dragHandle != null)
                       Padding(
                         padding: EdgeInsets.only(top: handleTop),
@@ -687,9 +705,14 @@ extension _ItemsRow on ItemsEditorState {
                     // yazarken satır her odakta yatayda oynuyordu. Yıldızlama sol
                     // bölgeye uzun basınca açılan menüde ([_showItemMenu]); burada
                     // yalnız YILDIZLI satırın işareti durur (dokununca kalkar).
-                    // Hatırlatıcı çipi İLK YAZI SATIRININ ORTASINA hizalı
-                    // (kullanıcı isteği 2026-11-08: "satırdaki yazıyla tam hizalı
-                    // olmalı" — satırın tepesine yapışıyordu). Çip sabit 22 dp.
+                    if (!_selectionMode && !item.header)
+                      ..._modeTrailingWidgets(
+                        context,
+                        item: item,
+                        checked: checked,
+                        firstLineCenter: firstLineCenter,
+                        scheme: scheme,
+                      ),
                     if (!_selectionMode && widget.lineTrailing != null)
                       Padding(
                         padding: EdgeInsets.only(
@@ -721,32 +744,81 @@ extension _ItemsRow on ItemsEditorState {
                 if (focused && !_selectionMode)
                   PositionedDirectional(
                     end: 0,
-                    // İlk satırın ortasına hizalı (kutucukla aynı çizgide).
-                    // 2026-11-01 (kullanıcı isteği: "silme x'ini 2 punto küçült,
-                    // hitbox'ını da daralt"): simge 20 → 18, dokunma alanı
-                    // 30×36 → 24×28 — yazının sonuna dokunurken madde kazara
-                    // silinmesin.
                     top: math.max(0.0, firstLineCenter - 14),
-                    // WEB'DE × İŞLEMİYORDU (kullanıcı bulgusu 2026-11-10): fare
-                    // basışı "alan dışı" sayılıp odağı düşürüyor, × bırakmadan
-                    // önce kayboluyordu (dokunmatikte alan dışı odağı bırakmaz).
-                    // Bölge alanın parçası sayılır: basış odağı korur.
                     child: TextFieldTapRegion(
-                      child: IconButton(
-                        key: ValueKey('item-remove-${item.id}'),
-                        tooltip: l10n.removeItem,
-                        icon: const Icon(Icons.close, size: AppIconSize.s),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints.tightFor(
-                          width: ItemsEditorState._kTrailingWidth - 4,
-                          height: 28,
-                        ),
-                        style: const ButtonStyle(
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        color: scheme.onSurfaceVariant.withValues(alpha: 0.8),
-                        onPressed: () => _removeItem(item),
-                      ),
+                      child:
+                          widget.listMode != ListMode.general &&
+                              widget.showCheckboxes &&
+                              !item.header &&
+                              item.text.trim().isNotEmpty
+                          ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Semantics(
+                                  button: true,
+                                  label: l10n.itemQuickMeta,
+                                  child: GestureDetector(
+                                    key: ValueKey('item-quick-meta-${item.id}'),
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: () =>
+                                        unawaited(_openItemMetaById(item.id)),
+                                    child: SizedBox(
+                                      width: 24,
+                                      height: 28,
+                                      child: Center(
+                                        child: Icon(
+                                          Icons.tune_rounded,
+                                          size: AppIconSize.s - 2,
+                                          color: scheme.onSurfaceVariant
+                                              .withValues(alpha: 0.85),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  key: ValueKey('item-remove-${item.id}'),
+                                  tooltip: l10n.removeItem,
+                                  icon: const Icon(
+                                    Icons.close,
+                                    size: AppIconSize.s,
+                                  ),
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints.tightFor(
+                                    width: ItemsEditorState._kTrailingWidth - 4,
+                                    height: 28,
+                                  ),
+                                  style: const ButtonStyle(
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  color: scheme.onSurfaceVariant.withValues(
+                                    alpha: 0.8,
+                                  ),
+                                  onPressed: () => _removeItem(item),
+                                ),
+                              ],
+                            )
+                          : IconButton(
+                              key: ValueKey('item-remove-${item.id}'),
+                              tooltip: l10n.removeItem,
+                              icon: const Icon(
+                                Icons.close,
+                                size: AppIconSize.s,
+                              ),
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints.tightFor(
+                                width: ItemsEditorState._kTrailingWidth - 4,
+                                height: 28,
+                              ),
+                              style: const ButtonStyle(
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              color: scheme.onSurfaceVariant.withValues(
+                                alpha: 0.8,
+                              ),
+                              onPressed: () => _removeItem(item),
+                            ),
                     ),
                   ),
               ],
@@ -790,6 +862,276 @@ extension _ItemsRow on ItemsEditorState {
         ),
       ),
     );
+  }
+
+  /// Liste kipine özgü satır içi rozet ve kontroller (alışveriş −/+ miktar ve
+  /// fiyat, rutin seri rozeti, proje öncelik/tarih). Tüm mutasyonlar `item.id`
+  /// üzerinden yapılır (Kural 5).
+  List<Widget> _modeTrailingWidgets(
+    BuildContext context, {
+    required NoteItem item,
+    required bool checked,
+    required double firstLineCenter,
+    required ColorScheme scheme,
+  }) {
+    if (item.text.trim().isEmpty) return const [];
+    final l10n = context.l10n;
+    final theme = Theme.of(context);
+    final accent = _accent?.accent ?? scheme.primary;
+    final topPad = math.max(0.0, firstLineCenter - 13);
+    final out = <Widget>[];
+
+    // 1) Alışveriş kipi: satır içi − / + miktar kontrolü + fiyat hapı
+    if (widget.listMode == ListMode.shopping) {
+      final qty = item.quantity;
+      final unit = item.unit;
+      final qtyLabel = qty != null
+          ? '${qty == qty.roundToDouble() ? qty.round() : qty}${unit.isNotEmpty ? ' $unit' : ''}'
+          : '1';
+      final compact = widget.columns == 2;
+      out.add(
+        Padding(
+          padding: EdgeInsetsDirectional.only(top: topPad, start: 4),
+          child: compact
+              ? InkWell(
+                  key: ValueKey('shop-qty-compact-${item.id}'),
+                  borderRadius: BorderRadius.circular(AppRadius.s),
+                  onTap: () => _stepItemQtyById(item.id, increase: true),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: scheme.surfaceContainerHighest.withValues(
+                        alpha: 0.7,
+                      ),
+                      borderRadius: BorderRadius.circular(AppRadius.s),
+                    ),
+                    child: Text(
+                      qtyLabel,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: AppWeight.strong,
+                        color: checked
+                            ? _dimmed(scheme.onSurfaceVariant, _kCheckedDim)
+                            : scheme.onSurface,
+                      ),
+                    ),
+                  ),
+                )
+              : DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: scheme.surfaceContainerHighest.withValues(
+                      alpha: 0.55,
+                    ),
+                    borderRadius: BorderRadius.circular(AppRadius.s),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      InkWell(
+                        key: ValueKey('shop-qty-dec-${item.id}'),
+                        borderRadius: BorderRadius.circular(AppRadius.s),
+                        onTap: () => _stepItemQtyById(item.id, increase: false),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 4,
+                          ),
+                          child: Icon(Icons.remove_rounded, size: 15),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 2),
+                        child: Text(
+                          qtyLabel,
+                          key: ValueKey('shop-qty-val-${item.id}'),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            fontWeight: AppWeight.strong,
+                            color: checked
+                                ? _dimmed(scheme.onSurfaceVariant, _kCheckedDim)
+                                : scheme.onSurface,
+                          ),
+                        ),
+                      ),
+                      InkWell(
+                        key: ValueKey('shop-qty-inc-${item.id}'),
+                        borderRadius: BorderRadius.circular(AppRadius.s),
+                        onTap: () => _stepItemQtyById(item.id, increase: true),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 4,
+                          ),
+                          child: Icon(Icons.add_rounded, size: 15),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+        ),
+      );
+      final price = item.price;
+      if (price != null && price > 0) {
+        final lineTotal = shopItemLineTotal(item) ?? price;
+        final cur = l10n.localeName.startsWith('tr') ? '₺' : '';
+        final label = cur.isEmpty
+            ? ShopBudgetBar.formatTl(lineTotal)
+            : '${ShopBudgetBar.formatTl(lineTotal)} $cur';
+        out.add(
+          Padding(
+            padding: EdgeInsetsDirectional.only(top: topPad, start: 4),
+            child: InkWell(
+              key: ValueKey('shop-price-${item.id}'),
+              borderRadius: BorderRadius.circular(AppRadius.s),
+              onTap: widget.onEditPrice == null
+                  ? null
+                  : () {
+                      final live = _items
+                          .where((i) => i.id == item.id)
+                          .firstOrNull;
+                      if (live != null) widget.onEditPrice!(live);
+                    },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppRadius.s),
+                ),
+                child: Text(
+                  label,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontWeight: AppWeight.strong,
+                    color: checked ? _dimmed(accent, _kCheckedDim) : accent,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+    }
+
+    // 2) Rutin kipi: doneDays üzerinden deterministik seri sayacı (Kural 2)
+    if (widget.listMode == ListMode.routine) {
+      final streak = item.streakCount;
+      if (streak > 0) {
+        out.add(
+          Padding(
+            padding: EdgeInsetsDirectional.only(top: topPad, start: 4),
+            child: InkWell(
+              key: ValueKey('routine-streak-${item.id}'),
+              borderRadius: BorderRadius.circular(AppRadius.s),
+              onTap: () => unawaited(_openItemMetaById(item.id)),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppRadius.s),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.local_fire_department_rounded,
+                      size: 13,
+                      color: accent,
+                    ),
+                    const SizedBox(width: 2),
+                    Text(
+                      '$streak',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: AppWeight.strong,
+                        color: accent,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+    }
+
+    // 3) Öncelik rozeti (tüm kiplerde görünür, özellikle Proje kipinde)
+    if (item.priority != ItemPriority.none) {
+      final pColor = switch (item.priority) {
+        ItemPriority.urgent => scheme.error,
+        ItemPriority.high => scheme.tertiary,
+        ItemPriority.medium => accent,
+        ItemPriority.low => scheme.onSurfaceVariant,
+        ItemPriority.none => scheme.onSurfaceVariant,
+      };
+      out.add(
+        Padding(
+          padding: EdgeInsetsDirectional.only(top: topPad, start: 4),
+          child: InkWell(
+            key: ValueKey('item-priority-${item.id}'),
+            borderRadius: BorderRadius.circular(AppRadius.s),
+            onTap: () => unawaited(_openItemMetaById(item.id)),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+              decoration: BoxDecoration(
+                color: pColor.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(AppRadius.s),
+              ),
+              child: Icon(
+                item.priority == ItemPriority.urgent
+                    ? Icons.priority_high_rounded
+                    : Icons.flag_rounded,
+                size: 13,
+                color: checked ? _dimmed(pColor, _kCheckedDim) : pColor,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // 4) Hedef tarih / erteleme rozeti
+    final due = item.dueDate;
+    if (due != null) {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final dueDay = DateTime(due.year, due.month, due.day);
+      final diffDays = dueDay.difference(today).inDays;
+      final overdue = diffDays < 0 && !item.checked;
+      final dueLabel = switch (diffDays) {
+        0 => l10n.itemDueToday,
+        1 => l10n.itemDueTomorrow,
+        _ => DateFormat('d MMM', l10n.localeName).format(due),
+      };
+      final dColor = overdue ? scheme.error : scheme.onSurfaceVariant;
+      out.add(
+        Padding(
+          padding: EdgeInsetsDirectional.only(top: topPad, start: 4),
+          child: InkWell(
+            key: ValueKey('item-due-${item.id}'),
+            borderRadius: BorderRadius.circular(AppRadius.s),
+            onTap: () => unawaited(_openItemMetaById(item.id)),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: overdue
+                    ? scheme.errorContainer.withValues(alpha: 0.7)
+                    : scheme.surfaceContainerHighest.withValues(alpha: 0.65),
+                borderRadius: BorderRadius.circular(AppRadius.s),
+              ),
+              child: Text(
+                dueLabel,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontWeight: overdue ? AppWeight.strong : AppWeight.medium,
+                  color: checked ? _dimmed(dColor, _kCheckedDim) : dColor,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return out;
   }
 
   /// Ekranın dibine demirlenmiş Bento madde seçim çubuğu (Overlay çocuğu).

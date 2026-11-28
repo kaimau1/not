@@ -666,7 +666,6 @@ extension _NoteEditorLifecycle on _NoteEditorScreenState {
     _pendingAudioFile = widget.startAudioFile;
     _pendingRevealItem = widget.revealItemId;
     _pendingFind = widget.initialFind;
-    _pendingWorkspace = widget.startWorkspace;
     WidgetsBinding.instance.addPostFrameCallback((_) => _runPendingIntents());
   }
 
@@ -685,9 +684,14 @@ extension _NoteEditorLifecycle on _NoteEditorScreenState {
     }
     if (_note == null) {
       // ESKİ DEFTER (F3.5): açılışta sayfalı nota çevrilir ve yazılır.
-      final loaded = incoming.type == NoteType.archive
+      var loaded = incoming.type == NoteType.archive
           ? notebookToPagedNote(incoming, pageId: (_) => const Uuid().v4())
           : _repairOrphanDocumentMode(incoming);
+      // RUTİN SIFIRLAMA: yeni döneme geçen rutin not açılışta sıfırlanır
+      // (doneDays geçmişi korunur, Kural 2).
+      if (!_readOnly && RoutineResetEngine.needsReset(loaded, DateTime.now())) {
+        loaded = RoutineResetEngine.resetNote(loaded, DateTime.now());
+      }
       onFirstLoad(loaded);
       // Açıldığı hâl ilk değişiklikte sürüm olur (F4.2).
       if (!_readOnly) _notesRepo?.rememberVersionBase(loaded);
@@ -893,6 +897,11 @@ extension _NoteEditorLifecycle on _NoteEditorScreenState {
     _recentKey?.cancel();
     _typingN.dispose();
     _floatsN.dispose();
+    _shopGroupedN.dispose();
+    _projectFocusN.dispose();
+    _projectFocusIdsN.dispose();
+    _modeNudgeDismissedN.dispose();
+    _ghostDismissedN.dispose();
     FocusManager.instance.removeListener(_onAnyFocusChange);
     HardwareKeyboard.instance.removeHandler(_onHardKey);
     InkToolMemory.autoStylusListenable.removeListener(_onStylusToggle);

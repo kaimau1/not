@@ -126,7 +126,18 @@ List<NoteItem> mergeItems3(
     } else if (!localChanged) {
       out.add(r);
     } else {
-      out.add(item);
+      final remoteChanged = b == null || !_sameItem(b, r);
+      if (remoteChanged &&
+          (item.doneDays.isNotEmpty || r.doneDays.isNotEmpty)) {
+        // Kural 2: çoklu cihaz rutin birleşiminde tarih kümeleri union olur.
+        final mergedDays = NoteItem.normalizeDoneDays([
+          ...item.doneDays,
+          ...r.doneDays,
+        ]);
+        out.add(item.copyWith(doneDays: mergedDays));
+      } else {
+        out.add(item);
+      }
     }
   }
   for (final r in remote) {
@@ -156,4 +167,5 @@ bool _sameItem(NoteItem a, NoteItem b) =>
     // değişmedi" sayılıp uzaktaki paketsiz kopya üstüne yazıyordu.
     a.package == b.package &&
     a.starred == b.starred &&
+    sameNoteItemStructuredFields(a, b) &&
     sameNoteItemExtras(a.extras, b.extras);

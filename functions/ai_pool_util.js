@@ -31,6 +31,27 @@ const MAX_OUTPUT_TOKENS = 4096;
 const RATE_LIMIT_PER_MINUTE = 25;
 const RATE_WINDOW_MS = 60 * 1000;
 
+/**
+ * Akıllı liste AI görev profilleri: daima en ucuz model (`gemini-2.5-flash-lite`,
+ * 1 kredi), sıkı girdi/çıktı tavanı ve günlük profil kotası.
+ */
+const LIST_TASK_PROFILES = {
+  list_breakdown: {
+    model: "gemini-2.5-flash-lite",
+    maxPromptChars: 2500,
+    maxOutputTokens: 350,
+    dailyLimitFree: 5,
+    dailyLimitPro: 25,
+  },
+  list_extract: {
+    model: "gemini-2.5-flash-lite",
+    maxPromptChars: 2500,
+    maxOutputTokens: 350,
+    dailyLimitFree: 5,
+    dailyLimitPro: 25,
+  },
+};
+
 function num(v) {
   return typeof v === "number" && Number.isFinite(v) && v >= 0
     ? Math.floor(v)
@@ -42,6 +63,14 @@ function toDate(v) {
   if (v instanceof Date) return v;
   if (typeof v.toDate === "function") return v.toDate();
   return null;
+}
+
+function dayKey(now) {
+  const t = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+  const y = t.getUTCFullYear();
+  const m = String(t.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(t.getUTCDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 function monthKey(now) {
@@ -93,16 +122,33 @@ function sanitizeGenerateRequest(data) {
   if (!data || typeof data !== "object") return null;
   const appId = normalizeAppId(data.appId);
   if (!appId) return null;
-  const model =
-    typeof data.model === "string" && data.model.trim()
+
+  let taskProfile = null;
+  let profileSpec = null;
+  if (data.taskProfile !== undefined && data.taskProfile !== null) {
+    if (typeof data.taskProfile !== "string") return null;
+    const cleanedProfile = data.taskProfile.trim();
+    if (!Object.prototype.hasOwnProperty.call(LIST_TASK_PROFILES, cleanedProfile)) {
+      return null;
+    }
+    taskProfile = cleanedProfile;
+    profileSpec = LIST_TASK_PROFILES[taskProfile];
+  }
+
+  const model = profileSpec
+    ? profileSpec.model
+    : typeof data.model === "string" && data.model.trim()
       ? data.model.trim()
       : "gemini-2.5-flash";
   if (!ALLOWED_MODELS.has(model)) return null;
 
+  const promptLimit = profileSpec ? profileSpec.maxPromptChars : MAX_PROMPT_CHARS;
+  const outputLimit = profileSpec ? profileSpec.maxOutputTokens : MAX_OUTPUT_TOKENS;
+
   let contents;
   if (typeof data.prompt === "string") {
     const prompt = data.prompt.trim();
-    if (!prompt || prompt.length > MAX_PROMPT_CHARS) return null;
+    if (!prompt || prompt.length > promptLimit) return null;
     contents = [{ parts: [{ text: prompt }] }];
   } else if (Array.isArray(data.contents) && data.contents.length > 0 && data.contents.length <= 6) {
     let totalText = 0;
@@ -116,9 +162,10 @@ function sanitizeGenerateRequest(data) {
         if (totalParts > MAX_PARTS || !p || typeof p !== "object") return null;
         if (typeof p.text === "string") {
           totalText += p.text.length;
-          if (totalText > MAX_PROMPT_CHARS) return null;
+          if (totalText > promptLimit) return null;
           parts.push({ text: p.text });
         } else if (p.inline_data && typeof p.inline_data === "object") {
+          if (profileSpec) return null; // Liste metin profillerinde medya kabul edilmez.
           const mime = p.inline_data.mime_type;
           const b64 = p.inline_data.data;
           if (
@@ -147,22 +194,27 @@ function sanitizeGenerateRequest(data) {
   }
 
   const payload = { contents };
+  const gc = {};
   if (data.generationConfig && typeof data.generationConfig === "object") {
-    const gc = {};
     const cfg = data.generationConfig;
     if (typeof cfg.temperature === "number" && Number.isFinite(cfg.temperature)) {
       gc.temperature = Math.min(2, Math.max(0, cfg.temperature));
     }
     if (typeof cfg.maxOutputTokens === "number" && Number.isFinite(cfg.maxOutputTokens)) {
-      gc.maxOutputTokens = Math.min(MAX_OUTPUT_TOKENS, Math.max(1, Math.floor(cfg.maxOutputTokens)));
+      gc.maxOutputTokens = Math.min(outputLimit, Math.max(1, Math.floor(cfg.maxOutputTokens)));
     }
     if (cfg.responseMimeType === "application/json" || cfg.responseMimeType === "text/plain") {
       gc.responseMimeType = cfg.responseMimeType;
     }
-    if (Object.keys(gc).length > 0) payload.generationConfig = gc;
   }
+  if (profileSpec && gc.maxOutputTokens === undefined) {
+    gc.maxOutputTokens = outputLimit;
+  }
+  if (Object.keys(gc).length > 0) payload.generationConfig = gc;
 
-  return { appId, model, payload };
+  return taskProfile
+    ? { appId, model, payload, taskProfile }
+    : { appId, model, payload };
 }
 
 function costForRequest(sanitized) {
@@ -202,11 +254,36 @@ function checkRateLimit(rateDoc, now) {
   };
 }
 
-function reserveCredits(poolDoc, entDoc, rateDoc, cost, appId, now) {
+function checkDailyProfileQuota(rateDoc, taskProfile, entDoc, now) {
+  if (!taskProfile || !Object.prototype.hasOwnProperty.call(LIST_TASK_PROFILES, taskProfile)) {
+    return { ok: true, daily: null };
+  }
+  const spec = LIST_TASK_PROFILES[taskProfile];
+  const limit = proActive(entDoc, now) ? spec.dailyLimitPro : spec.dailyLimitFree;
+  const today = dayKey(now);
+  const d = rateDoc || {};
+  const used = d.aiListDailyKey === today && typeof d.aiListDailyCount === "number"
+    ? Math.max(0, Math.floor(d.aiListDailyCount))
+    : 0;
+  if (used >= limit) {
+    return { ok: false, reason: "daily-quota-exceeded", limit, used };
+  }
+  return {
+    ok: true,
+    daily: { aiListDailyKey: today, aiListDailyCount: used + 1 },
+    remaining: limit - (used + 1),
+  };
+}
+
+function reserveCredits(poolDoc, entDoc, rateDoc, cost, appId, now, taskProfile = null) {
   const state = ensurePoolState(poolDoc, entDoc, now);
   const rateCheck = checkRateLimit(rateDoc, now);
   if (!rateCheck.ok) {
     return { ok: false, reason: "rate-limited", retryAfterMs: rateCheck.retryAfterMs, state };
+  }
+  const dailyCheck = checkDailyProfileQuota(rateDoc, taskProfile, entDoc, now);
+  if (!dailyCheck.ok) {
+    return { ok: false, reason: "daily-quota-exceeded", limit: dailyCheck.limit, state };
   }
   if (state.balance < cost) {
     return { ok: false, reason: "insufficient-credits", balance: state.balance, state };
@@ -221,7 +298,7 @@ function reserveCredits(poolDoc, entDoc, rateDoc, cost, appId, now) {
     ok: true,
     remainingCredits: nextState.balance,
     state: nextState,
-    rate: rateCheck.rate,
+    rate: dailyCheck.daily ? { ...rateCheck.rate, ...dailyCheck.daily } : rateCheck.rate,
   };
 }
 
@@ -242,14 +319,17 @@ module.exports = {
   PRO_MONTHLY_BONUS_CREDITS,
   ALLOWED_APPS,
   ALLOWED_MODELS,
+  LIST_TASK_PROFILES,
   MAX_PROMPT_CHARS,
   MAX_OUTPUT_TOKENS,
   RATE_LIMIT_PER_MINUTE,
+  dayKey,
   normalizeAppId,
   ensurePoolState,
   sanitizeGenerateRequest,
   costForRequest,
   checkRateLimit,
+  checkDailyProfileQuota,
   reserveCredits,
   refundCredits,
 };

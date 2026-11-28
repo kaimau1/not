@@ -55,9 +55,16 @@ class FolderTile extends ConsumerWidget {
     final count = ref.watch(
       folderNoteCountsProvider.select((m) => m[folder.id] ?? 0),
     );
+    final quickPending = folder.isQuickInbox
+        ? ref.watch(
+            quickInboxPendingCountsProvider.select((m) => m[folder.id] ?? 0),
+          )
+        : 0;
     // PAYLAŞILAN klasörde okunmamış hareket rozeti (kullanıcı isteği
     // 2026-09-04). Paylaşılmamış klasörde karşı taraf yok — hiç sorulmaz.
-    final unread = folder.isShared
+    final unread = folder.isQuickInbox
+        ? quickPending
+        : folder.isShared
         ? ref.watch(
             folderUnreadProvider((
               ownerId: folder.ownerId,
@@ -354,10 +361,18 @@ class FolderChip extends ConsumerWidget {
     final count = ref.watch(
       folderNoteCountsProvider.select((m) => m[folder.id] ?? 0),
     );
+    final quickPending = folder.isQuickInbox
+        ? ref.watch(
+            quickInboxPendingCountsProvider.select((m) => m[folder.id] ?? 0),
+          )
+        : 0;
     // Şerit çipinde de okunmamış rozeti (kullanıcı bulgusu 2026-10-17:
     // "yeni bir şey geldiğinde anlaşılmıyor") — eskiden yalnız karo
     // görünümünde vardı, varsayılan şeritte hareket hiç görünmüyordu.
-    final unread = folder.isShared
+    // "Hızlı Not" klasörü için tamamlanmamış madde sayısı rozeti (Kural 4).
+    final unread = folder.isQuickInbox
+        ? quickPending
+        : folder.isShared
         ? ref.watch(
             folderUnreadProvider((
               ownerId: folder.ownerId,
@@ -373,8 +388,11 @@ class FolderChip extends ConsumerWidget {
       unread: unread,
       icon: folder.iconData,
       label: folder.name,
-      count: count,
-      dimmed: count == 0 && unread == 0 && !selected,
+      count: folder.isQuickInbox ? quickPending : count,
+      dimmed:
+          (folder.isQuickInbox ? quickPending == 0 : count == 0) &&
+          unread == 0 &&
+          !selected,
       selected: selected,
       trailingIcon: folder.hidden ? Icons.visibility_off_outlined : null,
       onTap: () => openFolder(context, folder.id),

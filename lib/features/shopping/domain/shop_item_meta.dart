@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../notes/domain/list_mode.dart';
 import '../../notes/domain/note_item.dart';
 import '../../notes/domain/quick_entry.dart';
 
@@ -15,16 +16,10 @@ enum ShopItemStatus {
   unavailable,
 }
 
-/// Faz 3 geriye uyumlu alışveriş madde meta verisi (`NoteItem.extras`).
-///
-/// Anahtarlar:
-/// - `q`: sayısal miktar (`double`)
-/// - `u`: standart birim (`adet`, `kg`, `g`, `lt`, `ml`, `paket`, `demet`…)
-/// - `p`: birim/satır fiyatı (`double`, ₺)
-/// - `s`: market etiketi (`bim`, `a101`, `sok`, `migros`, `pazar`…)
-/// - `st`: durum (`0` todo, `1` inCart, `2` unavailable)
-/// - `g`: reyon kimliği (`0..12`)
-/// - `by`: ortak listede kimin aldığı
+/// Alışveriş madde meta verisi — miktar, birim, fiyat ve reyon doğrudan
+/// kanonik [NoteItem] alanları üzerinde ince bir sarmalayıcıdır (çift yazım
+/// yok). Yalnız alışverişe özgü alanlar (`s`: market, `st`: durum, `by`:
+/// kimin aldığı) `NoteItem.extras` içinde tutulur.
 @immutable
 class ShopItemMeta {
   const ShopItemMeta({
@@ -59,13 +54,14 @@ class ShopItemMeta {
     final ex = item.extras;
     final parsed = parseQuickQty(quickQtyOf(item.text));
     final rawQ = ex[keyQty];
-    final qty = rawQ is num ? rawQ.toDouble() : parsed?.value;
+    final qty =
+        item.quantity ?? (rawQ is num ? rawQ.toDouble() : null) ?? parsed?.value;
     final rawU = ex[keyUnit];
-    final unit = rawU is String && rawU.isNotEmpty
-        ? rawU
-        : (parsed?.rawUnit ?? '');
+    final unit = item.unit.isNotEmpty
+        ? item.unit
+        : (rawU is String && rawU.isNotEmpty ? rawU : (parsed?.rawUnit ?? ''));
     final rawP = ex[keyPrice];
-    final price = rawP is num ? rawP.toDouble() : null;
+    final price = item.price ?? (rawP is num ? rawP.toDouble() : null);
     final store = (ex[keyStore] as String? ?? '').trim();
     final rawSt = ex[keyStatus];
     final stCode = rawSt is num ? rawSt.toInt() : (item.checked ? 1 : 0);
@@ -75,7 +71,9 @@ class ShopItemMeta {
       _ => item.checked ? ShopItemStatus.inCart : ShopItemStatus.todo,
     };
     final rawG = ex[keyAisle];
-    final aisle = rawG is num ? rawG.toInt() : null;
+    final aisle =
+        aisleIndexFromCategory(item.category) ??
+        (rawG is num ? rawG.toInt() : null);
     final takenBy = (ex[keyTakenBy] as String? ?? '').trim();
     return ShopItemMeta(
       qty: qty,
@@ -109,9 +107,14 @@ class ShopItemMeta {
     takenBy: takenBy ?? this.takenBy,
   );
 
-  /// Sadece varsayılan olmayan alanları `extras`'a yazar (S16 +0 bayt kuralı).
+  /// Kanonik [NoteItem] alanlarını günceller; eski `q`/`u`/`p`/`g` anahtarlarını
+  /// `extras`'tan temizler (çift yazım yok, S16 +0 bayt kuralı).
   NoteItem applyToItem(NoteItem item, {bool syncTextQty = false}) {
-    final next = Map<String, dynamic>.from(item.extras);
+    final next = Map<String, dynamic>.from(item.extras)
+      ..remove(keyQty)
+      ..remove(keyUnit)
+      ..remove(keyPrice)
+      ..remove(keyAisle);
 
     void setOrRemove(String k, Object? v) {
       if (v == null || (v is String && v.isEmpty)) {
@@ -121,30 +124,36 @@ class ShopItemMeta {
       }
     }
 
-    setOrRemove(keyQty, qty != null && qty! > 0 ? qty : null);
-    setOrRemove(keyUnit, qty != null && qty! > 0 ? unit.trim() : null);
-    setOrRemove(
-      keyPrice,
-      unitPrice != null && unitPrice! > 0 ? unitPrice : null,
-    );
     setOrRemove(keyStore, store.trim());
     setOrRemove(keyStatus, status == ShopItemStatus.unavailable ? 2 : null);
-    setOrRemove(keyAisle, aisle != null && aisle! >= 0 ? aisle : null);
     setOrRemove(
       keyTakenBy,
       status == ShopItemStatus.inCart ? takenBy.trim() : null,
     );
 
+    final validQty = qty != null && qty! > 0 ? qty : null;
+    final validUnit = validQty != null ? unit.trim() : '';
+    final validPrice = unitPrice != null && unitPrice! > 0 ? unitPrice : null;
+    final aisleKey = aisleCategoryKey(aisle);
+    final nextCategory = aisleKey ??
+        (aisleIndexFromCategory(item.category) != null ? '' : item.category);
+
     var nextText = item.text;
     if (syncTextQty) {
       final base = quickBaseName(item.text);
-      final qLabel = formatShopQty(qty, unit);
+      final qLabel = formatShopQty(validQty, validUnit);
       nextText = quickCompose(base, qLabel);
     }
 
     return item.copyWith(
       text: nextText,
       checked: status == ShopItemStatus.inCart,
+      quantity: validQty,
+      clearQuantity: validQty == null,
+      unit: validUnit,
+      price: validPrice,
+      clearPrice: validPrice == null,
+      category: nextCategory,
       extras: next,
     );
   }

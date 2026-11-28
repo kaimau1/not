@@ -821,149 +821,267 @@ extension _NoteEditorContentBuild on _NoteEditorScreenState {
         ),
       );
     } else {
-      pageContent = ItemsEditor(
-        key: _itemsEditorKey,
-        items: note.items,
-        showCheckboxes: note.type == NoteType.checklist,
-        // İki sütun YALNIZ gerçek liste notunda (kullanıcı isteği
-        // 2026-08-16). Metin notuna iliştirilmiş maddeler gövdenin altında
-        // birkaç satır tutuyor; onları ikiye bölmek yalnız karıştırırdı.
-        columns: note.listColumns,
-        expandItems: ref.watch(expandListItemsProvider),
-        onChanged: (items) =>
-            _mutate((n) => n.copyWith(items: items), itemsShown: true),
-        floatsListenable: _floatsN,
-        pageBox: _pageBox,
-        shrinkWrap: true,
-        contentInsertion: _keyboardImagePaste,
-        richTheme: richTheme,
-        textStyle: noteBodyStyle,
-        onFieldFocused: _setFormatTarget,
-        onFieldDisposed: _clearFormatTargetFor,
-        // Madde satırlarındaki ek etiketleri de gövdedekiyle aynı çizilsin
-        // ve dokunulunca açılsın (bkz. ItemsEditor.attachmentNames).
-        attachmentNames: _bodyController.attachmentNames,
-        tagLooks: _tagLooks,
-        onAttachmentTag: _openTagByName,
-        selectionMenu: _itemSelectionMenu,
-        videoTimestamps: _bodyController.videoTimestamps,
-        onVideoTimestamp: _seekVideoTo,
-        onEmbedVideo: _readOnly ? null : _embedLinkedVideo,
-        addRowTrailing: _partsMenu(note),
-        paperLines: note.paged && note.archivePaper.ruled,
-        onMoveToPage: textPagePosition(note).count > 1 ? _moveItemToPage : null,
-        onMakeTask: _readOnly ? null : (item) => _makeTask(note, item),
-        onLineReminder: _readOnly
-            ? null
-            : (item) => unawaited(
-                addLineReminder(
-                  context,
-                  ref,
-                  noteId: note.id,
-                  itemId: item.id,
-                  text: item.text,
-                ),
-              ),
-        lineTrailing: (item) => LineTaskChip(noteId: note.id, itemId: item.id),
-        onItemChecked: (item, checked) =>
-            syncItemToTasks(ref, note.id, item.id, checked),
-        // Paylaşım biçimi (☐/☑) — `- [ ]` değil (bkz. noteShareText).
-        wholeNoteText: () => _note == null
-            ? ''
-            : noteShareText(_note!, pageLabel: context.l10n.pageLabel),
-        header: () {
-          final explicitKind = smartListKindFromId(note.listKind);
-          final resolvedKind = explicitKind != SmartListKind.generic
-              ? explicitKind
-              : (smartKindFromPhrase(note.title) ?? SmartListKind.generic);
-          final showStoreModePill =
-              note.type == NoteType.checklist &&
+      final isChecklist = note.type == NoteType.checklist;
+      final learnedGroups = isChecklist
+          ? ref.read(quickEntryMemoryProvider).itemGroups
+          : const <String, int>{};
+      final shopAisleOrder =
+          isChecklist && note.listMode == ListMode.shopping
+          ? ref.read(shopMemoryProvider).aisleOrderFor('')
+          : null;
+      pageContent = ListenableBuilder(
+        listenable: Listenable.merge([
+          _shopGroupedN,
+          _projectFocusN,
+          _projectFocusIdsN,
+          _modeNudgeDismissedN,
+          _ghostDismissedN,
+        ]),
+        builder: (context, _) {
+          final grouped = _shopGroupedN.value;
+          final focusOn = _projectFocusN.value;
+          final focusIds = _projectFocusIdsN.value;
+          final nudgeDismissed = _modeNudgeDismissedN.value;
+          final activeFocusCount =
+              note.listMode == ListMode.project && focusOn
+              ? resolveProjectFocusIds(
+                  note.items,
+                  manualFocusIds: focusIds,
+                ).length
+              : 0;
+          final suggestedMode =
+              isChecklist &&
+                  !_readOnly &&
+                  !note.locked &&
+                  !nudgeDismissed &&
+                  note.listMode == ListMode.general
+              ? SmartListModeHeader.suggestedModeFor(note, l10n.localeName)
+              : null;
+          final showModeHeader =
+              isChecklist &&
               !_readOnly &&
-              resolvedKind == SmartListKind.shopping;
-          final showSmartWorkspacePill =
-              note.type == NoteType.checklist &&
-              !_readOnly &&
-              resolvedKind != SmartListKind.generic &&
-              resolvedKind != SmartListKind.shopping;
+              (note.listMode != ListMode.general || suggestedMode != null);
+          final showInlineBar =
+              isChecklist && !_readOnly && note.listMode != ListMode.general;
           final showBody = note.body.trim().isNotEmpty || _listBodyOpen;
-          if (!showStoreModePill && !showSmartWorkspacePill && !showBody) {
-            return keyedHeader;
-          }
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              keyedHeader,
-              if (showStoreModePill)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    _NoteEditorScreenState._kGutter,
-                    0,
-                    _NoteEditorScreenState._kGutter,
-                    AppSpace.s,
-                  ),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(minHeight: 48),
-                    child: FilledButton.tonalIcon(
-                      key: const ValueKey('editor-open-store-mode'),
-                      icon: const Icon(
-                        Icons.shopping_cart_outlined,
-                        size: AppIconSize.s,
-                      ),
-                      label: Text(() {
-                        final rem = note.items
-                            .where(
-                              (i) =>
-                                  !i.header &&
-                                  !i.checked &&
-                                  i.text.trim().isNotEmpty,
-                            )
-                            .length;
-                        return rem > 0
-                            ? context.l10n.shopOpenStoreModeCount(rem)
-                            : context.l10n.shopOpenStoreMode;
-                      }()),
-                      onPressed: _openStoreMode,
-                    ),
-                  ),
+          final accent = NoteAccent.maybeOf(context)?.accent;
+
+          Widget? cachedModeHeader;
+          if (showModeHeader) {
+            final Object? statsKey;
+            if (note.listMode == ListMode.general) {
+              statsKey = suggestedMode;
+            } else {
+              var total = 0;
+              var done = 0;
+              for (final i in note.items) {
+                if (i.header || i.text.trim().isEmpty) continue;
+                total++;
+                if (i.checked) done++;
+              }
+              statsKey = (total, done);
+            }
+            final headerKey = (
+              note.id,
+              note.listMode,
+              note.resetSchedule,
+              note.contextTimeSlot,
+              note.listKind,
+              note.locked,
+              grouped,
+              focusOn,
+              activeFocusCount,
+              nudgeDismissed,
+              accent,
+              statsKey,
+              Theme.of(context).brightness,
+              l10n.localeName,
+            );
+            final hit = _modeHeaderCache;
+            if (hit != null && hit.$1 == headerKey) {
+              cachedModeHeader = hit.$2;
+            } else {
+              cachedModeHeader = Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  _NoteEditorScreenState._kGutter,
+                  0,
+                  _NoteEditorScreenState._kGutter,
+                  AppSpace.xs,
                 ),
-              if (showSmartWorkspacePill)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    _NoteEditorScreenState._kGutter,
-                    0,
-                    _NoteEditorScreenState._kGutter,
-                    AppSpace.s,
-                  ),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(minHeight: 48),
-                    child: FilledButton.tonalIcon(
-                      key: const ValueKey('editor-open-smart-workspace'),
-                      icon: Icon(
-                        smartWorkspaceIcon(resolvedKind),
-                        size: AppIconSize.s,
-                      ),
-                      label: Text(
-                        smartWorkspacePillLabel(
-                          note,
-                          resolvedKind,
-                          context.l10n,
+                child: SmartListModeHeader(
+                  note: note,
+                  accentColor: accent,
+                  onChangeMode: _setListMode,
+                  onChangeResetSchedule: _setResetSchedule,
+                  onChangeTimeSlot: _setContextTimeSlot,
+                  groupByAisle: grouped,
+                  onToggleGroupByAisle: () =>
+                      _shopGroupedN.value = !_shopGroupedN.value,
+                  onOpenBarcode: qrScanSupported
+                      ? () => unawaited(_openShoppingBarcode())
+                      : null,
+                  onOpenReceipt: () => unawaited(_openShoppingReceipt()),
+                  onOpenRecipes: () => unawaited(_openShoppingRecipes()),
+                  onOpenAisleOrder: () => unawaited(_openShoppingAisleOrder()),
+                  onResetTemplate: _resetTemplateItems,
+                  onCopyTemplate: () => unawaited(_copyTemplateAsNewList()),
+                  onOpenPackingWizard: () => unawaited(_openPackingWizard()),
+                  focusMode: focusOn,
+                  focusVisibleCount: activeFocusCount,
+                  onToggleFocusMode: () =>
+                      _projectFocusN.value = !_projectFocusN.value,
+                  onPickFocusItems: () => unawaited(_pickProjectFocusItems()),
+                  nudgeDismissed: nudgeDismissed,
+                  onDismissNudge: () => _modeNudgeDismissedN.value = true,
+                ),
+              );
+              _modeHeaderCache = (headerKey, cachedModeHeader);
+            }
+          }
+
+          final Widget listHeader =
+              (!showModeHeader && !showBody)
+              ? keyedHeader
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    keyedHeader,
+                    ?cachedModeHeader,
+                    if (showInlineBar)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          _NoteEditorScreenState._kGutter,
+                          AppSpace.xs,
+                          _NoteEditorScreenState._kGutter,
+                          AppSpace.s,
+                        ),
+                        child: InlineParseBar(
+                          mode: note.listMode,
+                          learnedGroups: learnedGroups,
+                          accentColor: accent,
+                          onAddItem: _addParsedItem,
+                          onTagsDetected: (tags) {
+                            for (final t in tags) {
+                              _applyTag(t);
+                            }
+                          },
+                          onLargePaste: (raw) =>
+                              unawaited(_openTextExtract(initialText: raw)),
                         ),
                       ),
-                      onPressed: () =>
-                          unawaited(_openSmartWorkspace(resolvedKind)),
+                    if (showBody)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: _NoteEditorScreenState._kGutter,
+                        ),
+                        child: _wrapped(_bodyController, bodyField),
+                      ),
+                  ],
+                );
+
+          // Kural 1: Hayalet öneriler yalnız geçici UI listesidir; NoteItem
+          // modeline yazılmaz, kilitli veya salt okunur notlarda üretilmez.
+          final ghostItems =
+              (isChecklist &&
+                  !_readOnly &&
+                  !note.locked &&
+                  !(note.listMode == ListMode.project && focusOn))
+              ? GhostSuggestionEngine.generate(
+                  note,
+                  memory: ref.read(quickEntryMemoryProvider),
+                  locale: l10n.localeName,
+                  dismissedKeys: _ghostDismissedN.value,
+                )
+              : const <GhostSuggestion>[];
+          final ghostSection = ghostItems.isEmpty
+              ? null
+              : GhostSuggestionsSection(
+                  suggestions: ghostItems,
+                  mode: note.listMode,
+                  onAccept: _acceptGhostSuggestion,
+                  onDismiss: (s) => unawaited(_dismissGhostSuggestion(s)),
+                );
+
+          return ItemsEditor(
+            key: _itemsEditorKey,
+            items: note.items,
+            showCheckboxes: isChecklist,
+            // İki sütun YALNIZ gerçek liste notunda (kullanıcı isteği
+            // 2026-08-16). Metin notuna iliştirilmiş maddeler gövdenin altında
+            // birkaç satır tutuyor; onları ikiye bölmek yalnız karıştırırdı.
+            columns: note.listColumns,
+            expandItems: ref.watch(expandListItemsProvider),
+            onChanged: (items) =>
+                _mutate((n) => n.copyWith(items: items), itemsShown: true),
+            floatsListenable: _floatsN,
+            pageBox: _pageBox,
+            shrinkWrap: true,
+            contentInsertion: _keyboardImagePaste,
+            richTheme: richTheme,
+            textStyle: noteBodyStyle,
+            onFieldFocused: _setFormatTarget,
+            onFieldDisposed: _clearFormatTargetFor,
+            // Madde satırlarındaki ek etiketleri de gövdedekiyle aynı çizilsin
+            // ve dokunulunca açılsın (bkz. ItemsEditor.attachmentNames).
+            attachmentNames: _bodyController.attachmentNames,
+            tagLooks: _tagLooks,
+            onAttachmentTag: _openTagByName,
+            selectionMenu: _itemSelectionMenu,
+            videoTimestamps: _bodyController.videoTimestamps,
+            onVideoTimestamp: _seekVideoTo,
+            onEmbedVideo: _readOnly ? null : _embedLinkedVideo,
+            addRowTrailing: _partsMenu(note),
+            paperLines: note.paged && note.archivePaper.ruled,
+            onMoveToPage: textPagePosition(note).count > 1
+                ? _moveItemToPage
+                : null,
+            onMakeTask: _readOnly ? null : (item) => _makeTask(note, item),
+            onLineReminder: _readOnly
+                ? null
+                : (item) => unawaited(
+                    addLineReminder(
+                      context,
+                      ref,
+                      noteId: note.id,
+                      itemId: item.id,
+                      text: item.text,
                     ),
                   ),
-                ),
-              if (showBody)
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: _NoteEditorScreenState._kGutter,
-                  ),
-                  child: _wrapped(_bodyController, bodyField),
-                ),
-            ],
+            lineTrailing: (item) =>
+                LineTaskChip(noteId: note.id, itemId: item.id),
+            onItemChecked: (item, checked) =>
+                syncItemToTasks(ref, note.id, item.id, checked),
+            listMode: isChecklist ? note.listMode : ListMode.general,
+            listKind: note.listKind,
+            groupByAisle:
+                isChecklist && note.listMode == ListMode.shopping && grouped,
+            aisleOrder: shopAisleOrder,
+            focusMode:
+                isChecklist && note.listMode == ListMode.project && focusOn,
+            focusIds: focusIds,
+            learnedGroups: learnedGroups,
+            onEditPrice: _readOnly
+                ? null
+                : (item) => unawaited(_openItemPriceSheet(item)),
+            onToggleFocusItem:
+                isChecklist && note.listMode == ListMode.project && !_readOnly
+                ? _toggleProjectFocusItem
+                : null,
+            onBreakdownItem:
+                isChecklist &&
+                    note.listMode == ListMode.project &&
+                    !_readOnly &&
+                    !note.locked
+                ? (item) => unawaited(_breakdownProjectItem(item))
+                : null,
+            ghostSection: ghostSection,
+            // Paylaşım biçimi (☐/☑) — `- [ ]` değil (bkz. noteShareText).
+            wholeNoteText: () => _note == null
+                ? ''
+                : noteShareText(_note!, pageLabel: context.l10n.pageLabel),
+            header: listHeader,
           );
-        }(),
+        },
       );
     }
 

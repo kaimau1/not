@@ -498,14 +498,16 @@ extension _EditorActions on _NoteEditorScreenState {
         _removeListPart();
       case 'removeText':
         _removeTextPart();
+      case 'listMode':
+        await _openListModePicker();
+      case 'extractText':
+        await _openTextExtract();
       case 'toText':
         _convertToText();
       case 'toList':
         _convertToList();
       case 'sortItems':
         await _sortItems();
-      case 'storeMode':
-        await _openStoreMode();
       case 'finishShopping':
         _finishShoppingList();
       case 'imagesToFiles':
@@ -946,7 +948,7 @@ extension _EditorActions on _NoteEditorScreenState {
       _ => 'smart:${kind.name}',
     };
     ref.read(quickEntryMemoryProvider.notifier).record(memKind, [
-      for (final i in checked) i.text,
+      for (final i in checked) stripRichMarkers(i.text),
     ]);
     final shopMem = ref.read(shopMemoryProvider.notifier);
     for (final item in checked) {
@@ -972,250 +974,449 @@ extension _EditorActions on _NoteEditorScreenState {
     _showUndoSnack(l10n.finishShoppingDone(checked.length));
   }
 
-  /// Türüne özel akıllı liste çalışma alanını açar (alışkanlık, taşınma,
-  /// bavul, antrenman, bütçe, temizlik, hediye, izleme...).
-  Future<void> _openSmartWorkspace(SmartListKind kind) async {
+  /// Liste kipini (`general | shopping | routine | template | project`)
+  /// doğrudan not üzerinde değiştirir.
+  void _setListMode(ListMode mode) {
     final note = _note;
-    if (note == null || _readOnly || note.type != NoteType.checklist) return;
-    FocusManager.instance.primaryFocus?.unfocus();
-    final liveItems = ValueNotifier<List<NoteItem>>(note.items);
-    void syncLive() {
-      final latest = _noteN.value;
-      if (latest != null) liveItems.value = latest.items;
-    }
-
-    _noteN.addListener(syncLive);
-    try {
-      await openSmartWorkspace(
-        context,
-        kind: kind,
-        title: note.displayTitle,
-        initialItems: note.items,
-        liveItems: liveItems,
-        onReplaceItems: (items) {
-          _mutate((n) => n.copyWith(items: items), immediate: true);
-          return items;
-        },
+    if (note == null || _readOnly) return;
+    _projectFocusN.value = false;
+    _projectFocusIdsN.value = const {};
+    _mutate((n) {
+      final nextSchedule = mode == ListMode.routine &&
+              n.resetSchedule == ResetSchedule.none
+          ? ResetSchedule.daily
+          : (mode != ListMode.routine ? ResetSchedule.none : n.resetSchedule);
+      final nextKind = switch (mode) {
+        ListMode.shopping => 'shopping',
+        ListMode.routine => n.listKind ?? 'habits',
+        ListMode.template => n.listKind ?? 'packing',
+        ListMode.project => n.listKind ?? 'project',
+        ListMode.general => null,
+      };
+      return n.copyWith(
+        listMode: mode,
+        resetSchedule: nextSchedule,
+        listKind: nextKind,
+        clearListKind: mode == ListMode.general,
       );
-    } finally {
-      _noteN.removeListener(syncLive);
-      liveItems.dispose();
+    }, immediate: true);
+    _notesRepo?.setListMode(widget.noteId, mode);
+    if (mode == ListMode.routine && note.resetSchedule == ResetSchedule.none) {
+      _notesRepo?.setResetSchedule(widget.noteId, ResetSchedule.daily);
+    } else if (mode != ListMode.routine &&
+        note.resetSchedule != ResetSchedule.none) {
+      _notesRepo?.setResetSchedule(widget.noteId, ResetSchedule.none);
     }
   }
 
-  /// AL-5 + Faz 3 Mağaza kipi: tek elle rahat işaretleme, reyon/bütçe/market
-  /// profili, barkod, fiş OCR, tarif paketleri, canlı ortak senkron.
-  Future<void> _openStoreMode() async {
+  /// Rutin sıfırlama takvimini günceller.
+  void _setResetSchedule(ResetSchedule schedule, List<int> customDays) {
+    if (_note == null || _readOnly) return;
+    _mutate(
+      (n) => n.copyWith(
+        resetSchedule: schedule,
+        resetCustomDays: schedule == ResetSchedule.customDays
+            ? customDays
+            : const [],
+      ),
+      immediate: true,
+    );
+    _notesRepo?.setResetSchedule(
+      widget.noteId,
+      schedule,
+      customDays: schedule == ResetSchedule.customDays ? customDays : const [],
+    );
+  }
+
+  /// Bağlamsal zaman dilimini günceller (`morning | evening | weekend | any`).
+  void _setContextTimeSlot(ContextTimeSlot slot) {
+    if (_note == null || _readOnly) return;
+    _mutate((n) => n.copyWith(contextTimeSlot: slot), immediate: true);
+    _notesRepo?.setContextTimeSlot(widget.noteId, slot);
+  }
+
+  /// Şablon kipi: tek dokunuşla tüm tikleri sıfırlar (+ Geri Al).
+  void _resetTemplateItems() {
     final note = _note;
-    if (note == null || _readOnly || note.type != NoteType.checklist) return;
-    FocusManager.instance.primaryFocus?.unfocus();
+    if (note == null || _readOnly) return;
+    if (!note.items.any((i) => !i.header && i.checked)) return;
+    unawaited(AppHaptics.tick());
+    _mutate(
+      (n) => n.copyWith(
+        items: [
+          for (final i in n.items)
+            i.header ? i : i.copyWith(checked: false),
+        ],
+      ),
+      immediate: true,
+    );
+    _showUndoSnack(context.l10n.templateResetDone);
+  }
+
+  /// Şablon kipi: tüm tikleri temizlenmiş yeni bir liste kopyası oluşturur.
+  Future<void> _copyTemplateAsNewList() async {
+    final note = _note;
+    final repo = ref.read(notesRepositoryProvider);
+    if (note == null || repo == null) return;
     final l10n = context.l10n;
-    final kind = detectNoteListKind(note, locale: l10n.localeName);
+    final id = await repo.duplicateNote(note, resetChecked: true);
+    if (!mounted) return;
+    showUndoSnackBar(
+      context,
+      message: l10n.noteDuplicated,
+      undoLabel: l10n.undo,
+      onUndo: () => repo.hardDelete(id),
+    );
+  }
+
+  /// Canlı doğal dil ayrıştırıcıdan gelen yapılandırılmış maddeyi ekler.
+  void _addParsedItem(NoteItem item) {
+    final note = _note;
+    if (note == null || _readOnly) return;
+    final l10n = context.l10n;
     final learned = ref.read(quickEntryMemoryProvider).itemGroups;
-    final dueItems = ref
-        .read(quickEntryMemoryProvider)
-        .predictDue('smart:market');
-    final user = ref.read(authStateProvider).value;
-    final rawDisplayName = user?.displayName?.trim();
-    final userName = (rawDisplayName != null && rawDisplayName.isNotEmpty)
-        ? rawDisplayName.split(' ').first
-        : '';
-    final isShared = widget.ownerId != null || noteSharedByMe(ref, note);
+    _mutate((n) {
+      if (n.listMode == ListMode.shopping) {
+        final next = insertItemsBySmartGroup(
+          n.items,
+          [item],
+          kind: SmartListKind.shopping,
+          locale: l10n.localeName,
+          learnedGroups: learned,
+        );
+        return n.copyWith(items: next);
+      }
+      if (n.listMode == ListMode.routine) {
+        return n.copyWith(items: [...n.items, item]);
+      }
+      final unchecked = [
+        for (final i in n.items)
+          if (!i.checked) i,
+      ];
+      final checked = [
+        for (final i in n.items)
+          if (i.checked) i,
+      ];
+      return n.copyWith(items: [...unchecked, item, ...checked]);
+    }, immediate: true);
+  }
 
-    // P1-1: Ortak alışveriş / ikinci cihaz güncellemeleri Mağaza Kipi'ne canlı
-    // yansır (editörün _noteN dinleyicisi uzak birleştirme sonrası güncellenir).
-    final liveItems = ValueNotifier<List<NoteItem>>(note.items);
-    final memoryN = ValueNotifier<ShopMemory>(ref.read(shopMemoryProvider));
-    void syncLive() {
-      final latest = _noteN.value;
-      if (latest != null) liveItems.value = latest.items;
+  /// Alışveriş / genel satır için hızlı fiyat + reyon levhası (Kural 3 & 5).
+  Future<void> _openItemPriceSheet(NoteItem item) async {
+    final note = _note;
+    if (note == null || _readOnly) return;
+    final l10n = context.l10n;
+    final learned = ref.read(quickEntryMemoryProvider).itemGroups;
+    final curAisle = resolveItemAisle(
+      item,
+      locale: l10n.localeName,
+      learnedGroups: learned,
+    );
+    final res = await showShopPriceSheet(
+      context,
+      item: item,
+      currentAisle: curAisle,
+      memory: ref.read(shopMemoryProvider),
+    );
+    if (res == null || !mounted) return;
+    final updated = ShopItemMeta.fromItem(item)
+        .copyWith(
+          unitPrice: res.price,
+          clearPrice: res.price == null,
+          store: res.store,
+          aisle: res.aisle,
+        )
+        .applyToItem(item);
+    _mutate(
+      (n) => n.copyWith(
+        items: [
+          for (final i in n.items)
+            if (i.id == item.id) updated else i,
+        ],
+      ),
+      immediate: true,
+    );
+    if (res.aisle != curAisle && res.aisle >= 0) {
+      ref
+          .read(quickEntryMemoryProvider.notifier)
+          .learnGroup(item.text, res.aisle);
     }
-
-    _noteN.addListener(syncLive);
-    try {
-      await Navigator.of(context).push<void>(
-        MaterialPageRoute<void>(
-          builder: (_) => StoreModeScreen(
-            title: note.displayTitle,
-            initialItems: note.items,
-            liveItems: liveItems,
-            noteId: note.id,
-            listKind: kind,
-            isShared: isShared,
-            currentUserName: userName,
-            learnedGroups: learned,
-            shopMemoryListenable: memoryN,
-            dueItems: dueItems,
-            onToggleItem: (id) {
-              List<NoteItem> updated = _note?.items ?? const [];
-              _mutate((n) {
-                updated = [
-                  for (final i in n.items)
-                    if (i.id == id) i.copyWith(checked: !i.checked) else i,
-                ];
-                return n.copyWith(items: updated);
-              }, immediate: true);
-              return updated;
-            },
-            onUpdateItem: (item) {
-              List<NoteItem> updated = _note?.items ?? const [];
-              _mutate((n) {
-                updated = [
-                  for (final i in n.items)
-                    if (i.id == item.id) item else i,
-                ];
-                return n.copyWith(items: updated);
-              }, immediate: true);
-              return updated;
-            },
-            onReplaceItems: (items) {
-              _mutate((n) => n.copyWith(items: items), immediate: true);
-              return items;
-            },
-            onAddItem: (raw) {
-              final cur = _note;
-              if (cur == null) return const [];
-              final curKind = detectNoteListKind(cur, locale: l10n.localeName);
-              final curLearned = ref.read(quickEntryMemoryProvider).itemGroups;
-              List<NoteItem> updated = cur.items;
-              final key = quickItemKey(raw);
-              final addedQty = quickQtyOf(raw);
-              _mutate((n) {
-                final existingIdx = n.items.indexWhere(
-                  (i) => !i.header && quickItemKey(i.text) == key,
-                );
-                if (existingIdx >= 0 && curKind == SmartListKind.shopping) {
-                  final existing = n.items[existingIdx];
-                  final oldQty = quickQtyOf(existing.text);
-                  final nextQty = existing.checked
-                      ? addedQty
-                      : (oldQty.isEmpty
-                            ? addedQty
-                            : (addedQty.isEmpty
-                                  ? oldQty
-                                  : combineQuickQuantities(oldQty, addedQty)));
-                  final nextText = quickCompose(
-                    quickBaseName(existing.text),
-                    nextQty,
-                  );
-                  final parsed = parseQuickQty(nextQty);
-                  final nextItem = ShopItemMeta.fromItem(existing)
-                      .copyWith(
-                        qty: parsed?.value,
-                        clearQty: parsed == null,
-                        unit: parsed?.rawUnit ?? '',
-                        status: ShopItemStatus.todo,
-                      )
-                      .applyToItem(existing.copyWith(text: nextText));
-                  updated = [
-                    for (var idx = 0; idx < n.items.length; idx++)
-                      if (idx == existingIdx) nextItem else n.items[idx],
-                  ];
-                } else {
-                  updated = insertItemsBySmartGroup(
-                    n.items,
-                    [NoteItem(id: const Uuid().v4(), text: raw)],
-                    kind: curKind,
-                    locale: l10n.localeName,
-                    learnedGroups: curLearned,
-                  );
-                }
-                return n.copyWith(items: updated);
-              }, immediate: true);
-              return updated;
-            },
-            onSortByGroup: () {
-              final cur = _note;
-              if (cur == null) return const [];
-              final curKind = detectNoteListKind(cur, locale: l10n.localeName);
-              final curLearned = ref.read(quickEntryMemoryProvider).itemGroups;
-              List<NoteItem> updated = cur.items;
-              _mutate((n) {
-                updated = sortItemsBySmartGroup(
-                  n.items,
-                  kind: curKind,
-                  locale: l10n.localeName,
-                  learnedGroups: curLearned,
-                );
-                return n.copyWith(items: updated);
-              }, immediate: true);
-              return updated;
-            },
-            onFinishChecked: () {
-              _finishShoppingList();
-              return _note?.items ?? const [];
-            },
-            onRecordPrice: (itemText, price, {store = '', unit = ''}) {
-              ref
-                  .read(shopMemoryProvider.notifier)
-                  .recordPrice(itemText, price, store: store, unit: unit);
-              memoryN.value = ref.read(shopMemoryProvider);
-            },
-            onSetBudget: (budget) {
-              ref.read(shopMemoryProvider.notifier).setBudget(note.id, budget);
-              memoryN.value = ref.read(shopMemoryProvider);
-            },
-            onSaveAisleOrder: (storeId, order) {
-              ref
-                  .read(shopMemoryProvider.notifier)
-                  .saveStoreAisleOrder(storeId, order);
-              memoryN.value = ref.read(shopMemoryProvider);
-            },
-            onSaveBarcode: (product) {
-              ref.read(shopMemoryProvider.notifier).saveBarcode(product);
-              memoryN.value = ref.read(shopMemoryProvider);
-            },
-            onSaveCustomRecipe: (recipe) {
-              ref.read(shopMemoryProvider.notifier).saveCustomRecipe(recipe);
-              memoryN.value = ref.read(shopMemoryProvider);
-            },
-            onDeleteCustomRecipe: (id) {
-              ref.read(shopMemoryProvider.notifier).deleteCustomRecipe(id);
-              memoryN.value = ref.read(shopMemoryProvider);
-            },
-            onLearnAisle: (itemText, aisle) {
-              ref
-                  .read(quickEntryMemoryProvider.notifier)
-                  .learnGroup(itemText, aisle);
-            },
-            onClassifyUnknownItem: (itemId, itemName) async {
-              final DecisionService? svc =
-                  _decisions ?? ref.read(decisionServiceProvider);
-              if (svc == null) return null;
-              final aisle = await decideShopAisle(svc, itemName);
-              return aisle?.index;
-            },
-            onDismissDue: (name) {
-              ref.read(quickEntryMemoryProvider);
-              ref.read(shopMemoryProvider.notifier).dismissDueItem(name);
-              memoryN.value = ref.read(shopMemoryProvider);
-            },
-            onRecordTrip: (trip) {
-              ref.read(shopMemoryProvider.notifier).recordTrip(trip);
-              memoryN.value = ref.read(shopMemoryProvider);
-            },
-            onNotifyAtStore: () async {
-              final who = userName.isNotEmpty ? userName : l10n.appName;
-              final msg = l10n.shopAtStoreMessage(who);
-              final cur = _note ?? note;
-              final chatRepo = ref.read(folderChatRepositoryProvider);
-              final folderId = cur.folderId;
-              if (folderId != null && folderId.isNotEmpty && chatRepo != null) {
-                await chatRepo.send(folderId, msg);
-              } else {
-                await SharePlus.instance.share(
-                  ShareParams(text: '$msg (${cur.displayTitle})'),
-                );
-              }
-            },
-          ),
-        ),
+    if (res.price != null && res.price! > 0) {
+      ref.read(shopMemoryProvider.notifier).recordPrice(
+        item.text,
+        res.price!,
+        store: res.store,
+        unit: updated.unit,
       );
-    } finally {
-      _noteN.removeListener(syncLive);
-      liveItems.dispose();
-      memoryN.dispose();
     }
+  }
+
+  /// Alışveriş kipi barkod tarama (doğrudan not üzerine ekler).
+  Future<void> _openShoppingBarcode() async {
+    final note = _note;
+    if (note == null || _readOnly) return;
+    final code = await openQrScanner(context);
+    if (code == null || code.trim().isEmpty || !mounted) return;
+    final memory = ref.read(shopMemoryProvider);
+    final product = await lookupBarcodeProduct(code, memory: memory);
+    if (!mounted) return;
+    final name = product?.name.trim().isNotEmpty == true
+        ? product!.name.trim()
+        : code.trim();
+    if (product != null) {
+      ref.read(shopMemoryProvider.notifier).saveBarcode(product);
+    }
+    final aisle = product?.aisle;
+    _addParsedItem(
+      NoteItem(
+        id: const Uuid().v4(),
+        text: name,
+        category: aisle != null && aisle >= 0
+            ? (aisleCategoryKey(aisle) ?? '')
+            : '',
+      ),
+    );
+  }
+
+  /// Alışveriş kipi fiş OCR fiyat güncellemesi (doğrudan not üzerinde).
+  Future<void> _openShoppingReceipt() async {
+    final note = _note;
+    if (note == null || _readOnly) return;
+    final res = await showShopReceiptSheet(context, items: note.items);
+    if (res == null || res.matches.isEmpty || !mounted) return;
+    final priceById = <String, double>{
+      for (final m in res.matches) m.itemId: m.receiptLine.price,
+    };
+    final unitById = <String, String>{
+      for (final i in note.items) i.id: i.unit,
+    };
+    _mutate(
+      (n) => n.copyWith(
+        items: [
+          for (final i in n.items)
+            if (priceById.containsKey(i.id))
+              ShopItemMeta.fromItem(i)
+                  .copyWith(
+                    unitPrice: priceById[i.id],
+                    store: res.storeId,
+                  )
+                  .applyToItem(i)
+            else
+              i,
+        ],
+      ),
+      immediate: true,
+    );
+    final shopMem = ref.read(shopMemoryProvider.notifier);
+    for (final m in res.matches) {
+      shopMem.recordPrice(
+        m.itemText,
+        m.receiptLine.price,
+        store: res.storeId,
+        unit: unitById[m.itemId] ?? '',
+      );
+    }
+  }
+
+  /// Alışveriş kipi tarif malzemelerini doğrudan nota ekler.
+  Future<void> _openShoppingRecipes() async {
+    final note = _note;
+    if (note == null || _readOnly) return;
+    final l10n = context.l10n;
+    final shopMem = ref.read(shopMemoryProvider);
+    final outcome = await showShopRecipesSheet(
+      context,
+      customRecipes: shopMem.customRecipes,
+      onSaveCustomRecipe: (r) =>
+          ref.read(shopMemoryProvider.notifier).saveCustomRecipe(r),
+      onDeleteCustomRecipe: (id) =>
+          ref.read(shopMemoryProvider.notifier).deleteCustomRecipe(id),
+    );
+    if (outcome == null ||
+        outcome.selectedIngredients.isEmpty ||
+        !mounted) {
+      return;
+    }
+    final learned = ref.read(quickEntryMemoryProvider).itemGroups;
+    _mutate(
+      (n) => n.copyWith(
+        items: mergeRecipeIntoItems(
+          n.items,
+          outcome.selectedIngredients,
+          locale: l10n.localeName,
+          learnedGroups: learned,
+        ),
+      ),
+      immediate: true,
+    );
+  }
+
+  /// Alışveriş kipi reyon yürüyüş sırasını düzenler.
+  Future<void> _openShoppingAisleOrder() async {
+    final l10n = context.l10n;
+    final cur = ref.read(shopMemoryProvider).aisleOrderFor('');
+    final order = await showShopAisleOrderSheet(
+      context,
+      storeLabel: l10n.listModeShopping,
+      currentOrder: cur,
+    );
+    if (order == null || !mounted) return;
+    ref.read(shopMemoryProvider.notifier).saveStoreAisleOrder('', order);
+    _update(() {});
+  }
+
+  /// Şablon (bavul) sihirbazını notun üzerinde hafif levha olarak açar.
+  Future<void> _openPackingWizard() async {
+    final note = _note;
+    if (note == null || _readOnly) return;
+    final generated = await showTripPackingWizardSheet(context);
+    if (generated == null || generated.isEmpty || !mounted) return;
+    final existingKeys = {
+      for (final i in note.items) quickItemKey(i.text),
+    };
+    final toAdd = <NoteItem>[
+      for (final g in generated)
+        if (!existingKeys.contains(quickItemKey(g.text)))
+          NoteItem.fromMap({
+            'id': const Uuid().v4(),
+            'text': g.text,
+            ...g.extras,
+          }),
+    ];
+    if (toAdd.isEmpty) return;
+    _mutate((n) => n.copyWith(items: [...n.items, ...toAdd]), immediate: true);
+  }
+
+  /// Proje kipi: odaklanılacak en fazla 3 maddeyi seçer.
+  Future<void> _pickProjectFocusItems() async {
+    final note = _note;
+    if (note == null) return;
+    final chosen = await showProjectFocusPickerSheet(
+      context,
+      items: note.items,
+      selectedIds: _projectFocusIdsN.value,
+    );
+    if (chosen == null || !mounted) return;
+    _projectFocusIdsN.value = chosen;
+    if (chosen.isNotEmpty) _projectFocusN.value = true;
+  }
+
+  /// Proje kipi: tek maddeyi odak kümesine ekler / çıkarır (en çok 3).
+  void _toggleProjectFocusItem(NoteItem item) {
+    final next = {..._projectFocusIdsN.value};
+    if (!next.remove(item.id)) {
+      if (next.length >= 3) next.remove(next.first);
+      next.add(item.id);
+    }
+    _projectFocusIdsN.value = next;
+  }
+
+  /// Liste kipi seçim levhasını ⋮ menüsünden açar (düz `general` listelerde de
+  /// tek dokunuşla Alışveriş / Rutin / Şablon / Proje kipine geçiş sağlar).
+  Future<void> _openListModePicker() async {
+    final note = _note;
+    if (note == null || _readOnly) return;
+    final picked = await SmartListModeHeader.pickMode(
+      context,
+      current: note.listMode,
+    );
+    if (picked != null && picked != note.listMode && mounted) {
+      _setListMode(picked);
+    }
+  }
+
+  /// Faz 3: Yapıştırılan uzun metin / WhatsApp mesajı / tariften temiz madde
+  /// ayıklama alt levhasını açar ve seçilen maddeleri nota ekler.
+  Future<void> _openTextExtract({String initialText = ''}) async {
+    final note = _note;
+    if (note == null || _readOnly) return;
+    final learnedGroups = ref.read(quickEntryMemoryProvider).itemGroups;
+    final extracted = await showTextExtractSheet(
+      context,
+      ref,
+      initialText: initialText,
+      mode: note.listMode,
+      learnedGroups: learnedGroups,
+      noteLocked: note.locked,
+    );
+    if (extracted == null || extracted.isEmpty || !mounted) return;
+    _mutate(
+      (n) => n.copyWith(items: [...n.items, ...extracted]),
+      immediate: true,
+    );
+    if (!note.locked) {
+      final memKind = note.listMode == ListMode.shopping
+          ? 'smart:market'
+          : 'mode:${note.listMode.name}';
+      ref.read(quickEntryMemoryProvider.notifier).record(
+        memKind,
+        [for (final i in extracted) i.text],
+        at: DateTime.now(),
+      );
+    }
+  }
+
+  /// Faz 3: Proje kipinde tek bir görevi kota kontrollü AI (veya çevrimdışı
+  /// 0-kredi yerel yedek) ile 3–5 alt adıma böler; onaylanan alt adımlar
+  /// `extras['parentId']` ile doğrudan ana görevin altına eklenir.
+  Future<void> _breakdownProjectItem(NoteItem parent) async {
+    final note = _note;
+    if (note == null || _readOnly || note.locked) return;
+    final l10n = context.l10n;
+    final res = await ref
+        .read(listAiServiceProvider)
+        .breakdownTask(
+          parent.text,
+          locale: l10n.localeName,
+          listTitle: note.title,
+          noteLocked: note.locked,
+        );
+    if (!mounted) return;
+    if (res.quotaReached) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showMessage(l10n.listAiQuotaReached);
+    }
+    final chosen = await showTaskBreakdownSheet(
+      context,
+      parentTaskText: parent.text,
+      initialSteps: res.items,
+    );
+    if (chosen == null || chosen.isEmpty || !mounted) return;
+    const uuid = Uuid();
+    final subItems = [
+      for (final step in chosen)
+        NoteItem(
+          id: uuid.v4(),
+          text: step,
+          extras: {'parentId': parent.id},
+        ),
+    ];
+    _mutate((n) {
+      final idx = n.items.indexWhere((i) => i.id == parent.id);
+      if (idx < 0) {
+        return n.copyWith(items: [...n.items, ...subItems]);
+      }
+      final next = [...n.items]..insertAll(idx + 1, subItems);
+      return n.copyWith(items: next);
+    }, immediate: true);
+  }
+
+  /// Kural 1: Geçici hayalet öneriye dokunulduğunda gerçek kalıcı [NoteItem]
+  /// oluşturup nota ekler.
+  void _acceptGhostSuggestion(GhostSuggestion suggestion) {
+    final item = suggestion.toNoteItem(const Uuid().v4());
+    _addParsedItem(item);
+  }
+
+  /// Kural 1: Hayalet öneriyi 24 saatliğine gizler (yalnız SharedPreferences).
+  Future<void> _dismissGhostSuggestion(GhostSuggestion suggestion) async {
+    await GhostSuggestionEngine.dismiss(
+      ref.read(sharedPreferencesProvider),
+      suggestion.id,
+    );
+    if (!mounted) return;
+    _ghostDismissedN.value = {..._ghostDismissedN.value, suggestion.id};
   }
 
   /// **Dışa aktarma** — eski "PDF olarak dışa aktar" maddesinin yerini alır.

@@ -26,6 +26,7 @@ import '../data/scan/scan_pdf.dart';
 import '../data/scan/scan_title.dart';
 import '../data/user_templates.dart';
 import '../data/video_frame.dart';
+import '../domain/list_mode.dart';
 import '../domain/note.dart';
 import '../domain/note_templates.dart';
 import 'note_template_sheet.dart';
@@ -117,6 +118,8 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     final content = outcome.content;
     final repo = ref.read(notesRepositoryProvider);
     if (repo == null) return;
+    final mode = listModeFromLegacyKind(outcome.listKind);
+    final schedule = defaultResetScheduleForLegacyKind(outcome.listKind);
     final rich = outcome.richItems;
     final id = (rich != null && rich.isNotEmpty)
         ? await repo.createRichNote(
@@ -127,6 +130,8 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
             folderId: quickAddFolderId,
             listColumns: content.columns,
             listKind: outcome.listKind,
+            listMode: mode,
+            resetSchedule: schedule,
           )
         : await repo.createNote(
             content.type,
@@ -136,13 +141,11 @@ mixin QuickAddActions<T extends ConsumerStatefulWidget> on ConsumerState<T> {
             folderId: quickAddFolderId,
             listColumns: content.columns,
             listKind: outcome.listKind,
+            listMode: mode,
+            resetSchedule: schedule,
           );
     if (outcome.open) {
-      await openNewNote(
-        id,
-        query: outcome.openWorkspace ? '?workspace=1' : '',
-        type: content.type,
-      );
+      await openNewNote(id, type: content.type);
       return;
     }
     // Hızlı liste: liste sayfada kuruldu, not kaydedildi — editör ayrıca

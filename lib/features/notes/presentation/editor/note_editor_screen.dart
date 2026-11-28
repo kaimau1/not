@@ -3,8 +3,19 @@ import '../note_link_ui.dart';
 import 'editor_chrome_palette.dart';
 import 'glyph_button.dart';
 import 'ime_hide_detector.dart';
-import 'store_mode_screen.dart';
-import '../../../smart_lists/presentation/smart_workspace_router.dart';
+import 'inline_parse_bar.dart';
+import 'shopping_summary_bar.dart';
+import 'smart_list_mode_header.dart';
+import '../../../shopping/data/barcode_lookup.dart';
+import '../../../shopping/domain/shop_aisles.dart';
+import '../../../shopping/domain/shop_recipes.dart';
+import '../../../shopping/presentation/shop_aisle_order_sheet.dart';
+import '../../../shopping/presentation/shop_price_sheet.dart';
+import '../../../shopping/presentation/shop_receipt_sheet.dart';
+import '../../../shopping/presentation/shop_recipes_sheet.dart';
+import '../../../smart_lists/presentation/smart_wizards.dart';
+import '../../domain/list_mode.dart';
+import '../../domain/routine_reset.dart';
 import '../../../../core/widgets/back_closes.dart';
 import '../../../../core/widgets/color_fade.dart';
 import '../note_card.dart' show openNoteRoute;
@@ -42,7 +53,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:pasteboard/pasteboard.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/app_update.dart';
@@ -100,10 +110,10 @@ import '../../../ai/data/ai_policy.dart';
 import '../../../ai/data/decisions/decision_flag.dart';
 import '../../../ai/data/decisions/decision_profiles.dart';
 import '../../../ai/data/decisions/decision_service.dart';
+import '../../../ai/data/list_ai_service.dart';
 import '../../../ai/presentation/ai_consent_sheet.dart';
 import '../../../ai/data/speech_service.dart';
 import '../../../ai/domain/smart_categorize.dart';
-import '../../../folders/data/folder_chat_repository.dart';
 import '../../../folders/data/folders_repository.dart';
 import '../../../folders/domain/note_folder.dart';
 import '../../../folders/presentation/folder_sheets.dart';
@@ -116,7 +126,10 @@ import '../../../calendar/presentation/note_calendar_links.dart';
 import '../../../calendar/presentation/task_editor.dart';
 import '../../../calendar/presentation/line_task_chip.dart';
 import '../../data/quick_entry_memory.dart';
+import '../../domain/ghost_suggestion_engine.dart';
 import '../../domain/smart_list.dart';
+import '../text_extract_sheet.dart';
+import 'ghost_suggestions_section.dart';
 import '../../domain/spell_review.dart';
 import 'auto_spell.dart';
 import '../../../../core/utils/speech_output.dart' show SpeechOutputController;
@@ -292,7 +305,6 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
     this.startAudioFile = false,
     this.revealItemId,
     this.initialFind,
-    this.startWorkspace = false,
   });
 
   final String noteId;
@@ -326,9 +338,6 @@ class NoteEditorScreen extends ConsumerStatefulWidget {
   /// El yazısı modu: editör açılır açılmaz çizim tuvali gösterilir,
   /// kaydedilen çizim nota görsel eki olarak girer.
   final bool startDrawing;
-
-  /// Akıllı liste / mağaza kipi çalışma alanıyla açılır.
-  final bool startWorkspace;
 
   /// "Ayrı çizim": açılır açılmaz çizim ekranı (sonuç görsel eki olur).
   final bool startSeparateDrawing;
@@ -527,6 +536,9 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
   void initState() {
     super.initState();
     _initNoteServices();
+    _ghostDismissedN.value = GhostSuggestionEngine.loadDismissed(
+      ref.read(sharedPreferencesProvider),
+    );
     _loadGuard = Timer(const Duration(seconds: 6), () {
       if (mounted && _note == null) setState(() => _loadFailed = true);
     });
@@ -738,7 +750,11 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       // sayısı burada KARŞILAŞTIRILMIYORDU. Değişim "saf yazım" sayılıp
       // `setState` atlanıyor, yeni düzen ancak başka bir sebeple gelen
       // yeniden çizimde (ör. editörden çıkıp girmek) görünüyordu.
-      (a.listColumns, a.listKind) == (b.listColumns, b.listKind) &&
+      (a.listColumns, a.listKind, a.listMode, a.resetSchedule,
+          a.lastResetAt, a.contextTimeSlot, a.isQuickInbox) ==
+          (b.listColumns, b.listKind, b.listMode, b.resetSchedule,
+          b.lastResetAt, b.contextTimeSlot, b.isQuickInbox) &&
+      _sameInts(a.resetCustomDays, b.resetCustomDays) &&
       a.archivePages.length == b.archivePages.length &&
       // KÖK NEDEN (kullanıcı bulgusu 2026-10-20: "defter görünümünde kâğıt
       // tipi seçimi çalışmıyor"): Defter görünümü ve kâğıt deseni burada

@@ -17,6 +17,7 @@ import 'package:notlar/features/ai/data/decisions/decision_service.dart';
 import 'package:notlar/features/notes/data/device_speech.dart';
 import 'package:notlar/features/notes/data/notes_repository.dart';
 import 'package:notlar/features/notes/data/quick_entry_memory.dart';
+import 'package:notlar/features/notes/domain/list_mode.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_item.dart';
 import 'package:notlar/features/notes/domain/note_templates.dart';
@@ -44,6 +45,9 @@ class _DropRepo extends CountingNotesRepository {
   /// Yeni not olarak kaydedilenler (H11): (tür, gövde).
   final created = <(NoteType, String)>[];
 
+  /// Zengin not olarak kaydedilenler (Hızlı Not gelen kutusu dahil).
+  final richCreated = <({String title, List<NoteItem> items, bool isQuickInbox})>[];
+
   @override
   Future<String> createNote(
     NoteType type, {
@@ -55,9 +59,41 @@ class _DropRepo extends CountingNotesRepository {
     DateTime? reminderAt,
     int listColumns = 1,
     String? listKind,
+    ListMode? listMode,
+    ResetSchedule? resetSchedule,
+    List<int> resetCustomDays = const [],
+    ContextTimeSlot contextTimeSlot = ContextTimeSlot.any,
+    bool isQuickInbox = false,
   }) {
     created.add((type, body));
     return Future.value('yeni${created.length}');
+  }
+
+  @override
+  Future<String> createRichNote(
+    NoteType type, {
+    double? orderIndex,
+    String title = '',
+    String body = '',
+    List<NoteItem>? items,
+    List<String> tags = const [],
+    bool urgent = false,
+    String? folderId,
+    DateTime? reminderAt,
+    int listColumns = 1,
+    String? listKind,
+    ListMode? listMode,
+    ResetSchedule? resetSchedule,
+    List<int> resetCustomDays = const [],
+    ContextTimeSlot contextTimeSlot = ContextTimeSlot.any,
+    bool isQuickInbox = false,
+  }) {
+    richCreated.add((
+      title: title,
+      items: items ?? const [],
+      isQuickInbox: isQuickInbox,
+    ));
+    return Future.value('zengin${richCreated.length}');
   }
 
   @override
@@ -69,21 +105,21 @@ class _DropRepo extends CountingNotesRepository {
 
 /// Hızlı liste ekranı ve "Hızlı ekle" (kullanıcı isteği 2026-11-15).
 void main() {
-  // Hedef şeridi yatay ve tembel: "Yeni not" çipi başta olduğundan dar
-  // test ekranında sondaki çipler kaydırılınca kurulur.
+  // v3: hedef çipine dokunarak hedef seçiciyi açar (veya görünür başa-baş
+  // çipine doğrudan dokunur).
   Future<void> tapTarget(WidgetTester tester, String id) async {
-    final chip = find.byKey(ValueKey('quick-drop-target-$id'));
-    await tester.scrollUntilVisible(
-      chip,
-      80,
-      scrollable: find.descendant(
-        of: find.byKey(const ValueKey('quick-drop-targets')),
-        matching: find.byType(Scrollable),
-      ),
-    );
-    await tester.ensureVisible(chip);
+    final direct = find.byKey(ValueKey('quick-drop-target-$id'));
+    if (direct.evaluate().isNotEmpty) {
+      await tester.tap(direct);
+      return;
+    }
+    await tester.tap(find.byKey(const ValueKey('quick-drop-target-chip')));
     await tester.pumpAndSettle();
-    await tester.tap(chip);
+    final pickKey = id == 'new'
+        ? const ValueKey('quick-drop-pick-new-note')
+        : ValueKey('quick-drop-pick-note-$id');
+    await tester.tap(find.byKey(pickKey));
+    await tester.pumpAndSettle();
   }
 
   setUpAll(() async {
@@ -387,14 +423,15 @@ void main() {
       await tester.pumpAndSettle();
       expect(outcome, isNull);
 
-      // Uzmanlaşmış v2 şablonu (alışkanlık, taşınma, bavul...) doğrudan çalışma alanına açılır.
+      // Uzmanlaşmış şablon (alışkanlık, taşınma, bavul...) ikincil sayfa yerine
+      // doğrudan not üzerinde kendi uyarlanan kipinde açılır.
       await tester.tap(find.text('aç'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Alışkanlık takibi').last);
       await tester.pumpAndSettle();
       expect(find.byType(QuickListScreen), findsNothing);
       expect(outcome?.open, isTrue);
-      expect(outcome?.openWorkspace, isTrue);
+      expect(outcome?.openWorkspace, isFalse);
       expect(outcome?.listKind, 'habits');
 
       await tester.tap(find.text('aç'));
@@ -555,10 +592,8 @@ void main() {
       await tester.pump();
       await tester.tap(find.text('aç'));
       await tester.pumpAndSettle();
-      ChoiceChip chip(String id) =>
-          tester.widget(find.byKey(ValueKey('quick-drop-target-$id')));
-      // Varsayılan hedef: en son değişen not.
-      expect(chip('b').selected, isTrue);
+      // v3: boş açılışta varsayılan hedef "Hızlı Not" (alakasız son not değil).
+      expect(find.text('Hedef: Hızlı Not'), findsOneWidget);
       final add = find.byKey(const ValueKey('quick-drop-add'));
       expect(tester.widget<FilledButton>(add).onPressed, isNull);
 
@@ -567,7 +602,7 @@ void main() {
         'alışveriş listesine süt ekle',
       );
       await tester.pumpAndSettle();
-      expect(chip('a').selected, isTrue);
+      expect(find.text('Hedef: Alışveriş listesi'), findsOneWidget);
       // HE-2: içerik düğmede değil önizleme satırında (işaretli Süt açılır).
       expect(find.text('→ Alışveriş listesi · Süt (1 madde)'), findsOneWidget);
       expect(find.text('Ekle'), findsOneWidget);
@@ -579,7 +614,7 @@ void main() {
       await tester.pumpAndSettle();
       await tapTarget(tester, 'c');
       await tester.pumpAndSettle();
-      expect(chip('c').selected, isTrue);
+      expect(find.text('Hedef: Fikirler'), findsOneWidget);
       expect(find.text('→ Fikirler · bir fikir'), findsOneWidget);
     });
 
@@ -658,21 +693,10 @@ void main() {
       expect(repo.created.last, (NoteType.text, 'faturayı yatır'));
     });
 
-    // H11 2. yarı (2026-11-19): not varken de "Yeni not" çipi HEP en başta.
-    testWidgets('"Yeni not" çipi en başta; seçilince yazılan yeni not olur', (
-      tester,
-    ) async {
+    // v3: hedef çipinden "Yeni not" seçilince yazılan yeni not olur.
+    testWidgets('"Yeni not" seçilince yazılan yeni not olur', (tester) async {
       final repo = await openSheet(tester, [shopping, todo, text]);
-      final strip = find.byKey(const ValueKey('quick-drop-targets'));
-      final chips = tester
-          .widgetList<ChoiceChip>(
-            find.descendant(of: strip, matching: find.byType(ChoiceChip)),
-          )
-          .toList();
-      expect(chips.first.key, const ValueKey('quick-drop-target-new'));
-      expect(chips.first.selected, isFalse);
-      await tester.tap(find.byKey(const ValueKey('quick-drop-target-new')));
-      await tester.pumpAndSettle();
+      await tapTarget(tester, 'new');
       await say(tester, 'kargoyu sor');
       expect(find.text('Yeni not olarak kaydediliyor…'), findsOneWidget);
       await tester.pump(const Duration(seconds: 2));
@@ -681,9 +705,8 @@ void main() {
       expect(repo.writes, isEmpty, reason: 'var olan nota eklenmez');
     });
 
-    // HE-2 (17K §4.2): şeridin başında arama; 12 çip sınırı yok — 16.
-    // sıradaki eski not da aranıp seçilir.
-    testWidgets('HE-2: çiplerde arama, uzak not seçilir ve ona eklenir', (
+    // v3: hedef çipinden aramalı seçiciyle uzak not seçilir ve ona eklenir.
+    testWidgets('HE-2: hedef seçicide arama, uzak not seçilir ve ona eklenir', (
       tester,
     ) async {
       final old = Note(
@@ -707,17 +730,17 @@ void main() {
         'logo taslağı',
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('quick-drop-search')));
+      await tester.tap(find.byKey(const ValueKey('quick-drop-target-chip')));
       await tester.pumpAndSettle();
       expect(find.text('Hangi nota eklensin?'), findsWidgets);
-      await tester.enterText(find.byType(TextField).last, 'defter');
+      await tester.enterText(
+        find.byKey(const ValueKey('quick-drop-picker-search')),
+        'defter',
+      );
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(ListTile, 'Fikir defteri'));
       await tester.pumpAndSettle();
-      final chip = tester.widget<ChoiceChip>(
-        find.byKey(const ValueKey('quick-drop-target-eski')),
-      );
-      expect(chip.selected, isTrue);
+      expect(find.text('Hedef: Fikir defteri'), findsOneWidget);
       expect(find.text('→ Fikir defteri · logo taslağı'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('quick-drop-add')));
       await tester.pumpAndSettle();
@@ -770,6 +793,7 @@ void main() {
       tester,
     ) async {
       final repo = await openSheet(tester, [shopping, todo, text]);
+      await tapTarget(tester, 'b');
       await say(tester, 'kargoyu sor');
       expect(find.byKey(const ValueKey('quick-drop-counting')), findsOneWidget);
       expect(find.text('“Yapılacaklar” notuna ekleniyor…'), findsOneWidget);
@@ -789,11 +813,12 @@ void main() {
     });
 
     // Kullanıcı isteği 2026-11-26: "ekle dediğim zaman çok kısa bir
-    // beklemeden sonra direkt eklemeli" — ad söylenmediyse seçili nota.
+    // beklemeden sonra direkt eklemeli" — ad söylenmediyse hedefe.
     testWidgets('"… ekle" ile biten konuşma: çok kısa geri sayımla eklenir', (
       tester,
     ) async {
       final repo = await openSheet(tester, [shopping, todo, text]);
+      await tapTarget(tester, 'b');
       await say(tester, 'kargoyu sor ekle');
       expect(find.byKey(const ValueKey('quick-drop-counting')), findsOneWidget);
       expect(find.text('“Yapılacaklar” notuna ekleniyor…'), findsOneWidget);
@@ -810,6 +835,7 @@ void main() {
       final before = repo.writes['b'];
       await tester.tap(find.text('aç'));
       await tester.pumpAndSettle();
+      await tapTarget(tester, 'b');
       await say(tester, 'faturayı yatır');
       await tester.pump(QuickDropSheet.commandCountdown);
       await tester.pump(const Duration(milliseconds: 50));
@@ -1177,7 +1203,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 150));
         await tester.tap(add);
         await tester.pumpAndSettle();
-        expect(repo.writes.keys, ['b']);
+        expect(repo.writes.keys, ['a']);
       },
     );
   });

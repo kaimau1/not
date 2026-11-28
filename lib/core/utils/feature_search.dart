@@ -738,7 +738,7 @@ const List<FeatureConcept> kFeatureConcepts = [
     ],
   ),
   (
-    ids: ['toText', 'toList', 'sortItems', 'columns', 'storeMode'],
+    ids: ['toText', 'toList', 'sortItems', 'columns'],
     words: [
       'liste',
       'madde',

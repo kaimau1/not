@@ -16,11 +16,13 @@ import '../../shopping/domain/shop_item_meta.dart';
 import '../../smart_lists/presentation/smart_wizards.dart';
 import '../data/notes_repository.dart';
 import '../data/quick_entry_memory.dart';
+import '../domain/list_mode.dart';
 import '../domain/note.dart';
 import '../domain/note_item.dart';
 import '../domain/note_templates.dart';
 import '../domain/note_type.dart';
 import '../domain/quick_entry.dart';
+import '../domain/quick_suggestion_sanitizer.dart';
 import '../domain/smart_lexicon_v2.dart';
 import '../domain/smart_list.dart';
 import 'quick_entry_bar.dart';
@@ -260,27 +262,41 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
   List<String> _computeFrequent(SmartListKind kind) {
     final memory = ref.read(quickEntryMemoryProvider);
     final base = widget.args.kind;
+    final locale = context.l10n.localeName;
+    final mode = listModeFromLegacyKind(smartListKindId(kind));
     if (!widget.args.smart) {
-      final top = memory.top(base, count: 16);
+      final top = memory.top(base, count: 16, min: 2);
       // Önce kullanıcının sık eklediği, boş kalan yer şablonun tohumu.
       final have = {for (final t in top) quickItemKey(t)};
-      return [
-        ...top,
-        for (final s in widget.args.seedItems)
-          if (have.add(quickItemKey(s))) s,
-      ].take(16).toList();
+      return QuickSuggestionSanitizer.filterSuggestions(
+        [
+          ...top,
+          for (final s in widget.args.seedItems)
+            if (have.add(quickItemKey(s))) s,
+        ],
+        mode: widget.args.grocery ? ListMode.shopping : mode,
+        kind: widget.args.grocery ? SmartListKind.shopping : kind,
+        locale: locale,
+        limit: 16,
+      );
     }
     // Türe bölünmeden önceki ortak kayıt ([base]) türüne süzülerek katılır.
     List<String> legacy(int Function(QuickItem) groupOf) => [
-      for (final t in memory.top(base, count: 32))
+      for (final t in memory.top(base, count: 32, min: 2))
         if (groupOf(QuickItem(name: t)) >= 0) t,
     ];
-    final market = memory.top(smartMemoryKind(base, SmartListKind.shopping));
-    final bavul = memory.top(smartMemoryKind(base, SmartListKind.packing));
+    final market = memory.top(
+      smartMemoryKind(base, SmartListKind.shopping),
+      min: 2,
+    );
+    final bavul = memory.top(
+      smartMemoryKind(base, SmartListKind.packing),
+      min: 2,
+    );
     final due = [
       for (final d in memory.predictDue(smartMemoryKind(base, kind))) d.name,
     ];
-    return switch (kind) {
+    final combined = switch (kind) {
       SmartListKind.shopping => quickInterleave([
         due,
         market,
@@ -294,10 +310,20 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
       SmartListKind.generic => quickInterleave([
         market,
         bavul,
-        memory.top(base, count: 16),
+        memory.top(base, count: 16, min: 2),
       ]),
-      _ => quickInterleave([due, memory.top(smartMemoryKind(base, kind))]),
+      _ => quickInterleave([
+        due,
+        memory.top(smartMemoryKind(base, kind), min: 2),
+      ]),
     };
+    return QuickSuggestionSanitizer.filterSuggestions(
+      combined,
+      mode: mode,
+      kind: kind,
+      locale: locale,
+      limit: 16,
+    );
   }
 
   List<String> _leftoversFor(SmartListKind kind) =>
@@ -820,21 +846,25 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
     final richItems = <NoteItem>[
       for (final r in ordered)
         () {
-          var item = NoteItem(
-            id: uuid.v4(),
-            text: r.item.text,
-            extras: r.extras,
-          );
-          if (effectiveKind == SmartListKind.shopping &&
-              r.extras['p'] is num &&
-              !r.extras.containsKey('q')) {
+          var item = NoteItem.fromMap({
+            ...r.extras,
+            'id': uuid.v4(),
+            'text': r.item.text,
+          });
+          if (effectiveKind == SmartListKind.shopping) {
             final parsedQty = parseQuickQty(r.item.qty);
-            if (parsedQty != null && parsedQty.value > 0) {
-              item = ShopItemMeta(
-                qty: parsedQty.value,
-                unit: parsedQty.rawUnit,
-                unitPrice: (r.extras['p'] as num).toDouble(),
-              ).applyToItem(item);
+            final meta = ShopItemMeta.fromItem(item);
+            final qty = meta.qty ?? parsedQty?.value;
+            final unit = meta.unit.isNotEmpty
+                ? meta.unit
+                : (parsedQty?.rawUnit ?? '');
+            final aisle =
+                meta.aisle ??
+                (r.item.group >= 0 && r.item.group < 13 ? r.item.group : null);
+            if (qty != null || meta.unitPrice != null || aisle != null) {
+              item = meta
+                  .copyWith(qty: qty, unit: unit, aisle: aisle)
+                  .applyToItem(item);
             }
           }
           return item;
@@ -1106,11 +1136,11 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
                   ),
                 if (kind != SmartListKind.generic)
                   _emptyPill(
-                    icon: Icons.dashboard_customize_outlined,
-                    label: l10n.smartListOpenWorkspace,
+                    icon: Icons.open_in_new_rounded,
+                    label: l10n.quickListOpenInNote,
                     tint: accent.withValues(alpha: AppAlpha.pressed),
                     fg: scheme.onSurface,
-                    onTap: () => unawaited(_finish(openWorkspace: true)),
+                    onTap: () => unawaited(_finish(open: true, openWorkspace: true)),
                   ),
               ],
             ),

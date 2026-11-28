@@ -9516,4 +9516,270 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get floatingAlignCycle => 'Horizontal alignment';
+
+  @override
+  String get quickInboxFolderName => 'Quick Note';
+
+  @override
+  String get quickInboxSubtitle => 'Unmatched additions land here';
+
+  @override
+  String get quickDropAddedQuickInbox => 'Added to Quick Note';
+
+  @override
+  String get quickDropOpen => 'Open';
+
+  @override
+  String quickDropTargetLabel(String target) {
+    return 'Target: $target';
+  }
+
+  @override
+  String get quickDropMergeSingle => 'Merge into one note';
+
+  @override
+  String get quickDropPriorityUrgent => 'Urgent';
+
+  @override
+  String get quickDropPriorityHigh => 'High';
+
+  @override
+  String get quickDropPriorityMedium => 'Medium';
+
+  @override
+  String get quickDropPriorityLow => 'Low';
+
+  @override
+  String quickDropContextNow(String title) {
+    return 'Suggested now: $title';
+  }
+
+  @override
+  String get listModeLabel => 'List mode';
+
+  @override
+  String get listModeGeneral => 'General';
+
+  @override
+  String get listModeShopping => 'Shopping';
+
+  @override
+  String get listModeRoutine => 'Routine';
+
+  @override
+  String get listModeTemplate => 'Template';
+
+  @override
+  String get listModeProject => 'Project';
+
+  @override
+  String get listModeResetSchedule => 'Reset';
+
+  @override
+  String get listModeResetNone => 'Off';
+
+  @override
+  String get listModeResetDaily => 'Every night';
+
+  @override
+  String get listModeResetWeekly => 'Every week';
+
+  @override
+  String get listModeResetCustom => 'Custom days';
+
+  @override
+  String get listModeTimeSlot => 'Time slot';
+
+  @override
+  String get listModeSlotAny => 'Anytime';
+
+  @override
+  String get listModeSlotMorning => 'Morning';
+
+  @override
+  String get listModeSlotEvening => 'Evening';
+
+  @override
+  String get listModeSlotWeekend => 'Weekend';
+
+  @override
+  String get shoppingGroupToggle => 'Aisles';
+
+  @override
+  String shoppingBoughtCount(int done, int total) {
+    return '$done/$total bought';
+  }
+
+  @override
+  String shoppingTotalAmount(String amount) {
+    return 'Total: $amount';
+  }
+
+  @override
+  String shoppingSummaryRemaining(int count) {
+    return '$count left';
+  }
+
+  @override
+  String routineTodayProgress(int done, int total) {
+    return 'Today $done/$total';
+  }
+
+  @override
+  String routineStreakDays(int count) {
+    return '$count d';
+  }
+
+  @override
+  String routineBestStreak(int count) {
+    return 'Best streak: $count days';
+  }
+
+  @override
+  String get routineLast30Days => 'Last 30 days';
+
+  @override
+  String get templateResetReuse => 'Reset all and reuse';
+
+  @override
+  String get templateResetDone => 'All items reset';
+
+  @override
+  String get templateCopyNew => 'Copy as new list';
+
+  @override
+  String get projectFocusToggle => 'Focus (3)';
+
+  @override
+  String get projectFocusExit => 'Exit focus';
+
+  @override
+  String get projectFocusPick => 'Pick focus';
+
+  @override
+  String projectFocusActive(int shown, int total) {
+    return 'Focus mode: $shown/$total';
+  }
+
+  @override
+  String projectProgressLabel(int percent, int done, int total) {
+    return '$percent% · $done/$total';
+  }
+
+  @override
+  String get itemQuickPostponeTomorrow => 'Move to tomorrow';
+
+  @override
+  String get itemQuickPriority => 'Priority';
+
+  @override
+  String get itemQuickDueDate => 'Due date';
+
+  @override
+  String get itemQuickPrice => 'Price';
+
+  @override
+  String get itemQuickFocus => 'Pin to focus';
+
+  @override
+  String get itemQuickUnfocus => 'Remove from focus';
+
+  @override
+  String get itemQuickMeta => 'Details';
+
+  @override
+  String get itemDueToday => 'Today';
+
+  @override
+  String get itemDueTomorrow => 'Tomorrow';
+
+  @override
+  String get itemDueNextWeek => 'Next week';
+
+  @override
+  String get itemDueClear => 'Clear date';
+
+  @override
+  String get itemPriorityNone => 'None';
+
+  @override
+  String get listModeNudgeShopping => 'Switch to Shopping mode?';
+
+  @override
+  String get listModeNudgeRoutine => 'Switch to Routine mode?';
+
+  @override
+  String get listModeQuickAddHint => 'e.g. 2 kg tomatoes, coffee \$6…';
+
+  @override
+  String get ghostSuggestionsTitle => 'Suggested items';
+
+  @override
+  String get ghostReasonDue => 'Bought regularly';
+
+  @override
+  String get ghostReasonPair => 'Goes well with';
+
+  @override
+  String get ghostReasonFrequent => 'Frequently added';
+
+  @override
+  String get ghostReasonTemplate => 'Might be missing';
+
+  @override
+  String get ghostReasonRoutine => 'Daily idea';
+
+  @override
+  String get itemBreakdownAction => 'Break into substeps';
+
+  @override
+  String get itemBreakdownTitle => 'Substeps';
+
+  @override
+  String get itemBreakdownApply => 'Add substeps';
+
+  @override
+  String get itemBreakdownEmpty => 'Could not suggest substeps';
+
+  @override
+  String get textExtractAction => 'Extract from text';
+
+  @override
+  String get textExtractTitle => 'Extract items from text';
+
+  @override
+  String get textExtractHint => 'Paste a message, recipe, or list here…';
+
+  @override
+  String get textExtractRefineAi => 'Refine with AI';
+
+  @override
+  String textExtractAddSelected(int count) {
+    return 'Add selected ($count)';
+  }
+
+  @override
+  String textExtractPasteBanner(int count) {
+    return 'Extract $count items from text';
+  }
+
+  @override
+  String get listAiQuotaReached =>
+      'Daily AI quota reached; using local suggestion.';
+
+  @override
+  String carryOverBanner(int count) {
+    return '$count unfinished tasks from earlier';
+  }
+
+  @override
+  String get carryOverAction => 'Move to today';
+
+  @override
+  String carryOverDone(int count) {
+    return 'Moved $count tasks to today';
+  }
+
+  @override
+  String get contextNowBadge => 'Now';
 }

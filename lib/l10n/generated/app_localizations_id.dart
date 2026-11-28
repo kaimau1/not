@@ -9556,4 +9556,270 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get floatingAlignCycle => 'Perataan horizontal';
+
+  @override
+  String get quickInboxFolderName => 'Catatan Cepat';
+
+  @override
+  String get quickInboxSubtitle => 'Tambahan yang belum pasti masuk ke sini';
+
+  @override
+  String get quickDropAddedQuickInbox => 'Ditambahkan ke Catatan Cepat';
+
+  @override
+  String get quickDropOpen => 'Buka';
+
+  @override
+  String quickDropTargetLabel(String target) {
+    return 'Tujuan: $target';
+  }
+
+  @override
+  String get quickDropMergeSingle => 'Gabung ke satu catatan';
+
+  @override
+  String get quickDropPriorityUrgent => 'Mendesak';
+
+  @override
+  String get quickDropPriorityHigh => 'Tinggi';
+
+  @override
+  String get quickDropPriorityMedium => 'Sedang';
+
+  @override
+  String get quickDropPriorityLow => 'Rendah';
+
+  @override
+  String quickDropContextNow(String title) {
+    return 'Disarankan sekarang: $title';
+  }
+
+  @override
+  String get listModeLabel => 'Mode daftar';
+
+  @override
+  String get listModeGeneral => 'Umum';
+
+  @override
+  String get listModeShopping => 'Belanja';
+
+  @override
+  String get listModeRoutine => 'Rutinitas';
+
+  @override
+  String get listModeTemplate => 'Templat';
+
+  @override
+  String get listModeProject => 'Proyek';
+
+  @override
+  String get listModeResetSchedule => 'Atur ulang';
+
+  @override
+  String get listModeResetNone => 'Nonaktif';
+
+  @override
+  String get listModeResetDaily => 'Setiap malam';
+
+  @override
+  String get listModeResetWeekly => 'Setiap minggu';
+
+  @override
+  String get listModeResetCustom => 'Hari khusus';
+
+  @override
+  String get listModeTimeSlot => 'Waktu';
+
+  @override
+  String get listModeSlotAny => 'Kapan saja';
+
+  @override
+  String get listModeSlotMorning => 'Pagi';
+
+  @override
+  String get listModeSlotEvening => 'Malam';
+
+  @override
+  String get listModeSlotWeekend => 'Akhir pekan';
+
+  @override
+  String get shoppingGroupToggle => 'Lorong';
+
+  @override
+  String shoppingBoughtCount(int done, int total) {
+    return '$done/$total dibeli';
+  }
+
+  @override
+  String shoppingTotalAmount(String amount) {
+    return 'Total: $amount';
+  }
+
+  @override
+  String shoppingSummaryRemaining(int count) {
+    return 'Tersisa $count';
+  }
+
+  @override
+  String routineTodayProgress(int done, int total) {
+    return 'Hari ini $done/$total';
+  }
+
+  @override
+  String routineStreakDays(int count) {
+    return '$count hr';
+  }
+
+  @override
+  String routineBestStreak(int count) {
+    return 'Rekor terbaik: $count hari';
+  }
+
+  @override
+  String get routineLast30Days => '30 hari terakhir';
+
+  @override
+  String get templateResetReuse => 'Atur ulang semua dan gunakan lagi';
+
+  @override
+  String get templateResetDone => 'Semua item diatur ulang';
+
+  @override
+  String get templateCopyNew => 'Salin sebagai daftar baru';
+
+  @override
+  String get projectFocusToggle => 'Fokus (3)';
+
+  @override
+  String get projectFocusExit => 'Tutup fokus';
+
+  @override
+  String get projectFocusPick => 'Pilih fokus';
+
+  @override
+  String projectFocusActive(int shown, int total) {
+    return 'Mode fokus: $shown/$total';
+  }
+
+  @override
+  String projectProgressLabel(int percent, int done, int total) {
+    return '$percent% · $done/$total';
+  }
+
+  @override
+  String get itemQuickPostponeTomorrow => 'Tunda ke besok';
+
+  @override
+  String get itemQuickPriority => 'Prioritas';
+
+  @override
+  String get itemQuickDueDate => 'Tanggal';
+
+  @override
+  String get itemQuickPrice => 'Harga';
+
+  @override
+  String get itemQuickFocus => 'Tandai fokus';
+
+  @override
+  String get itemQuickUnfocus => 'Hapus dari fokus';
+
+  @override
+  String get itemQuickMeta => 'Detail';
+
+  @override
+  String get itemDueToday => 'Hari ini';
+
+  @override
+  String get itemDueTomorrow => 'Besok';
+
+  @override
+  String get itemDueNextWeek => 'Minggu depan';
+
+  @override
+  String get itemDueClear => 'Hapus tanggal';
+
+  @override
+  String get itemPriorityNone => 'Tidak ada';
+
+  @override
+  String get listModeNudgeShopping => 'Pindah ke mode Belanja?';
+
+  @override
+  String get listModeNudgeRoutine => 'Pindah ke mode Rutinitas?';
+
+  @override
+  String get listModeQuickAddHint => 'Mis. 2 kg tomat, kopi 25000 rp…';
+
+  @override
+  String get ghostSuggestionsTitle => 'Item disarankan';
+
+  @override
+  String get ghostReasonDue => 'Rutin dibeli';
+
+  @override
+  String get ghostReasonPair => 'Cocok bersama';
+
+  @override
+  String get ghostReasonFrequent => 'Sering ditambahkan';
+
+  @override
+  String get ghostReasonTemplate => 'Mungkin terlewat';
+
+  @override
+  String get ghostReasonRoutine => 'Saran harian';
+
+  @override
+  String get itemBreakdownAction => 'Bagi jadi sublangkah';
+
+  @override
+  String get itemBreakdownTitle => 'Sublangkah';
+
+  @override
+  String get itemBreakdownApply => 'Tambah sublangkah';
+
+  @override
+  String get itemBreakdownEmpty => 'Tidak dapat menyarankan sublangkah';
+
+  @override
+  String get textExtractAction => 'Ekstrak dari teks';
+
+  @override
+  String get textExtractTitle => 'Ekstrak item dari teks';
+
+  @override
+  String get textExtractHint => 'Tempel pesan, resep, atau daftar di sini…';
+
+  @override
+  String get textExtractRefineAi => 'Rapikan dengan AI';
+
+  @override
+  String textExtractAddSelected(int count) {
+    return 'Tambah terpilih ($count)';
+  }
+
+  @override
+  String textExtractPasteBanner(int count) {
+    return 'Ekstrak $count item dari teks';
+  }
+
+  @override
+  String get listAiQuotaReached =>
+      'Kuota AI harian tercapai; memakai saran lokal.';
+
+  @override
+  String carryOverBanner(int count) {
+    return '$count tugas kemarin belum selesai';
+  }
+
+  @override
+  String get carryOverAction => 'Pindah ke hari ini';
+
+  @override
+  String carryOverDone(int count) {
+    return '$count tugas dipindah ke hari ini';
+  }
+
+  @override
+  String get contextNowBadge => 'Sekarang';
 }

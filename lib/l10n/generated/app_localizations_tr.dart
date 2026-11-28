@@ -9499,4 +9499,271 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get floatingAlignCycle => 'Yatay hiza';
+
+  @override
+  String get quickInboxFolderName => 'Hızlı Not';
+
+  @override
+  String get quickInboxSubtitle => 'Emin olunmayan eklemeler burada toplanır';
+
+  @override
+  String get quickDropAddedQuickInbox => 'Hızlı Not\'a eklendi';
+
+  @override
+  String get quickDropOpen => 'Aç';
+
+  @override
+  String quickDropTargetLabel(String target) {
+    return 'Hedef: $target';
+  }
+
+  @override
+  String get quickDropMergeSingle => 'Tek notta birleştir';
+
+  @override
+  String get quickDropPriorityUrgent => 'Acil';
+
+  @override
+  String get quickDropPriorityHigh => 'Yüksek';
+
+  @override
+  String get quickDropPriorityMedium => 'Orta';
+
+  @override
+  String get quickDropPriorityLow => 'Düşük';
+
+  @override
+  String quickDropContextNow(String title) {
+    return 'Şimdi önerilen: $title';
+  }
+
+  @override
+  String get listModeLabel => 'Liste kipi';
+
+  @override
+  String get listModeGeneral => 'Genel';
+
+  @override
+  String get listModeShopping => 'Alışveriş';
+
+  @override
+  String get listModeRoutine => 'Rutin';
+
+  @override
+  String get listModeTemplate => 'Şablon';
+
+  @override
+  String get listModeProject => 'Proje';
+
+  @override
+  String get listModeResetSchedule => 'Sıfırlama';
+
+  @override
+  String get listModeResetNone => 'Kapalı';
+
+  @override
+  String get listModeResetDaily => 'Her gece';
+
+  @override
+  String get listModeResetWeekly => 'Her hafta';
+
+  @override
+  String get listModeResetCustom => 'Özel günler';
+
+  @override
+  String get listModeTimeSlot => 'Zaman dilimi';
+
+  @override
+  String get listModeSlotAny => 'Her zaman';
+
+  @override
+  String get listModeSlotMorning => 'Sabah';
+
+  @override
+  String get listModeSlotEvening => 'Akşam';
+
+  @override
+  String get listModeSlotWeekend => 'Hafta sonu';
+
+  @override
+  String get shoppingGroupToggle => 'Reyonlar';
+
+  @override
+  String shoppingBoughtCount(int done, int total) {
+    return '$done/$total alındı';
+  }
+
+  @override
+  String shoppingTotalAmount(String amount) {
+    return 'Toplam: $amount';
+  }
+
+  @override
+  String shoppingSummaryRemaining(int count) {
+    return '$count kaldı';
+  }
+
+  @override
+  String routineTodayProgress(int done, int total) {
+    return 'Bugün $done/$total';
+  }
+
+  @override
+  String routineStreakDays(int count) {
+    return '$count gün';
+  }
+
+  @override
+  String routineBestStreak(int count) {
+    return 'En iyi seri: $count gün';
+  }
+
+  @override
+  String get routineLast30Days => 'Son 30 gün';
+
+  @override
+  String get templateResetReuse => 'Tümünü sıfırla ve tekrar kullan';
+
+  @override
+  String get templateResetDone => 'Tüm maddeler sıfırlandı';
+
+  @override
+  String get templateCopyNew => 'Yeni liste olarak kopyala';
+
+  @override
+  String get projectFocusToggle => 'Odak (3)';
+
+  @override
+  String get projectFocusExit => 'Odağı kapat';
+
+  @override
+  String get projectFocusPick => 'Odak seç';
+
+  @override
+  String projectFocusActive(int shown, int total) {
+    return 'Odak kipi: $shown/$total';
+  }
+
+  @override
+  String projectProgressLabel(int percent, int done, int total) {
+    return '%$percent · $done/$total';
+  }
+
+  @override
+  String get itemQuickPostponeTomorrow => 'Yarına ertele';
+
+  @override
+  String get itemQuickPriority => 'Öncelik';
+
+  @override
+  String get itemQuickDueDate => 'Tarih';
+
+  @override
+  String get itemQuickPrice => 'Fiyat';
+
+  @override
+  String get itemQuickFocus => 'Odağa al';
+
+  @override
+  String get itemQuickUnfocus => 'Odaktan çıkar';
+
+  @override
+  String get itemQuickMeta => 'Ayrıntılar';
+
+  @override
+  String get itemDueToday => 'Bugün';
+
+  @override
+  String get itemDueTomorrow => 'Yarın';
+
+  @override
+  String get itemDueNextWeek => 'Gelecek hafta';
+
+  @override
+  String get itemDueClear => 'Tarihi kaldır';
+
+  @override
+  String get itemPriorityNone => 'Yok';
+
+  @override
+  String get listModeNudgeShopping => 'Alışveriş kipine geç?';
+
+  @override
+  String get listModeNudgeRoutine => 'Rutin kipine geç?';
+
+  @override
+  String get listModeQuickAddHint => 'Örn. 2 kg domates, kahve 180 tl…';
+
+  @override
+  String get ghostSuggestionsTitle => 'Önerilen maddeler';
+
+  @override
+  String get ghostReasonDue => 'Sık alıyorsun';
+
+  @override
+  String get ghostReasonPair => 'Yanında iyi gider';
+
+  @override
+  String get ghostReasonFrequent => 'Sık eklediklerin';
+
+  @override
+  String get ghostReasonTemplate => 'Eksik olabilir';
+
+  @override
+  String get ghostReasonRoutine => 'Günlük öneri';
+
+  @override
+  String get itemBreakdownAction => 'Alt adımlara böl';
+
+  @override
+  String get itemBreakdownTitle => 'Alt adımlar';
+
+  @override
+  String get itemBreakdownApply => 'Alt adımları ekle';
+
+  @override
+  String get itemBreakdownEmpty => 'Alt adım önerilemedi';
+
+  @override
+  String get textExtractAction => 'Metinden ayıkla';
+
+  @override
+  String get textExtractTitle => 'Metinden madde ayıkla';
+
+  @override
+  String get textExtractHint =>
+      'Mesaj, tarif veya liste metnini buraya yapıştır…';
+
+  @override
+  String get textExtractRefineAi => 'Yapay zekâ ile netleştir';
+
+  @override
+  String textExtractAddSelected(int count) {
+    return 'Seçilenleri ekle ($count)';
+  }
+
+  @override
+  String textExtractPasteBanner(int count) {
+    return 'Metinden $count madde ayıkla';
+  }
+
+  @override
+  String get listAiQuotaReached =>
+      'Günlük yapay zekâ kotan doldu; yerel öneri kullanıldı.';
+
+  @override
+  String carryOverBanner(int count) {
+    return 'Önceki günden $count görev kaldı';
+  }
+
+  @override
+  String get carryOverAction => 'Bugüne aktar';
+
+  @override
+  String carryOverDone(int count) {
+    return '$count görev bugüne aktarıldı';
+  }
+
+  @override
+  String get contextNowBadge => 'Şimdi';
 }

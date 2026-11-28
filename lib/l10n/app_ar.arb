@@ -2792,5 +2792,183 @@
   "floatingSizeSmall": "صغير",
   "floatingSizeMedium": "متوسط",
   "floatingSizeLarge": "كامل",
-  "floatingAlignCycle": "محاذاة أفقية"
+  "floatingAlignCycle": "محاذاة أفقية",
+  "quickInboxFolderName": "ملاحظة سريعة",
+  "quickInboxSubtitle": "تُجمع الإضافات غير المؤكدة هنا",
+  "quickDropAddedQuickInbox": "تمت الإضافة إلى ملاحظة سريعة",
+  "quickDropOpen": "فتح",
+  "quickDropTargetLabel": "الهدف: {target}",
+  "quickDropMergeSingle": "دمج في ملاحظة واحدة",
+  "quickDropPriorityUrgent": "عاجل",
+  "quickDropPriorityHigh": "مرتفع",
+  "quickDropPriorityMedium": "متوسط",
+  "quickDropPriorityLow": "منخفض",
+  "quickDropContextNow": "مقترح الآن: {title}",
+  "listModeLabel": "وضع القائمة",
+  "listModeGeneral": "عام",
+  "listModeShopping": "تسوق",
+  "listModeRoutine": "روتين",
+  "listModeTemplate": "قالب",
+  "listModeProject": "مشروع",
+  "listModeResetSchedule": "إعادة التعيين",
+  "listModeResetNone": "متوقف",
+  "listModeResetDaily": "كل ليلة",
+  "listModeResetWeekly": "كل أسبوع",
+  "listModeResetCustom": "أيام مخصصة",
+  "listModeTimeSlot": "الفترة الزمنية",
+  "listModeSlotAny": "أي وقت",
+  "listModeSlotMorning": "الصباح",
+  "listModeSlotEvening": "المساء",
+  "listModeSlotWeekend": "عطلة نهاية الأسبوع",
+  "shoppingGroupToggle": "الأقسام",
+  "shoppingBoughtCount": "تم شراء {done}/{total}",
+  "@shoppingBoughtCount": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "shoppingTotalAmount": "الإجمالي: {amount}",
+  "@shoppingTotalAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "shoppingSummaryRemaining": "متبقي {count}",
+  "@shoppingSummaryRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "routineTodayProgress": "اليوم {done}/{total}",
+  "@routineTodayProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "routineStreakDays": "{count} يوم",
+  "@routineStreakDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "routineBestStreak": "أفضل سلسلة: {count} يوم",
+  "@routineBestStreak": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "routineLast30Days": "آخر 30 يومًا",
+  "templateResetReuse": "إعادة تعيين الكل وإعادة الاستخدام",
+  "templateResetDone": "تمت إعادة تعيين جميع العناصر",
+  "templateCopyNew": "نسخ كقائمة جديدة",
+  "projectFocusToggle": "تركيز (3)",
+  "projectFocusExit": "إغلاق التركيز",
+  "projectFocusPick": "اختر التركيز",
+  "projectFocusActive": "وضع التركيز: {shown}/{total}",
+  "@projectFocusActive": {
+    "placeholders": {
+      "shown": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "projectProgressLabel": "{percent}% · {done}/{total}",
+  "@projectProgressLabel": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      },
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "itemQuickPostponeTomorrow": "تأجيل للغد",
+  "itemQuickPriority": "الأولوية",
+  "itemQuickDueDate": "التاريخ",
+  "itemQuickPrice": "السعر",
+  "itemQuickFocus": "إضافة للتركيز",
+  "itemQuickUnfocus": "إزالة من التركيز",
+  "itemQuickMeta": "التفاصيل",
+  "itemDueToday": "اليوم",
+  "itemDueTomorrow": "غدًا",
+  "itemDueNextWeek": "الأسبوع القادم",
+  "itemDueClear": "إزالة التاريخ",
+  "itemPriorityNone": "بلا",
+  "listModeNudgeShopping": "التبديل إلى وضع التسوق؟",
+  "listModeNudgeRoutine": "التبديل إلى وضع الروتين؟",
+  "listModeQuickAddHint": "مثلاً 2 كغ طماطم، قهوة 50 ر.س…",
+  "ghostSuggestionsTitle": "عناصر مقترحة",
+  "ghostReasonDue": "تشتريه باستمرار",
+  "ghostReasonPair": "يناسب قائمتك",
+  "ghostReasonFrequent": "تضيفه كثيرًا",
+  "ghostReasonTemplate": "قد يكون ناقصًا",
+  "ghostReasonRoutine": "اقتراح يومي",
+  "itemBreakdownAction": "تقسيم إلى خطوات",
+  "itemBreakdownTitle": "خطوات فرعية",
+  "itemBreakdownApply": "إضافة الخطوات",
+  "itemBreakdownEmpty": "تعذّر اقتراح خطوات فرعية",
+  "textExtractAction": "استخراج من النص",
+  "textExtractTitle": "استخراج عناصر من النص",
+  "textExtractHint": "الصق رسالة أو وصفة أو قائمة هنا…",
+  "textExtractRefineAi": "تحسين بالذكاء الاصطناعي",
+  "textExtractAddSelected": "إضافة المحدد ({count})",
+  "@textExtractAddSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "textExtractPasteBanner": "استخراج {count} عناصر من النص",
+  "@textExtractPasteBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listAiQuotaReached": "اكتملت الحصة اليومية؛ تم استخدام الاقتراح المحلي.",
+  "carryOverBanner": "تبقّت {count} مهام غير منجزة",
+  "@carryOverBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "carryOverAction": "نقل إلى اليوم",
+  "carryOverDone": "تم نقل {count} مهام إلى اليوم",
+  "@carryOverDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "contextNowBadge": "الآن"
 }

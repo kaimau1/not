@@ -541,6 +541,4 @@ Widget _noteBuilder(BuildContext context, GoRouterState state) =>
       // ?find=<sorgu>: aramadan açıldı — not içi arama o kelimeyle açılır
       // (F56.1).
       initialFind: state.uri.queryParameters['find'],
-      // ?workspace=1: akıllı liste / mağaza kipi çalışma alanıyla açılır.
-      startWorkspace: state.uri.queryParameters['workspace'] == '1',
     );

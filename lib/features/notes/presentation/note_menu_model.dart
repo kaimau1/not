@@ -99,14 +99,20 @@ ActionMenu noteMenuModel(
           MenuAction('calendar', l10n.calendarLinkNote, Icons.event_outlined),
         if (editor) ...[
           if (isList) ...[
+            if (!readOnly && note.type == NoteType.checklist) ...[
+              MenuAction(
+                'listMode',
+                l10n.listModeLabel,
+                Icons.tune_rounded,
+              ),
+              MenuAction(
+                'extractText',
+                l10n.textExtractAction,
+                Icons.playlist_add_check_rounded,
+              ),
+            ],
             MenuAction('toText', l10n.convertToText, Icons.notes_outlined),
             MenuAction('sortItems', l10n.sortItems, Icons.sort),
-            if (!readOnly && note.type == NoteType.checklist)
-              MenuAction(
-                'storeMode',
-                l10n.storeMode,
-                Icons.storefront_outlined,
-              ),
             if (!readOnly && note.items.any((i) => !i.header && i.checked))
               MenuAction(
                 'finishShopping',

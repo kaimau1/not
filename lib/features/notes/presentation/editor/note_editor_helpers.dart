@@ -65,6 +65,7 @@ bool sameItemsVisually(List<NoteItem> a, List<NoteItem> b) {
         x.align != y.align ||
         // Paket satırları özet hapına toplar (bkz. NoteItem.package).
         x.package != y.package ||
+        !sameNoteItemStructuredFields(x, y) ||
         !sameNoteItemExtras(x.extras, y.extras) ||
         isBlankText(x.text) != isBlankText(y.text)) {
       return false;
@@ -133,6 +134,12 @@ bool sameRenderedNote(Note a, Note b) {
       a.theme != b.theme ||
       // Defter görünümü ve kâğıt deseni (bkz. `_sameVisual` kök neden notu).
       a.listKind != b.listKind ||
+      a.listMode != b.listMode ||
+      a.resetSchedule != b.resetSchedule ||
+      !_sameInts(a.resetCustomDays, b.resetCustomDays) ||
+      a.lastResetAt != b.lastResetAt ||
+      a.contextTimeSlot != b.contextTimeSlot ||
+      a.isQuickInbox != b.isQuickInbox ||
       a.paged != b.paged ||
       a.archivePaper != b.archivePaper ||
       a.orderIndex != b.orderIndex ||

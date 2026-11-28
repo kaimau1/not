@@ -13,6 +13,32 @@ extension ItemsEditorBuildOps on ItemsEditorState {
     if (nowChecked && _items[index].text.trim().isEmpty) return;
     // Ara başlık işaretlenmez (kutucuğu da yok; toplu işaret buraya düşer).
     if (nowChecked && _items[index].header) return;
+
+    // Kural 2 (Rutin kipi): madde yerinde kalır (alta düşmez / silinmez) ve
+    // doneDays tek gerçek kaynak olarak güncellenir.
+    if (_keepCheckedInPlace) {
+      final todayKey = isoDayKeyOf(DateTime.now());
+      final current = _items[index];
+      final hasToday = current.isDoneOn(todayKey);
+      NoteItem updated;
+      if (nowChecked && !hasToday) {
+        updated = current.toggledDoneDay(todayKey);
+      } else if (!nowChecked && hasToday) {
+        updated = current.toggledDoneDay(todayKey);
+      } else {
+        updated = current.copyWith(checked: nowChecked);
+      }
+      _update(() {
+        _items[index] = updated;
+        _rowCache.remove(target.id);
+      });
+      _commit();
+      if (wasChecked != nowChecked) {
+        widget.onItemChecked?.call(updated, nowChecked);
+      }
+      return;
+    }
+
     if (nowChecked && !wasChecked) {
       // Eski sıra ŞİMDİ saklanmalı: işaret anında öğe listede yer değiştirir.
       _checkedFrom[target.id] = (index: index, at: DateTime.now());
@@ -122,7 +148,7 @@ extension ItemsEditorBuildOps on ItemsEditorState {
       _items[index] = current.copyWith(text: before.trimRight());
       // İşaretli maddeden bölünen parça işaretsizlerin sonuna girer
       // ("işaretsizler başta" değişmezi, bkz. [_insertAfter]).
-      final at = (widget.showCheckboxes && current.checked)
+      final at = (widget.showCheckboxes && !_keepCheckedInPlace && current.checked)
           ? _uncheckedInsertIndex(_uncheckedCount)
           : index + 1;
       _items.insert(at, next);
@@ -172,7 +198,7 @@ extension ItemsEditorBuildOps on ItemsEditorState {
     if (_selectionMode) return null;
     final open = [
       for (final i in _items)
-        if (!widget.showCheckboxes || !i.checked) i,
+        if (!widget.showCheckboxes || _keepCheckedInPlace || !i.checked) i,
     ];
     NoteItem item;
     if (open.isNotEmpty && open.last.text.trim().isEmpty && !open.last.header) {
@@ -181,7 +207,12 @@ extension ItemsEditorBuildOps on ItemsEditorState {
       // "+ Yeni öğe" ([_addItem]) ile aynı: paketsiz, işaretsizlerin sonu.
       item = NoteItem(id: ItemsEditorState._uuid.v4(), text: '');
       _update(
-        () => _items.insert(_uncheckedInsertIndex(_uncheckedCount), item),
+        () => _items.insert(
+          _keepCheckedInPlace
+              ? _items.length
+              : _uncheckedInsertIndex(_uncheckedCount),
+          item,
+        ),
       );
       _commit();
     }
@@ -214,7 +245,7 @@ extension ItemsEditorBuildOps on ItemsEditorState {
     // bloğun ortasına giremez — "işaretsizler _items'ın başında" değişmezi
     // bozulur ve sürükle-sırala görünenden BAŞKA öğeyi taşırdı. Yeni öğe
     // işaretsizlerin sonuna girer.
-    final at = (widget.showCheckboxes && after.checked)
+    final at = (widget.showCheckboxes && !_keepCheckedInPlace && after.checked)
         ? _uncheckedInsertIndex(_uncheckedCount)
         : index + 1;
     _update(() => _items.insert(at, item));
@@ -225,13 +256,119 @@ extension ItemsEditorBuildOps on ItemsEditorState {
     return item;
   }
 
-  /// [text] ile başlayan bir madde açar ve imleci sonuna koyar (videonun
-  /// "Bu ana not al" düğmesi — damga + boşluk).
-  ///
-  /// [after] bu editörün bir satırıysa: o satır BOŞSA damga oraya yazılır,
-  /// doluysa hemen altına yeni madde açılır. Verilmezse işaretsizlerin
-  /// sonundaki boş madde kullanılır, yoksa sona yeni madde eklenir — art
-  /// arda basılan düğme boş satır biriktirmez.
+  /// Alışveriş reyon gruplarını [ItemsEditor.aisleOrder] sırasına göre kurar.
+  /// Tüm satır mutasyonları Kural 5 gereği `item.id` ile yapılır.
+  List<Widget> _buildShoppingAisleChildren(
+    BuildContext context,
+    List<NoteItem> listItems,
+    Set<int> collapsed,
+    double stylusGutter,
+  ) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final l10n = context.l10n;
+    final isTr = l10n.localeName.startsWith('tr');
+    final buckets = <int, List<NoteItem>>{};
+    final blankTail = <NoteItem>[];
+    for (final item in listItems) {
+      if (item.header) continue;
+      if (item.text.trim().isEmpty) {
+        blankTail.add(item);
+        continue;
+      }
+      final aisle = resolveItemAisle(
+        item,
+        locale: l10n.localeName,
+        learnedGroups: widget.learnedGroups,
+      );
+      (buckets[aisle] ??= <NoteItem>[]).add(item);
+    }
+
+    final customOrder = widget.aisleOrder;
+    final orderedKeys = <int>[
+      if (customOrder != null)
+        for (final a in customOrder)
+          if (buckets.containsKey(a)) a,
+      for (var i = 0; i < kShopAisles.length; i++)
+        if (buckets.containsKey(i) &&
+            (customOrder == null || !customOrder.contains(i)))
+          i,
+      if (buckets.containsKey(kOtherAisleIndex)) kOtherAisleIndex,
+    ];
+
+    final out = <Widget>[];
+    for (final aisleIdx in orderedKeys) {
+      final group = buckets[aisleIdx]!;
+      final meta = shopAisleMetaOfIndex(aisleIdx);
+      final isCollapsed = collapsed.contains(aisleIdx);
+      out.add(
+        _floatRow(
+          reserved: ItemsEditorState._kButtonRowWidth,
+          pushOnly: true,
+          Padding(
+            padding: EdgeInsetsDirectional.fromSTEB(
+              14,
+              AppSpace.s,
+              8 + stylusGutter,
+              AppSpace.xxs,
+            ),
+            child: InkWell(
+              key: ValueKey('aisle-header-$aisleIdx'),
+              borderRadius: BorderRadius.circular(AppRadius.s),
+              onTap: () {
+                final next = {..._collapsedAisles.value};
+                if (!next.add(aisleIdx)) next.remove(aisleIdx);
+                _collapsedAisles.value = next;
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpace.xs,
+                  vertical: AppSpace.xs,
+                ),
+                child: Row(
+                  children: [
+                    Icon(meta.icon, size: AppIconSize.s, color: meta.color),
+                    const SizedBox(width: AppSpace.s),
+                    Text(
+                      meta.label(isTr: isTr),
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: AppWeight.strong,
+                        color: scheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpace.xs),
+                    Text(
+                      '(${group.length})',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const Spacer(),
+                    Icon(
+                      isCollapsed
+                          ? Icons.expand_more_rounded
+                          : Icons.expand_less_rounded,
+                      size: AppIconSize.s,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      if (!isCollapsed) {
+        for (final item in group) {
+          out.add(_cachedItemRow(item));
+        }
+      }
+    }
+    for (final blank in blankTail) {
+      out.add(_cachedItemRow(blank));
+    }
+    return out;
+  }
 
   Widget _buildItemsEditor(BuildContext context) {
     final theme = Theme.of(context);
@@ -255,11 +392,9 @@ extension ItemsEditorBuildOps on ItemsEditorState {
 
     // Checklist'te işaretli öğeler sürüklenebilir listenin DIŞINDA, footer'da
     // ayrı bir blok olarak durur (Keep'in "tamamlananlar" bölümü gibi).
-    // Böylece "Yeni öğe" düğmesi tam istenen yere — işaretsizlerin altına,
-    // işaretlilerin üstüne — doğal olarak düşer.
-    // Blok seçimi _placedAsChecked ile yapılır: işareti yeni değişen öğe,
-    // solma animasyonu bitene kadar eski bloğunda kalır (bkz. _settling).
-    var checkedItems = showChecks
+    // Rutin kipinde (_keepCheckedInPlace) ve Proje Odak kipinde işaretliler
+    // footer bloğunda ayrılmaz.
+    var checkedItems = (showChecks && !_keepCheckedInPlace && !_isProjectFocused)
         ? [
             for (final i in _items)
               if (_placedAsChecked(i)) i,
@@ -267,6 +402,16 @@ extension ItemsEditorBuildOps on ItemsEditorState {
         : const <NoteItem>[];
     // Sürüklenebilir liste ile [_reorder]'ın eşlemesi AYNI süzgeçten geçmeli.
     var listItems = _visibleItems();
+    if (_isProjectFocused) {
+      final focusSet = resolveProjectFocusIds(
+        listItems,
+        manualFocusIds: widget.focusIds,
+      );
+      listItems = [
+        for (final item in listItems)
+          if (focusSet.contains(item.id) || item.text.trim().isEmpty) item,
+      ];
+    }
     // Yalnız ÖNEK kurulur: sürükleme dizinleri [_reorder]'ın eşlemesiyle örtüşür.
     final checkedCount = checkedItems.length;
     final checkedHidden = math.max(0, checkedCount - _checkedShown);
@@ -372,6 +517,7 @@ extension ItemsEditorBuildOps on ItemsEditorState {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         addButton,
+        if (widget.ghostSection != null) widget.ghostSection!,
         // SİL BLOĞUN BAŞINDA (F38.4): en altta "İşaretlileri göster"in de
         // altındaydı; 10 satır + ek şeridi kaydırmadan ulaşılmıyordu.
         if (checkedItems.isNotEmpty)
@@ -452,7 +598,7 @@ extension ItemsEditorBuildOps on ItemsEditorState {
     // Satırların KENDİSİ aynı `_itemRow`: onay kutusu, yıldız, biçimli metin,
     // uzun basma menüsü ve seçim kipi tek sütundakiyle birebir aynı çalışır.
     // Yalnız sürükleme tutamağı yok (bkz. [ItemsEditor.columns]).
-    if (widget.columns == 2) {
+    if (widget.columns == 2 && !_isGroupedShopping) {
       final half = (listItems.length + 1) ~/ 2;
       final columns = <Widget>[
         for (final range in [
@@ -493,6 +639,43 @@ extension ItemsEditorBuildOps on ItemsEditorState {
           controller: _barController,
           overlayChildBuilder: _selectionBar,
           child: grid,
+        ),
+      );
+    }
+
+    // ALIŞVERİŞ REYON GRUPLAMASI (Kural 5: ID tabanlı satır mutasyonu,
+    // yerel ValueNotifier ile daraltılabilir başlıklar, sürükleme kapalı).
+    if (_isGroupedShopping) {
+      final groupedList = ValueListenableBuilder<Set<int>>(
+        valueListenable: _collapsedAisles,
+        builder: (context, collapsed, _) => ListView(
+          padding: EdgeInsets.only(bottom: _selectionMode ? 152 : 96),
+          shrinkWrap: widget.shrinkWrap,
+          addAutomaticKeepAlives: !widget.shrinkWrap,
+          physics: widget.shrinkWrap
+              ? const NeverScrollableScrollPhysics()
+              : null,
+          children: [
+            if (widget.header != null) widget.header!,
+            ..._buildShoppingAisleChildren(
+              context,
+              listItems,
+              collapsed,
+              stylusGutter,
+            ),
+            footer,
+          ],
+        ),
+      );
+      return PopScope(
+        canPop: !_selectionMode,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop && !BackCloses.handling(context)) _exitSelection();
+        },
+        child: OverlayPortal(
+          controller: _barController,
+          overlayChildBuilder: _selectionBar,
+          child: groupedList,
         ),
       );
     }

@@ -2792,5 +2792,183 @@
   "floatingSizeSmall": "Kecil",
   "floatingSizeMedium": "Sedang",
   "floatingSizeLarge": "Penuh",
-  "floatingAlignCycle": "Perataan horizontal"
+  "floatingAlignCycle": "Perataan horizontal",
+  "quickInboxFolderName": "Catatan Cepat",
+  "quickInboxSubtitle": "Tambahan yang belum pasti masuk ke sini",
+  "quickDropAddedQuickInbox": "Ditambahkan ke Catatan Cepat",
+  "quickDropOpen": "Buka",
+  "quickDropTargetLabel": "Tujuan: {target}",
+  "quickDropMergeSingle": "Gabung ke satu catatan",
+  "quickDropPriorityUrgent": "Mendesak",
+  "quickDropPriorityHigh": "Tinggi",
+  "quickDropPriorityMedium": "Sedang",
+  "quickDropPriorityLow": "Rendah",
+  "quickDropContextNow": "Disarankan sekarang: {title}",
+  "listModeLabel": "Mode daftar",
+  "listModeGeneral": "Umum",
+  "listModeShopping": "Belanja",
+  "listModeRoutine": "Rutinitas",
+  "listModeTemplate": "Templat",
+  "listModeProject": "Proyek",
+  "listModeResetSchedule": "Atur ulang",
+  "listModeResetNone": "Nonaktif",
+  "listModeResetDaily": "Setiap malam",
+  "listModeResetWeekly": "Setiap minggu",
+  "listModeResetCustom": "Hari khusus",
+  "listModeTimeSlot": "Waktu",
+  "listModeSlotAny": "Kapan saja",
+  "listModeSlotMorning": "Pagi",
+  "listModeSlotEvening": "Malam",
+  "listModeSlotWeekend": "Akhir pekan",
+  "shoppingGroupToggle": "Lorong",
+  "shoppingBoughtCount": "{done}/{total} dibeli",
+  "@shoppingBoughtCount": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "shoppingTotalAmount": "Total: {amount}",
+  "@shoppingTotalAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "shoppingSummaryRemaining": "Tersisa {count}",
+  "@shoppingSummaryRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "routineTodayProgress": "Hari ini {done}/{total}",
+  "@routineTodayProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "routineStreakDays": "{count} hr",
+  "@routineStreakDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "routineBestStreak": "Rekor terbaik: {count} hari",
+  "@routineBestStreak": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "routineLast30Days": "30 hari terakhir",
+  "templateResetReuse": "Atur ulang semua dan gunakan lagi",
+  "templateResetDone": "Semua item diatur ulang",
+  "templateCopyNew": "Salin sebagai daftar baru",
+  "projectFocusToggle": "Fokus (3)",
+  "projectFocusExit": "Tutup fokus",
+  "projectFocusPick": "Pilih fokus",
+  "projectFocusActive": "Mode fokus: {shown}/{total}",
+  "@projectFocusActive": {
+    "placeholders": {
+      "shown": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "projectProgressLabel": "{percent}% · {done}/{total}",
+  "@projectProgressLabel": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      },
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "itemQuickPostponeTomorrow": "Tunda ke besok",
+  "itemQuickPriority": "Prioritas",
+  "itemQuickDueDate": "Tanggal",
+  "itemQuickPrice": "Harga",
+  "itemQuickFocus": "Tandai fokus",
+  "itemQuickUnfocus": "Hapus dari fokus",
+  "itemQuickMeta": "Detail",
+  "itemDueToday": "Hari ini",
+  "itemDueTomorrow": "Besok",
+  "itemDueNextWeek": "Minggu depan",
+  "itemDueClear": "Hapus tanggal",
+  "itemPriorityNone": "Tidak ada",
+  "listModeNudgeShopping": "Pindah ke mode Belanja?",
+  "listModeNudgeRoutine": "Pindah ke mode Rutinitas?",
+  "listModeQuickAddHint": "Mis. 2 kg tomat, kopi 25000 rp…",
+  "ghostSuggestionsTitle": "Item disarankan",
+  "ghostReasonDue": "Rutin dibeli",
+  "ghostReasonPair": "Cocok bersama",
+  "ghostReasonFrequent": "Sering ditambahkan",
+  "ghostReasonTemplate": "Mungkin terlewat",
+  "ghostReasonRoutine": "Saran harian",
+  "itemBreakdownAction": "Bagi jadi sublangkah",
+  "itemBreakdownTitle": "Sublangkah",
+  "itemBreakdownApply": "Tambah sublangkah",
+  "itemBreakdownEmpty": "Tidak dapat menyarankan sublangkah",
+  "textExtractAction": "Ekstrak dari teks",
+  "textExtractTitle": "Ekstrak item dari teks",
+  "textExtractHint": "Tempel pesan, resep, atau daftar di sini…",
+  "textExtractRefineAi": "Rapikan dengan AI",
+  "textExtractAddSelected": "Tambah terpilih ({count})",
+  "@textExtractAddSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "textExtractPasteBanner": "Ekstrak {count} item dari teks",
+  "@textExtractPasteBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listAiQuotaReached": "Kuota AI harian tercapai; memakai saran lokal.",
+  "carryOverBanner": "{count} tugas kemarin belum selesai",
+  "@carryOverBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "carryOverAction": "Pindah ke hari ini",
+  "carryOverDone": "{count} tugas dipindah ke hari ini",
+  "@carryOverDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "contextNowBadge": "Sekarang"
 }

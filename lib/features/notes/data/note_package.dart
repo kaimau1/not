@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:archive/archive.dart';
 
 import '../domain/attachment.dart';
+import '../domain/list_mode.dart';
 import '../domain/note.dart';
 import '../domain/note_item.dart';
 import '../domain/note_type.dart';
@@ -83,6 +84,17 @@ Map<String, dynamic> encodeNoteJson(Note note) => {
   'backgroundImageId': note.backgroundImageId,
   'backgroundOpacity': note.backgroundOpacity,
   if (note.theme.isNotEmpty) 'theme': note.theme,
+  if (note.listKind != null && note.listKind!.isNotEmpty)
+    'listKind': note.listKind,
+  if (note.listMode != ListMode.general) 'listMode': note.listMode.id,
+  if (note.resetSchedule != ResetSchedule.none)
+    'resetSchedule': note.resetSchedule.id,
+  if (note.resetCustomDays.isNotEmpty) 'resetCustomDays': note.resetCustomDays,
+  if (note.lastResetAt != null)
+    'lastResetAt': note.lastResetAt!.millisecondsSinceEpoch,
+  if (note.contextTimeSlot != ContextTimeSlot.any)
+    'contextTimeSlot': note.contextTimeSlot.id,
+  if (note.isQuickInbox) 'isQuickInbox': true,
   if (note.textPages.isNotEmpty)
     'textPages': [for (final p in note.textPages) p.toMap()],
   if (note.activePage.isNotEmpty) 'activePage': note.activePage,
@@ -134,6 +146,13 @@ Note decodeNoteJson(Map<String, dynamic> map) {
   if (version > NotePackage.formatVersion) {
     throw FormatException('Paket sürümü desteklenmiyor: $version');
   }
+  final listKind = map['listKind'] as String?;
+  final rawMode = map['listMode'] as String?;
+  final rawReset = map['resetSchedule'] as String?;
+  final rawLastReset = map['lastResetAt'];
+  final lastResetAt = rawLastReset is num
+      ? DateTime.fromMillisecondsSinceEpoch(rawLastReset.toInt())
+      : (rawLastReset is String ? DateTime.tryParse(rawLastReset) : null);
   return Note(
     id: '',
     type: NoteType.fromId(map['type'] as String?),
@@ -169,6 +188,20 @@ Note decodeNoteJson(Map<String, dynamic> map) {
     backgroundImageId: map['backgroundImageId'] as String?,
     backgroundOpacity: (map['backgroundOpacity'] as num?)?.toDouble() ?? 0.35,
     theme: map['theme'] as String? ?? '',
+    listKind: listKind,
+    listMode: rawMode != null && rawMode.isNotEmpty
+        ? ListMode.fromId(rawMode)
+        : listModeFromLegacyKind(listKind),
+    resetSchedule: rawReset != null && rawReset.isNotEmpty
+        ? ResetSchedule.fromId(rawReset)
+        : defaultResetScheduleForLegacyKind(listKind),
+    resetCustomDays: [
+      for (final d in (map['resetCustomDays'] as List? ?? const []))
+        if (d is num && d.toInt() >= 1 && d.toInt() <= 7) d.toInt(),
+    ],
+    lastResetAt: lastResetAt,
+    contextTimeSlot: ContextTimeSlot.fromId(map['contextTimeSlot'] as String?),
+    isQuickInbox: map['isQuickInbox'] == true,
     textPages: [
       for (final raw in (map['textPages'] as List? ?? const []))
         NoteTextPage.fromMap(Map<String, dynamic>.from(raw as Map)),

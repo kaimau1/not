@@ -4927,5 +4927,197 @@
   "floatingSizeSmall": "Küçük",
   "floatingSizeMedium": "Orta",
   "floatingSizeLarge": "Tam",
-  "floatingAlignCycle": "Yatay hiza"
+  "floatingAlignCycle": "Yatay hiza",
+  "quickInboxFolderName": "Hızlı Not",
+  "quickInboxSubtitle": "Emin olunmayan eklemeler burada toplanır",
+  "quickDropAddedQuickInbox": "Hızlı Not'a eklendi",
+  "quickDropOpen": "Aç",
+  "quickDropTargetLabel": "Hedef: {target}",
+  "@quickDropTargetLabel": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "quickDropMergeSingle": "Tek notta birleştir",
+  "quickDropPriorityUrgent": "Acil",
+  "quickDropPriorityHigh": "Yüksek",
+  "quickDropPriorityMedium": "Orta",
+  "quickDropPriorityLow": "Düşük",
+  "quickDropContextNow": "Şimdi önerilen: {title}",
+  "@quickDropContextNow": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "listModeLabel": "Liste kipi",
+  "listModeGeneral": "Genel",
+  "listModeShopping": "Alışveriş",
+  "listModeRoutine": "Rutin",
+  "listModeTemplate": "Şablon",
+  "listModeProject": "Proje",
+  "listModeResetSchedule": "Sıfırlama",
+  "listModeResetNone": "Kapalı",
+  "listModeResetDaily": "Her gece",
+  "listModeResetWeekly": "Her hafta",
+  "listModeResetCustom": "Özel günler",
+  "listModeTimeSlot": "Zaman dilimi",
+  "listModeSlotAny": "Her zaman",
+  "listModeSlotMorning": "Sabah",
+  "listModeSlotEvening": "Akşam",
+  "listModeSlotWeekend": "Hafta sonu",
+  "shoppingGroupToggle": "Reyonlar",
+  "shoppingBoughtCount": "{done}/{total} alındı",
+  "@shoppingBoughtCount": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "shoppingTotalAmount": "Toplam: {amount}",
+  "@shoppingTotalAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "shoppingSummaryRemaining": "{count} kaldı",
+  "@shoppingSummaryRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "routineTodayProgress": "Bugün {done}/{total}",
+  "@routineTodayProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "routineStreakDays": "{count} gün",
+  "@routineStreakDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "routineBestStreak": "En iyi seri: {count} gün",
+  "@routineBestStreak": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "routineLast30Days": "Son 30 gün",
+  "templateResetReuse": "Tümünü sıfırla ve tekrar kullan",
+  "templateResetDone": "Tüm maddeler sıfırlandı",
+  "templateCopyNew": "Yeni liste olarak kopyala",
+  "projectFocusToggle": "Odak (3)",
+  "projectFocusExit": "Odağı kapat",
+  "projectFocusPick": "Odak seç",
+  "projectFocusActive": "Odak kipi: {shown}/{total}",
+  "@projectFocusActive": {
+    "placeholders": {
+      "shown": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "projectProgressLabel": "%{percent} · {done}/{total}",
+  "@projectProgressLabel": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      },
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "itemQuickPostponeTomorrow": "Yarına ertele",
+  "itemQuickPriority": "Öncelik",
+  "itemQuickDueDate": "Tarih",
+  "itemQuickPrice": "Fiyat",
+  "itemQuickFocus": "Odağa al",
+  "itemQuickUnfocus": "Odaktan çıkar",
+  "itemQuickMeta": "Ayrıntılar",
+  "itemDueToday": "Bugün",
+  "itemDueTomorrow": "Yarın",
+  "itemDueNextWeek": "Gelecek hafta",
+  "itemDueClear": "Tarihi kaldır",
+  "itemPriorityNone": "Yok",
+  "listModeNudgeShopping": "Alışveriş kipine geç?",
+  "listModeNudgeRoutine": "Rutin kipine geç?",
+  "listModeQuickAddHint": "Örn. 2 kg domates, kahve 180 tl…",
+  "ghostSuggestionsTitle": "Önerilen maddeler",
+  "ghostReasonDue": "Sık alıyorsun",
+  "ghostReasonPair": "Yanında iyi gider",
+  "ghostReasonFrequent": "Sık eklediklerin",
+  "ghostReasonTemplate": "Eksik olabilir",
+  "ghostReasonRoutine": "Günlük öneri",
+  "itemBreakdownAction": "Alt adımlara böl",
+  "itemBreakdownTitle": "Alt adımlar",
+  "itemBreakdownApply": "Alt adımları ekle",
+  "itemBreakdownEmpty": "Alt adım önerilemedi",
+  "textExtractAction": "Metinden ayıkla",
+  "textExtractTitle": "Metinden madde ayıkla",
+  "textExtractHint": "Mesaj, tarif veya liste metnini buraya yapıştır…",
+  "textExtractRefineAi": "Yapay zekâ ile netleştir",
+  "textExtractAddSelected": "Seçilenleri ekle ({count})",
+  "@textExtractAddSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "textExtractPasteBanner": "Metinden {count} madde ayıkla",
+  "@textExtractPasteBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listAiQuotaReached": "Günlük yapay zekâ kotan doldu; yerel öneri kullanıldı.",
+  "carryOverBanner": "Önceki günden {count} görev kaldı",
+  "@carryOverBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "carryOverAction": "Bugüne aktar",
+  "carryOverDone": "{count} görev bugüne aktarıldı",
+  "@carryOverDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "contextNowBadge": "Şimdi"
 }

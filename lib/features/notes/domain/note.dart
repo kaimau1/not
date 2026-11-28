@@ -7,6 +7,7 @@ import '../../../core/utils/note_e2ee_session.dart';
 import '../../../core/utils/rich_text.dart';
 import 'archive_paper.dart';
 import 'attachment.dart';
+import 'list_mode.dart';
 import 'note_item.dart';
 import 'note_type.dart';
 import 'page_notes.dart';
@@ -206,6 +207,12 @@ class Note {
     this.theme = '',
     this.listColumns = 1,
     this.listKind,
+    this.listMode = ListMode.general,
+    this.resetSchedule = ResetSchedule.none,
+    this.resetCustomDays = const [],
+    this.lastResetAt,
+    this.contextTimeSlot = ContextTimeSlot.any,
+    this.isQuickInbox = false,
     this.classicDocument = false,
     this.archivePages = const [],
     this.archivePaper = ArchivePaper.lined,
@@ -256,6 +263,12 @@ class Note {
     'theme',
     'listColumns',
     'listKind',
+    'listMode',
+    'resetSchedule',
+    'resetCustomDays',
+    'lastResetAt',
+    'contextTimeSlot',
+    'isQuickInbox',
     'classicDocument',
     'archivePages',
     'archivePaper', 'lineSpacing', 'archiveGeneralName', 'paged', 'heavyRef',
@@ -458,6 +471,25 @@ class Note {
   /// bayt bütçesi +0).
   final String? listKind;
 
+  /// Liste davranış kipi (`general | shopping | routine | template | project`).
+  /// Varsayılan `general` iken [toMap] yazmaz.
+  final ListMode listMode;
+
+  /// Rutin sıfırlama takvimi (`none | daily | weekly | customDays`).
+  final ResetSchedule resetSchedule;
+
+  /// `resetSchedule == customDays` iken haftanın günleri (ISO `1` Pzt .. `7` Paz).
+  final List<int> resetCustomDays;
+
+  /// Rutinin en son otomatik sıfırlandığı dönemin başlangıç zamanı.
+  final DateTime? lastResetAt;
+
+  /// Günün saatine / hafta sonuna göre öne çıkarma bağlamı.
+  final ContextTimeSlot contextTimeSlot;
+
+  /// "Hızlı Not" klasöründeki düşük güvenli eklemelerin aktığı hedef not mu?
+  final bool isQuickInbox;
+
   /// Belge (PDF/sunum) notu KLASİK görünüme alındı mı?
   ///
   /// Kullanıcı isteği 2026-10-15: "balonlu mod ve normal ek arasında hızlı
@@ -597,6 +629,7 @@ class Note {
   /// bırakmak meşru bir kullanım — silinirse kurulu hatırlatıcı da kaybolur.
   bool get isEmpty =>
       !locked &&
+      !isQuickInbox &&
       !extras.containsKey('e2ee') &&
       title.trim().isEmpty &&
       body.trim().isEmpty &&
@@ -875,6 +908,13 @@ class Note {
     int? listColumns,
     String? listKind,
     bool clearListKind = false,
+    ListMode? listMode,
+    ResetSchedule? resetSchedule,
+    List<int>? resetCustomDays,
+    DateTime? lastResetAt,
+    bool clearLastResetAt = false,
+    ContextTimeSlot? contextTimeSlot,
+    bool? isQuickInbox,
     bool? classicDocument,
     List<String>? archivePages,
     ArchivePaper? archivePaper,
@@ -948,6 +988,12 @@ class Note {
       theme: theme ?? this.theme,
       listColumns: listColumns ?? this.listColumns,
       listKind: clearListKind ? null : (listKind ?? this.listKind),
+      listMode: listMode ?? this.listMode,
+      resetSchedule: resetSchedule ?? this.resetSchedule,
+      resetCustomDays: resetCustomDays ?? this.resetCustomDays,
+      lastResetAt: clearLastResetAt ? null : (lastResetAt ?? this.lastResetAt),
+      contextTimeSlot: contextTimeSlot ?? this.contextTimeSlot,
+      isQuickInbox: isQuickInbox ?? this.isQuickInbox,
       classicDocument: classicDocument ?? this.classicDocument,
       archivePages: archivePages ?? this.archivePages,
       archivePaper: archivePaper ?? this.archivePaper,
@@ -1165,6 +1211,21 @@ class Note {
       // yerleştiremez.
       listColumns: (map['listColumns'] as num?)?.toInt() == 2 ? 2 : 1,
       listKind: map['listKind'] as String?,
+      listMode: (map['listMode'] as String?)?.isNotEmpty == true
+          ? ListMode.fromId(map['listMode'] as String?)
+          : listModeFromLegacyKind(map['listKind'] as String?),
+      resetSchedule: (map['resetSchedule'] as String?)?.isNotEmpty == true
+          ? ResetSchedule.fromId(map['resetSchedule'] as String?)
+          : defaultResetScheduleForLegacyKind(map['listKind'] as String?),
+      resetCustomDays: [
+        for (final d in (map['resetCustomDays'] as List<dynamic>? ?? const []))
+          if (d is num && d.toInt() >= 1 && d.toInt() <= 7) d.toInt(),
+      ],
+      lastResetAt: parseTs(map['lastResetAt']),
+      contextTimeSlot: ContextTimeSlot.fromId(
+        map['contextTimeSlot'] as String?,
+      ),
+      isQuickInbox: map['isQuickInbox'] == true,
       classicDocument: map['classicDocument'] == true,
       archivePages: [
         for (final p in (map['archivePages'] as List<dynamic>? ?? const []))
@@ -1318,6 +1379,16 @@ class Note {
       'listColumns': listColumns,
       // KOŞULLU (AL-2, S16 bayt bütçesi): sıradan notlarda hiç yazılmaz.
       if (listKind != null && listKind!.isNotEmpty) 'listKind': listKind,
+      // KOŞULLU (S16 bayt bütçesi): varsayılan değerlerde yazılmaz;
+      // varsayılana dönüşte açık alan güncellemesi (setListMode vb.) yapılır.
+      if (listMode != ListMode.general) 'listMode': listMode.id,
+      if (resetSchedule != ResetSchedule.none)
+        'resetSchedule': resetSchedule.id,
+      if (resetCustomDays.isNotEmpty) 'resetCustomDays': resetCustomDays,
+      if (lastResetAt != null) 'lastResetAt': Timestamp.fromDate(lastResetAt!),
+      if (contextTimeSlot != ContextTimeSlot.any)
+        'contextTimeSlot': contextTimeSlot.id,
+      if (isQuickInbox) 'isQuickInbox': true,
       // HER ZAMAN yazılır (merge tuzağı): balonluya geri dönüş bayrağı
       // indirebilmeli.
       'classicDocument': classicDocument,

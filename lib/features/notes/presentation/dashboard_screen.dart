@@ -76,7 +76,9 @@ import '../../calendar/presentation/home_calendar_strip.dart';
 import '../data/attachment_repository.dart';
 import '../data/notes_repository.dart';
 import '../data/upload_queue.dart';
+import '../domain/context_highlight.dart';
 import '../domain/note.dart';
+import 'quick_drop_sheet.dart' show quickDropRecentProvider;
 import '../domain/note_share_text.dart';
 import '../domain/note_type.dart';
 import 'color_picker_sheet.dart';
@@ -223,7 +225,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   /// Anahtar sorgunun KENDİSİ değil yalnız "arama var mı" (F21.6): sorgu
   /// harf harf değişirken kartlar aynı örnek kalır, vurgu [_liveQuery]
   /// üzerinden yalnız yeniden BOYANIR (bkz. `SearchHighlight`).
-  final Map<String, (Note, bool, DateTime?, Widget)> _cardCache = {};
+  final Map<String, (Note, bool, DateTime?, bool, Widget)> _cardCache = {};
 
   /// Kartların izlediği canlı arama sorgusu (F21.6).
   final _liveQuery = ValueNotifier<String>('');

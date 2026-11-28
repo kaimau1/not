@@ -45,7 +45,11 @@ class NoteFolder {
     this.sharedWith = const [],
     this.pending = const [],
     this.roles = const {},
+    this.systemRole = '',
   });
+
+  /// "Hızlı Not" sistem klasörü rol kimliği (düşük güvenli Hızlı Ekle hedefi).
+  static const String roleQuickInbox = 'quick_inbox';
 
   final String id;
   final String name;
@@ -102,6 +106,11 @@ class NoteFolder {
   /// [FolderRole.fromId]).
   final Map<String, FolderRole> roles;
 
+  /// Sistem rolü: `''` (sıradan klasör) veya [roleQuickInbox] ("Hızlı Not").
+  final String systemRole;
+
+  bool get isQuickInbox => systemRole == roleQuickInbox;
+
   bool get isShared => sharedWith.isNotEmpty || pending.isNotEmpty;
 
   FolderRole roleOf(String uid) => roles[uid] ?? FolderRole.both;
@@ -128,6 +137,7 @@ class NoteFolder {
     'pets': Icons.pets_outlined,
     'star': Icons.star_outline,
     'lock': Icons.lock_outline,
+    'bolt': Icons.bolt_outlined,
   };
 
   IconData get iconData => iconChoices[icon] ?? Icons.folder_outlined;
@@ -157,6 +167,7 @@ class NoteFolder {
     List<String>? sharedWith,
     List<String>? pending,
     Map<String, FolderRole>? roles,
+    String? systemRole,
   }) => NoteFolder(
     id: id,
     name: name ?? this.name,
@@ -169,6 +180,7 @@ class NoteFolder {
     sharedWith: sharedWith ?? this.sharedWith,
     pending: pending ?? this.pending,
     roles: roles ?? this.roles,
+    systemRole: systemRole ?? this.systemRole,
   );
 
   /// [ownerId] verilmezse dokümanın YOLUNDAN çıkarılır
@@ -198,6 +210,7 @@ class NoteFolder {
           uid.toString(),
       ],
       roles: parseFolderRoles(map['roles']),
+      systemRole: map['systemRole'] as String? ?? '',
     );
   }
 
@@ -211,6 +224,7 @@ class NoteFolder {
     'sharedWith': sharedWith,
     'pending': pending,
     'roles': {for (final e in roles.entries) e.key: e.value.id},
+    if (systemRole.isNotEmpty) 'systemRole': systemRole,
     'createdAt': createdAt != null
         ? Timestamp.fromDate(createdAt!)
         : FieldValue.serverTimestamp(),

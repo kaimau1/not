@@ -6,11 +6,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:notlar/features/folders/domain/note_folder.dart';
 import 'package:notlar/features/notes/data/markdown_export.dart';
 import 'package:notlar/features/notes/domain/attachment.dart';
+import 'package:notlar/features/notes/domain/list_mode.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_item.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
-import 'package:notlar/features/notes/domain/smart_list.dart';
-import 'package:notlar/features/notes/presentation/editor/store_mode_screen.dart';
+import 'package:notlar/features/notes/presentation/editor/items_editor.dart';
+import 'package:notlar/features/notes/presentation/editor/shopping_summary_bar.dart';
 import 'package:notlar/l10n/generated/app_localizations.dart';
 
 /// P90: Kolay dışa aktarma (Markdown .zip) + Akıllı liste AL-5 (Mağaza kipi).
@@ -131,143 +132,59 @@ void main() {
     });
   });
 
-  group('AL-5 Mağaza kipi (StoreModeScreen)', () {
+  group('AL-5 Doğrudan Not Üzerinde Alışveriş Kipi', () {
     testWidgets(
-      'işaretleme, alınanları gizleme, reyona sıralama, hızlı ekleme ve tamamlama çalışır',
+      'reyon başlıkları, satır içi miktar adımı, işaretleme ve canlı özet çubuğu çalışır',
       (tester) async {
         tester.view.physicalSize = const Size(412, 915);
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.reset);
 
         var items = <NoteItem>[
-          const NoteItem(id: '1', text: 'Ekmek'),
-          const NoteItem(id: '2', text: 'Elma'),
-          const NoteItem(id: '3', text: 'Süt'),
+          const NoteItem(id: '1', text: 'Ekmek', price: 15),
+          const NoteItem(id: '2', text: 'Elma', quantity: 1, unit: 'kg', price: 40),
+          const NoteItem(id: '3', text: 'Süt', price: 35),
         ];
 
         await tester.pumpWidget(
-          MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            locale: const Locale('tr'),
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: StoreModeScreen(
-              title: 'Market',
-              initialItems: items,
-              onToggleItem: (id) {
-                items = [
-                  for (final i in items)
-                    if (i.id == id) i.copyWith(checked: !i.checked) else i,
-                ];
-                return items;
-              },
-              onAddItem: (raw) {
-                items = insertItemsBySmartGroup(
-                  items,
-                  [NoteItem(id: 'added-${items.length}', text: raw)],
-                  kind: SmartListKind.shopping,
-                  locale: 'tr',
-                );
-                return items;
-              },
-              onSortByGroup: () {
-                items = sortItemsBySmartGroup(
-                  items,
-                  kind: SmartListKind.shopping,
-                  locale: 'tr',
-                );
-                return items;
-              },
-              onFinishChecked: () {
-                items = [
-                  for (final i in items)
-                    if (!i.checked) i,
-                ];
-                return items;
-              },
+          StatefulBuilder(
+            builder: (ctx, setState) => MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              locale: const Locale('tr'),
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(
+                body: Column(
+                  children: [
+                    Expanded(
+                      child: ItemsEditor(
+                        items: items,
+                        showCheckboxes: true,
+                        listMode: ListMode.shopping,
+                        groupByAisle: true,
+                        onChanged: (next) => setState(() => items = next),
+                      ),
+                    ),
+                    ShoppingSummaryBar(items: items),
+                  ],
+                ),
+              ),
             ),
           ),
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('3 / 3 kaldı'), findsOneWidget);
-        expect(find.byKey(const ValueKey('store-mode-finish')), findsNothing);
+        expect(find.byKey(const ValueKey('aisle-header-0')), findsOneWidget);
+        expect(find.byKey(const ValueKey('aisle-header-1')), findsOneWidget);
+        expect(find.byKey(const ValueKey('aisle-header-2')), findsOneWidget);
+        expect(find.text('0/3 alındı'), findsOneWidget);
+        expect(find.text('Toplam: 90 ₺'), findsOneWidget);
 
-        // 1. Elma'yı işaretle → 2 / 3 kaldı, Alınanları tamamla (1) belirir.
-        await tester.tap(find.byKey(const ValueKey('store-item-2')));
+        // Kural 5: Gruplu görünümde ID ile miktar artırma (Elma 1 kg -> 1.5 kg, fiyat 40 -> 60 ₺, toplam 110 ₺).
+        await tester.tap(find.byKey(const ValueKey('shop-qty-inc-2')));
         await tester.pumpAndSettle();
-        expect(find.text('2 / 3 kaldı'), findsOneWidget);
-        expect(find.byKey(const ValueKey('store-mode-finish')), findsOneWidget);
-
-        // 2. Alınanları gizle → Elma listeden gizlenir.
-        await tester.tap(find.byKey(const ValueKey('store-mode-hide-checked')));
-        await tester.pumpAndSettle();
-        expect(find.byKey(const ValueKey('store-item-2')), findsNothing);
-        expect(find.byKey(const ValueKey('store-item-1')), findsOneWidget);
-
-        // 3. Hızlı ekleme: "Domates" ekle → 3 / 4 kaldı.
-        await tester.enterText(
-          find.byKey(const ValueKey('store-mode-add-field')),
-          'Domates',
-        );
-        await tester.tap(find.byKey(const ValueKey('store-mode-add-submit')));
-        await tester.pumpAndSettle();
-        expect(find.text('3 / 4 kaldı'), findsOneWidget);
-        expect(find.text('Domates'), findsOneWidget);
-
-        // 4. Reyona sırala düğmesi çalışır (hata/taşma yok).
-        await tester.tap(find.byKey(const ValueKey('store-mode-sort')));
-        await tester.pumpAndSettle();
-
-        // 5. Alınanları tamamla → işaretli Elma temizlenir, 3 / 3 kaldı.
-        await tester.tap(find.byKey(const ValueKey('store-mode-finish')));
-        await tester.pumpAndSettle();
-        expect(find.text('3 / 3 kaldı'), findsOneWidget);
-        expect(items.any((i) => i.id == '2'), isFalse);
-      },
-    );
-
-    testWidgets(
-      'P1-1: ortak listede başka cihazdan gelen değişiklik Mağaza Kipi\'nde canlı görünür',
-      (tester) async {
-        tester.view.physicalSize = const Size(412, 915);
-        tester.view.devicePixelRatio = 1;
-        addTearDown(tester.view.reset);
-
-        final live = ValueNotifier<List<NoteItem>>(const [
-          NoteItem(id: '1', text: 'Ekmek'),
-          NoteItem(id: '2', text: 'Süt'),
-        ]);
-        addTearDown(live.dispose);
-
-        await tester.pumpWidget(
-          MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            locale: const Locale('tr'),
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: StoreModeScreen(
-              title: 'Ortak Market',
-              initialItems: live.value,
-              liveItems: live,
-              onToggleItem: (_) => live.value,
-              onAddItem: (_) => live.value,
-              onSortByGroup: () => live.value,
-              onFinishChecked: () => live.value,
-            ),
-          ),
-        );
-        await tester.pumpAndSettle();
-        expect(find.text('2 / 2 kaldı'), findsOneWidget);
-
-        // Başka cihazda Süt işaretlendi ve Yoğurt eklendi.
-        live.value = const [
-          NoteItem(id: '1', text: 'Ekmek'),
-          NoteItem(id: '2', text: 'Süt', checked: true),
-          NoteItem(id: '3', text: 'Yoğurt'),
-        ];
-        await tester.pumpAndSettle();
-
-        expect(find.text('2 / 3 kaldı'), findsOneWidget);
-        expect(find.text('Yoğurt'), findsOneWidget);
+        final apple = items.firstWhere((i) => i.id == '2');
+        expect(apple.quantity, 1.5);
+        expect(find.text('Toplam: 110 ₺'), findsOneWidget);
       },
     );
   });

@@ -9463,4 +9463,270 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get floatingAlignCycle => 'محاذاة أفقية';
+
+  @override
+  String get quickInboxFolderName => 'ملاحظة سريعة';
+
+  @override
+  String get quickInboxSubtitle => 'تُجمع الإضافات غير المؤكدة هنا';
+
+  @override
+  String get quickDropAddedQuickInbox => 'تمت الإضافة إلى ملاحظة سريعة';
+
+  @override
+  String get quickDropOpen => 'فتح';
+
+  @override
+  String quickDropTargetLabel(String target) {
+    return 'الهدف: $target';
+  }
+
+  @override
+  String get quickDropMergeSingle => 'دمج في ملاحظة واحدة';
+
+  @override
+  String get quickDropPriorityUrgent => 'عاجل';
+
+  @override
+  String get quickDropPriorityHigh => 'مرتفع';
+
+  @override
+  String get quickDropPriorityMedium => 'متوسط';
+
+  @override
+  String get quickDropPriorityLow => 'منخفض';
+
+  @override
+  String quickDropContextNow(String title) {
+    return 'مقترح الآن: $title';
+  }
+
+  @override
+  String get listModeLabel => 'وضع القائمة';
+
+  @override
+  String get listModeGeneral => 'عام';
+
+  @override
+  String get listModeShopping => 'تسوق';
+
+  @override
+  String get listModeRoutine => 'روتين';
+
+  @override
+  String get listModeTemplate => 'قالب';
+
+  @override
+  String get listModeProject => 'مشروع';
+
+  @override
+  String get listModeResetSchedule => 'إعادة التعيين';
+
+  @override
+  String get listModeResetNone => 'متوقف';
+
+  @override
+  String get listModeResetDaily => 'كل ليلة';
+
+  @override
+  String get listModeResetWeekly => 'كل أسبوع';
+
+  @override
+  String get listModeResetCustom => 'أيام مخصصة';
+
+  @override
+  String get listModeTimeSlot => 'الفترة الزمنية';
+
+  @override
+  String get listModeSlotAny => 'أي وقت';
+
+  @override
+  String get listModeSlotMorning => 'الصباح';
+
+  @override
+  String get listModeSlotEvening => 'المساء';
+
+  @override
+  String get listModeSlotWeekend => 'عطلة نهاية الأسبوع';
+
+  @override
+  String get shoppingGroupToggle => 'الأقسام';
+
+  @override
+  String shoppingBoughtCount(int done, int total) {
+    return 'تم شراء $done/$total';
+  }
+
+  @override
+  String shoppingTotalAmount(String amount) {
+    return 'الإجمالي: $amount';
+  }
+
+  @override
+  String shoppingSummaryRemaining(int count) {
+    return 'متبقي $count';
+  }
+
+  @override
+  String routineTodayProgress(int done, int total) {
+    return 'اليوم $done/$total';
+  }
+
+  @override
+  String routineStreakDays(int count) {
+    return '$count يوم';
+  }
+
+  @override
+  String routineBestStreak(int count) {
+    return 'أفضل سلسلة: $count يوم';
+  }
+
+  @override
+  String get routineLast30Days => 'آخر 30 يومًا';
+
+  @override
+  String get templateResetReuse => 'إعادة تعيين الكل وإعادة الاستخدام';
+
+  @override
+  String get templateResetDone => 'تمت إعادة تعيين جميع العناصر';
+
+  @override
+  String get templateCopyNew => 'نسخ كقائمة جديدة';
+
+  @override
+  String get projectFocusToggle => 'تركيز (3)';
+
+  @override
+  String get projectFocusExit => 'إغلاق التركيز';
+
+  @override
+  String get projectFocusPick => 'اختر التركيز';
+
+  @override
+  String projectFocusActive(int shown, int total) {
+    return 'وضع التركيز: $shown/$total';
+  }
+
+  @override
+  String projectProgressLabel(int percent, int done, int total) {
+    return '$percent% · $done/$total';
+  }
+
+  @override
+  String get itemQuickPostponeTomorrow => 'تأجيل للغد';
+
+  @override
+  String get itemQuickPriority => 'الأولوية';
+
+  @override
+  String get itemQuickDueDate => 'التاريخ';
+
+  @override
+  String get itemQuickPrice => 'السعر';
+
+  @override
+  String get itemQuickFocus => 'إضافة للتركيز';
+
+  @override
+  String get itemQuickUnfocus => 'إزالة من التركيز';
+
+  @override
+  String get itemQuickMeta => 'التفاصيل';
+
+  @override
+  String get itemDueToday => 'اليوم';
+
+  @override
+  String get itemDueTomorrow => 'غدًا';
+
+  @override
+  String get itemDueNextWeek => 'الأسبوع القادم';
+
+  @override
+  String get itemDueClear => 'إزالة التاريخ';
+
+  @override
+  String get itemPriorityNone => 'بلا';
+
+  @override
+  String get listModeNudgeShopping => 'التبديل إلى وضع التسوق؟';
+
+  @override
+  String get listModeNudgeRoutine => 'التبديل إلى وضع الروتين؟';
+
+  @override
+  String get listModeQuickAddHint => 'مثلاً 2 كغ طماطم، قهوة 50 ر.س…';
+
+  @override
+  String get ghostSuggestionsTitle => 'عناصر مقترحة';
+
+  @override
+  String get ghostReasonDue => 'تشتريه باستمرار';
+
+  @override
+  String get ghostReasonPair => 'يناسب قائمتك';
+
+  @override
+  String get ghostReasonFrequent => 'تضيفه كثيرًا';
+
+  @override
+  String get ghostReasonTemplate => 'قد يكون ناقصًا';
+
+  @override
+  String get ghostReasonRoutine => 'اقتراح يومي';
+
+  @override
+  String get itemBreakdownAction => 'تقسيم إلى خطوات';
+
+  @override
+  String get itemBreakdownTitle => 'خطوات فرعية';
+
+  @override
+  String get itemBreakdownApply => 'إضافة الخطوات';
+
+  @override
+  String get itemBreakdownEmpty => 'تعذّر اقتراح خطوات فرعية';
+
+  @override
+  String get textExtractAction => 'استخراج من النص';
+
+  @override
+  String get textExtractTitle => 'استخراج عناصر من النص';
+
+  @override
+  String get textExtractHint => 'الصق رسالة أو وصفة أو قائمة هنا…';
+
+  @override
+  String get textExtractRefineAi => 'تحسين بالذكاء الاصطناعي';
+
+  @override
+  String textExtractAddSelected(int count) {
+    return 'إضافة المحدد ($count)';
+  }
+
+  @override
+  String textExtractPasteBanner(int count) {
+    return 'استخراج $count عناصر من النص';
+  }
+
+  @override
+  String get listAiQuotaReached =>
+      'اكتملت الحصة اليومية؛ تم استخدام الاقتراح المحلي.';
+
+  @override
+  String carryOverBanner(int count) {
+    return 'تبقّت $count مهام غير منجزة';
+  }
+
+  @override
+  String get carryOverAction => 'نقل إلى اليوم';
+
+  @override
+  String carryOverDone(int count) {
+    return 'تم نقل $count مهام إلى اليوم';
+  }
+
+  @override
+  String get contextNowBadge => 'الآن';
 }

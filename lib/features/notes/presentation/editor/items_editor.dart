@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show RenderFlex, RenderParagraph;
 import 'package:flutter/scheduler.dart' show SchedulerBinding;
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart' show DateFormat;
 import 'package:uuid/uuid.dart';
 
 import '../../../../app/theme/app_tokens.dart';
@@ -26,10 +27,15 @@ import '../../../../core/utils/link_text.dart' show findLinks;
 import '../../../../core/utils/rich_text.dart';
 import '../../../../core/utils/sentence_select.dart';
 import '../../../../core/widgets/undo_snackbar.dart';
+import '../../../shopping/domain/shop_aisles.dart';
+import '../../../shopping/domain/shop_item_meta.dart';
+import '../../../shopping/presentation/shop_budget_bar.dart';
+import '../../domain/list_mode.dart';
 import '../../domain/note_item.dart';
 import '../../domain/note_share_text.dart';
 import '../item_divider_style.dart';
 import 'format_menu.dart';
+import 'item_quick_meta_sheet.dart';
 import 'note_package.dart';
 import 'selection_toolbar.dart';
 import 'auto_spell.dart';
@@ -48,6 +54,51 @@ part 'items_editor_actions.dart';
 part 'items_editor_widgets.dart';
 part 'items_editor_helpers.dart';
 part 'items_editor_build.dart';
+
+/// Proje odak kipinde gösterilecek en fazla 3 açık maddenin kimliklerini çözer.
+///
+/// Kullanıcı [manualFocusIds] seçtiyse önce onları (açık olanları, en çok 3),
+/// seçmediyse öncelik ağırlığı (yüksekten düşüğe) → hedef tarih (yakından uzağa)
+/// → liste sırası ölçütüyle en kritik 3 maddeyi döndürür.
+Set<String> resolveProjectFocusIds(
+  List<NoteItem> items, {
+  Set<String> manualFocusIds = const {},
+}) {
+  final open = <({int idx, NoteItem item})>[];
+  for (var i = 0; i < items.length; i++) {
+    final item = items[i];
+    if (!item.header && !item.checked && item.text.trim().isNotEmpty) {
+      open.add((idx: i, item: item));
+    }
+  }
+  if (open.isEmpty) return const {};
+  if (manualFocusIds.isNotEmpty) {
+    final manual = <String>{};
+    for (final entry in open) {
+      if (manualFocusIds.contains(entry.item.id)) {
+        manual.add(entry.item.id);
+        if (manual.length == 3) break;
+      }
+    }
+    if (manual.isNotEmpty) return manual;
+  }
+  open.sort((a, b) {
+    final pw = b.item.priority.weight.compareTo(a.item.priority.weight);
+    if (pw != 0) return pw;
+    final ad = a.item.dueDate;
+    final bd = b.item.dueDate;
+    if (ad != null && bd != null) {
+      final dc = ad.compareTo(bd);
+      if (dc != 0) return dc;
+    } else if (ad != null) {
+      return -1;
+    } else if (bd != null) {
+      return 1;
+    }
+    return a.idx.compareTo(b.idx);
+  });
+  return {for (final e in open.take(3)) e.item.id};
+}
 
 /// Yanlışlıkla işaretlenen öğenin "hemen geri alındı" sayıldığı süre.
 /// Checklist ve sıralı liste düzenleyicisi. Öğeler "Seç" modundaki tutamaçtan
@@ -89,7 +140,52 @@ class ItemsEditor extends StatefulWidget {
     this.onLineReminder,
     this.lineTrailing,
     this.onItemChecked,
+    this.listMode = ListMode.general,
+    this.listKind,
+    this.groupByAisle = false,
+    this.aisleOrder,
+    this.focusMode = false,
+    this.focusIds = const {},
+    this.learnedGroups = const {},
+    this.onEditPrice,
+    this.onToggleFocusItem,
+    this.onBreakdownItem,
+    this.ghostSection,
   });
+
+  /// Aktif akıllı liste kipi (`general | shopping | routine | template | project`).
+  final ListMode listMode;
+
+  /// Eski alt kategori kimliği (ör. `packing`, `shopping`).
+  final String? listKind;
+
+  /// Alışveriş kipinde işaretsiz maddeleri reyon başlıkları altında gruplar.
+  /// Gruplu görünümde tüm satır mutasyonları Kural 5 gereği `item.id` ile yapılır.
+  final bool groupByAisle;
+
+  /// Alışveriş reyonlarının özel yürüyüş sırası (yoksa varsayılan 0..12 + Diğer).
+  final List<int>? aisleOrder;
+
+  /// Proje kipinde Odak Modu açık mı (en fazla 3 görev görünür, kalanı gizlenir).
+  final bool focusMode;
+
+  /// Kullanıcının elle seçtiği odak madde kimlikleri (boşsa ilk 3 otomatik).
+  final Set<String> focusIds;
+
+  /// Kullanıcının öğrettiği ürün → reyon eşlemeleri.
+  final Map<String, int> learnedGroups;
+
+  /// Alışveriş fiyat rozetine veya hızlı menüde "Fiyat"a dokunulunca.
+  final ValueChanged<NoteItem>? onEditPrice;
+
+  /// Proje kipinde maddenin odak seçimini açıp kapatır.
+  final ValueChanged<NoteItem>? onToggleFocusItem;
+
+  /// Proje kipinde "Alt adımlara böl" (Faz 3) geri çağrısı.
+  final ValueChanged<NoteItem>? onBreakdownItem;
+
+  /// Kural 1: geçici hayalet öneri katmanı (UI-only; `NoteItem` modeline girmez).
+  final Widget? ghostSection;
 
   /// DEFTER (çizgili kâğıt) görünümü: satırlar defter çizgilerine oturacak
   /// şekilde dizilir — dikey dolgu yok (madde satırı = satır sayısı × satır
@@ -301,6 +397,10 @@ class ItemsEditorState extends State<ItemsEditor>
       widget.expandItems,
       // Defter görünümü dolguyu ve kutu boyunu değiştiriyor.
       widget.paperLines,
+      widget.listMode,
+      widget.groupByAisle,
+      widget.focusMode,
+      widget.columns,
       _selectionMode,
       l10n.localeName,
       widget.contentInsertion,
@@ -324,6 +424,28 @@ class ItemsEditorState extends State<ItemsEditor>
       _slotCache.removeWhere((id, _) => !live.contains(id));
     }
   }
+
+  /// Alışveriş reyon başlıklarında daraltılmış reyon indeksleri (yerel durum;
+  /// üst editör kökünü yeniden kurmaz).
+  final ValueNotifier<Set<int>> _collapsedAisles = ValueNotifier<Set<int>>(
+    const {},
+  );
+
+  /// Rutin kipinde tamamlanan maddeler yerinde kalır (alta düşmez, silinmez).
+  bool get _keepCheckedInPlace =>
+      widget.showCheckboxes && widget.listMode == ListMode.routine;
+
+  /// Alışveriş kipinde reyonlara göre daraltılabilir gruplu görünüm etkin mi?
+  bool get _isGroupedShopping =>
+      widget.showCheckboxes &&
+      widget.listMode == ListMode.shopping &&
+      widget.groupByAisle;
+
+  /// Proje kipinde 3 maddelik Odak Modu etkin mi?
+  bool get _isProjectFocused =>
+      widget.showCheckboxes &&
+      widget.listMode == ListMode.project &&
+      widget.focusMode;
 
   late List<NoteItem> _items;
   final _controllers = <String, WrapTextController>{};
@@ -370,8 +492,11 @@ class ItemsEditorState extends State<ItemsEditor>
   /// Geniş ekranda (web, tablet) tutamak seçim kipi dışında da görünür.
   bool _pinHandles = false;
 
-  /// Satırda sürükleme tutamağı yuvası var mı.
-  bool get _showHandles => _selectionMode || _pinHandles;
+  /// Satırda sürükleme tutamağı yuvası var mı. Gruplu alışveriş ve proje odak
+  /// görünümünde görsel sıra ile arka plan indeksi ayrıştığı için sürükleme
+  /// kapalıdır (Kural 5).
+  bool get _showHandles =>
+      !_isGroupedShopping && !_isProjectFocused && (_selectionMode || _pinHandles);
 
   /// Seçim çubuğunu ekranın DİBİNE demirleyen katman denetleyicisi.
   ///
@@ -512,7 +637,9 @@ class ItemsEditorState extends State<ItemsEditor>
   /// karıştırırdı. Kullanıcı ilk düzenlemesini yaptığı anda düzeltilmiş sıra
   /// zaten kaydedilir.
   List<NoteItem> _adopt(List<NoteItem> incoming) =>
-      widget.showCheckboxes ? normalizeItems(incoming) : List.of(incoming);
+      widget.showCheckboxes && !_keepCheckedInPlace
+          ? normalizeItems(incoming)
+          : List.of(incoming);
 
   /// Dıştaki sayfa kaydırıcısı ([ItemsEditor.shrinkWrap] kipinde liste kendi
   /// kaydırmasını yapmaz). Sürükleyerek sıralarken kenar kaydırması bunun
@@ -681,6 +808,7 @@ class ItemsEditorState extends State<ItemsEditor>
           a[i].header != b[i].header ||
           a[i].align != b[i].align ||
           a[i].package != b[i].package ||
+          !sameNoteItemStructuredFields(a[i], b[i]) ||
           !sameNoteItemExtras(a[i].extras, b[i].extras)) {
         return false;
       }
@@ -690,6 +818,7 @@ class ItemsEditorState extends State<ItemsEditor>
 
   @override
   void dispose() {
+    _collapsedAisles.dispose();
     _floatsL.removeListener(_onFloats);
     _ownFloats?.dispose();
     _wrapRemeasure.dispose();
@@ -987,8 +1116,10 @@ class ItemsEditorState extends State<ItemsEditor>
   /// (bkz. [_CheckMove]). Açılma bitince listeden düşerler.
   final _arriving = <String>{};
 
-  /// Öğe hangi blokta çizilsin: yerleşiyorsa eski durumu, değilse gerçeği.
-  bool _placedAsChecked(NoteItem item) => _settling[item.id] ?? item.checked;
+  /// Öğe hangi blokta çizilsin: rutin kipinde madde yerinde kalır (hiçbir
+  /// zaman işaretli bloğa inmez); diğer kiplerde yerleşiyorsa eski durumu.
+  bool _placedAsChecked(NoteItem item) =>
+      _keepCheckedInPlace ? false : (_settling[item.id] ?? item.checked);
 
   /// İşaretlenen öğenin işaretlenmeden ÖNCEKİ sırası ve işaretlenme anı —
   /// [kUncheckRestoreWindow] içinde geri alınırsa öğe oraya döner.
@@ -1009,21 +1140,26 @@ class ItemsEditorState extends State<ItemsEditor>
     } else if (anchor != null) {
       final index = _items.indexWhere((i) => i.id == anchor!.id);
       target = NoteItem(id: _uuid.v4(), text: '');
-      final at = (widget.showCheckboxes && anchor.checked)
+      final at = (widget.showCheckboxes && !_keepCheckedInPlace && anchor.checked)
           ? _uncheckedInsertIndex(_uncheckedCount)
           : index + 1;
       setState(() => _items.insert(at, target));
     } else {
       final open = [
         for (final i in _items)
-          if (!i.checked) i,
+          if (_keepCheckedInPlace || !i.checked) i,
       ];
       if (open.isNotEmpty && open.last.text.trim().isEmpty) {
         target = open.last;
       } else {
         target = NoteItem(id: _uuid.v4(), text: '');
         setState(
-          () => _items.insert(_uncheckedInsertIndex(_uncheckedCount), target),
+          () => _items.insert(
+            _keepCheckedInPlace
+                ? _items.length
+                : _uncheckedInsertIndex(_uncheckedCount),
+            target,
+          ),
         );
       }
     }
@@ -1059,7 +1195,7 @@ class ItemsEditorState extends State<ItemsEditor>
   void _addItem() {
     final open = [
       for (final i in _items)
-        if (!i.checked) i,
+        if (_keepCheckedInPlace || !i.checked) i,
     ];
     final trailing = trailingEmptyCount(open);
     if (trailing >= kMaxTrailingEmptyItems) {
@@ -1067,7 +1203,14 @@ class ItemsEditorState extends State<ItemsEditor>
       return;
     }
     final item = NoteItem(id: _uuid.v4(), text: '');
-    setState(() => _items.insert(_uncheckedInsertIndex(_uncheckedCount), item));
+    setState(
+      () => _items.insert(
+        _keepCheckedInPlace
+            ? _items.length
+            : _uncheckedInsertIndex(_uncheckedCount),
+        item,
+      ),
+    );
     _commit();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _focusFor(item).requestFocus();
@@ -1249,9 +1392,95 @@ class ItemsEditorState extends State<ItemsEditor>
     _commit();
   }
 
+  /// Kural 5: Gruplu alışveriş görünümünde satır içi miktar artırma/azaltma
+  /// kesinlikle `item.id` üzerinden yapılır, görsel indeks kullanılmaz.
+  void _stepItemQtyById(String id, {required bool increase}) {
+    final index = _items.indexWhere((i) => i.id == id);
+    if (index < 0) return;
+    final current = _items[index];
+    final next = stepShopItemQty(current, increase: increase);
+    if (next == current) return;
+    unawaited(AppHaptics.tick());
+    setState(() {
+      _items[index] = next;
+      _rowCache.remove(id);
+    });
+    final ctl = _controllers[id];
+    if (ctl != null && ctl.logicalText != next.text) {
+      ctl.setLogical(next.text, next.text.length);
+    }
+    _commit();
+  }
+
+  /// Kural 5: Kaydırmasız tek tık "Yarına ertele" (`item.id` ile).
+  void _postponeItemTomorrowById(String id) {
+    final index = _items.indexWhere((i) => i.id == id);
+    if (index < 0) return;
+    final now = DateTime.now();
+    final tomorrow = DateTime(now.year, now.month, now.day + 1);
+    unawaited(AppHaptics.tick());
+    setState(() {
+      _items[index] = _items[index].copyWith(dueDate: tomorrow);
+      _rowCache.remove(id);
+    });
+    _commit();
+  }
+
+  /// Kural 5: Kaydırmasız madde ayrıntı levhası (tarih, öncelik, fiyat, odak,
+  /// rutin 30 günlük ısı haritası, AI alt adımlara bölme).
+  Future<void> _openItemMetaById(String id) async {
+    final index = _items.indexWhere((i) => i.id == id);
+    if (index < 0) return;
+    final current = _items[index];
+    FocusManager.instance.primaryFocus?.unfocus();
+    final res = await showItemQuickMetaSheet(
+      context,
+      item: current,
+      mode: widget.listMode,
+      isFocused: widget.focusIds.contains(id),
+      canBreakdown:
+          widget.onBreakdownItem != null &&
+          !current.header &&
+          !current.checked &&
+          current.text.trim().isNotEmpty,
+    );
+    if (!mounted || res == null) return;
+    final liveIdx = _items.indexWhere((i) => i.id == id);
+    if (liveIdx < 0) return;
+    final live = _items[liveIdx];
+    if (res.openPriceSheet) {
+      widget.onEditPrice?.call(live);
+      return;
+    }
+    if (res.toggleFocus) {
+      widget.onToggleFocusItem?.call(live);
+      return;
+    }
+    if (res.triggerBreakdown) {
+      _commit();
+      widget.onBreakdownItem?.call(live);
+      return;
+    }
+    var updated = live;
+    if (res.priority != null) {
+      updated = updated.copyWith(priority: res.priority);
+    }
+    if (res.clearDueDate) {
+      updated = updated.copyWith(clearDueDate: true);
+    } else if (res.dueDate != null) {
+      updated = updated.copyWith(dueDate: res.dueDate);
+    }
+    setState(() {
+      _items[liveIdx] = updated;
+      _rowCache.remove(id);
+    });
+    _commit();
+  }
+
   /// Satırın denetleyici/odak kaynaklarını bırakır; önce biçim çubuğuna
   /// haber verir (bkz. [ItemsEditor.onFieldDisposed]).
   void _reorder(int oldIndex, int newIndex) {
+    if (_isGroupedShopping || _isProjectFocused) return;
     final visible = _visibleItems();
     if (oldIndex < 0 || oldIndex >= visible.length) return;
     final moved = visible.removeAt(oldIndex);

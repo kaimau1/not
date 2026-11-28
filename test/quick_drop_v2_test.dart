@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:notlar/core/utils/spell_learn.dart';
 import 'package:notlar/features/notes/data/notes_repository.dart';
+import 'package:notlar/features/notes/domain/list_mode.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_item.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
@@ -30,6 +31,7 @@ class _DropV2Repo implements NotesRepository {
           List<String> tags,
           bool urgent,
           String? listKind,
+          bool isQuickInbox,
         })
       >[];
 
@@ -51,6 +53,11 @@ class _DropV2Repo implements NotesRepository {
     DateTime? reminderAt,
     int listColumns = 1,
     String? listKind,
+    ListMode? listMode,
+    ResetSchedule? resetSchedule,
+    List<int> resetCustomDays = const [],
+    ContextTimeSlot contextTimeSlot = ContextTimeSlot.any,
+    bool isQuickInbox = false,
   }) async {
     richCreated.add((
       type: type,
@@ -60,6 +67,7 @@ class _DropV2Repo implements NotesRepository {
       tags: tags,
       urgent: urgent,
       listKind: listKind,
+      isQuickInbox: isQuickInbox,
     ));
     return 'rich-${richCreated.length}';
   }
@@ -75,6 +83,11 @@ class _DropV2Repo implements NotesRepository {
     DateTime? reminderAt,
     int listColumns = 1,
     String? listKind,
+    ListMode? listMode,
+    ResetSchedule? resetSchedule,
+    List<int> resetCustomDays = const [],
+    ContextTimeSlot contextTimeSlot = ContextTimeSlot.any,
+    bool isQuickInbox = false,
   }) async {
     return 'plain-1';
   }
@@ -143,24 +156,26 @@ void main() {
       expect(en.text, 'Call doctor');
     });
 
-    test('quickDropFields extracts inline prices into ShopItemMeta', () {
+    test('quickDropFields extracts inline prices into canonical NoteItem.price', () {
       const note = Note(
         id: 'shop-1',
         type: NoteType.checklist,
         title: 'Market',
         listKind: 'shopping',
+        listMode: ListMode.shopping,
       );
       final res = quickDropFields(note, 'Süt 45 TL', locale: 'tr');
       final rawItems = res.fields['items'] as List;
       final saved = NoteItem.fromMap(rawItems.single as Map<String, dynamic>);
       expect(saved.text, 'Süt');
+      expect(saved.price, 45.0);
       expect(ShopItemMeta.fromItem(saved).unitPrice, 45.0);
     });
   });
 
-  group('QuickDropSheet v2 widget flows', () {
+  group('QuickDropSheet v3 widget flows', () {
     testWidgets(
-      'creates smart list via command and supports keep-open toggle',
+      'creates smart list via command, supports keep-open toggle in settings, and routes low-confidence to Hızlı Not with Aç snackbar',
       (tester) async {
         SharedPreferences.setMockInitialValues({});
         final prefs = await SharedPreferences.getInstance();
@@ -208,7 +223,7 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(
-          find.byKey(const ValueKey('quick-drop-target-smart')),
+          find.byKey(const ValueKey('quick-drop-target-chip')),
           findsOneWidget,
         );
 
@@ -229,10 +244,10 @@ void main() {
         // Sheet remains open because Keep Open was enabled!
         expect(find.byKey(const ValueKey('quick-entry-field')), findsOneWidget);
 
-        // Toggle keep-open off via header pill and add to existing note -> focusedNoteProvider updates.
-        await tester.tap(
-          find.byKey(const ValueKey('quick-drop-keep-open-pill')),
-        );
+        // Toggle keep-open off in settings menu and add low-confidence text -> lands in Hızlı Not with Aç snackbar!
+        await tester.tap(find.byKey(const ValueKey('quick-drop-settings')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const ValueKey('quick-drop-keep-open')));
         await tester.pumpAndSettle();
         await tester.enterText(
           find.byKey(const ValueKey('quick-entry-field')),
@@ -241,8 +256,11 @@ void main() {
         await tester.pumpAndSettle();
         await tester.tap(find.byKey(const ValueKey('quick-drop-add')));
         await tester.pump();
-        expect(repo.updates, hasLength(1));
-        expect(container.read(focusedNoteProvider), 'n1');
+        await tester.pump(const Duration(milliseconds: 350));
+        expect(repo.richCreated, hasLength(2));
+        expect(repo.richCreated.last.isQuickInbox, isTrue);
+        expect(find.text("Hızlı Not'a eklendi"), findsOneWidget);
+        expect(find.text('Aç'), findsOneWidget);
         await tester.pumpAndSettle();
       },
     );

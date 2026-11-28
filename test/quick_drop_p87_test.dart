@@ -10,6 +10,7 @@ import 'package:notlar/features/calendar/data/calendar_repository.dart';
 import 'package:notlar/features/calendar/domain/day_key.dart';
 import 'package:notlar/features/notes/data/device_speech.dart';
 import 'package:notlar/features/notes/data/notes_repository.dart';
+import 'package:notlar/features/notes/domain/list_mode.dart';
 import 'package:notlar/features/notes/domain/note.dart';
 import 'package:notlar/features/notes/domain/note_item.dart';
 import 'package:notlar/features/notes/domain/note_type.dart';
@@ -40,6 +41,34 @@ class _FakeRepo implements NotesRepository {
     DateTime? reminderAt,
     int listColumns = 1,
     String? listKind,
+    ListMode? listMode,
+    ResetSchedule? resetSchedule,
+    List<int> resetCustomDays = const [],
+    ContextTimeSlot contextTimeSlot = ContextTimeSlot.any,
+    bool isQuickInbox = false,
+  }) async {
+    created.add((type: type, body: body, reminderAt: reminderAt));
+    return 'new-${created.length}';
+  }
+
+  @override
+  Future<String> createRichNote(
+    NoteType type, {
+    double? orderIndex,
+    String title = '',
+    String body = '',
+    List<NoteItem>? items,
+    List<String> tags = const [],
+    bool urgent = false,
+    String? folderId,
+    DateTime? reminderAt,
+    int listColumns = 1,
+    String? listKind,
+    ListMode? listMode,
+    ResetSchedule? resetSchedule,
+    List<int> resetCustomDays = const [],
+    ContextTimeSlot contextTimeSlot = ContextTimeSlot.any,
+    bool isQuickInbox = false,
   }) async {
     created.add((type: type, body: body, reminderAt: reminderAt));
     return 'new-${created.length}';

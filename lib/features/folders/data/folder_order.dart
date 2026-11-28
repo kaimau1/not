@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/stable_value.dart';
 
 import '../../notes/data/notes_repository.dart';
+import '../../notes/domain/note.dart';
+import '../../notes/domain/note_type.dart';
 import '../../notes/presentation/notes_providers.dart';
 import '../../settings/settings_providers.dart';
 import '../domain/note_folder.dart';
@@ -140,6 +142,47 @@ final folderNoteCountsProvider = Provider<Map<String, int>>((ref) {
 });
 
 final _folderNoteCountsBox = Provider<StableBox<Map<String, int>>>(
+  (ref) => StableBox(),
+);
+
+/// "Hızlı Not" klasöründeki tamamlanmamış madde sayısı (Kural 4):
+/// liste notlarında işaretsiz boş-olmayan maddeler, düz notlarda boş olmayan
+/// notlar sayılır.
+int quickInboxPendingItemCount(Iterable<Note> notes, String folderId) {
+  var total = 0;
+  for (final n in notes) {
+    if (n.folderId != folderId ||
+        n.deletedAt != null ||
+        n.archivedAt != null ||
+        n.locked) {
+      continue;
+    }
+    if (n.type == NoteType.checklist || n.type == NoteType.ordered) {
+      for (final i in n.items) {
+        if (!i.header && !i.checked && i.text.trim().isNotEmpty) total++;
+      }
+    } else if (!n.isEmpty) {
+      total++;
+    }
+  }
+  return total;
+}
+
+/// Klasör kimliği → "Hızlı Not" klasörleri için tamamlanmamış madde sayısı.
+final quickInboxPendingCountsProvider = Provider<Map<String, int>>((ref) {
+  final notes = ref.watch(notesStreamProvider).value;
+  if (notes == null) return const {};
+  final folders =
+      ref.watch(foldersStreamProvider).value ?? const <NoteFolder>[];
+  final counts = <String, int>{};
+  for (final f in folders) {
+    if (!f.isQuickInbox) continue;
+    counts[f.id] = quickInboxPendingItemCount(notes, f.id);
+  }
+  return ref.watch(_quickInboxPendingBox).keep(counts, sameMap);
+});
+
+final _quickInboxPendingBox = Provider<StableBox<Map<String, int>>>(
   (ref) => StableBox(),
 );
 

@@ -152,21 +152,48 @@ List<Note> quickDropCandidates(
     );
   }
   final kind = detectNoteListKind(note, locale: locale);
+  final effectiveMode = note.listMode != ListMode.general
+      ? note.listMode
+      : listModeFromLegacyKind(smartListKindId(kind));
   final priceByKey = <String, double>{};
+  final metaByKey = <String, InlineParsedItem>{};
   var parseInput = text;
-  if (kind == SmartListKind.shopping || kind == SmartListKind.expense) {
+  {
     final segments = text.split(',');
     final rebuilt = <String>[];
     for (final rawSeg in segments) {
-      final priced = extractInlinePrice(rawSeg.trim());
-      if (priced.price != null && priced.text.isNotEmpty) {
-        priceByKey[quickItemKey(priced.text)] = priced.price!;
-        rebuilt.add(priced.text);
-      } else if (rawSeg.trim().isNotEmpty) {
-        rebuilt.add(rawSeg.trim());
+      final seg = rawSeg.trim();
+      if (seg.isEmpty) continue;
+      final inline = InlineItemParser.parse(
+        seg,
+        mode: effectiveMode,
+        locale: locale,
+        learnedGroups: memory.itemGroups,
+      );
+      final baseKey = quickItemKey(inline.title);
+      if (inline.price != null) {
+        priceByKey[baseKey] = inline.price!;
+      }
+      if (inline.dueDate != null ||
+          inline.priority.isSet ||
+          inline.price != null ||
+          inline.quantity != null ||
+          inline.category.isNotEmpty) {
+        metaByKey[baseKey] = inline;
+      }
+      if (kind == SmartListKind.shopping || kind == SmartListKind.expense) {
+        final priced = extractInlinePrice(seg);
+        if (priced.price != null && priced.text.isNotEmpty) {
+          priceByKey[quickItemKey(priced.text)] = priced.price!;
+          rebuilt.add(priced.text);
+        } else {
+          rebuilt.add(seg);
+        }
+      } else {
+        rebuilt.add(inline.title);
       }
     }
-    if (priceByKey.isNotEmpty) parseInput = rebuilt.join(', ');
+    if (rebuilt.isNotEmpty) parseInput = rebuilt.join(', ');
   }
   final parsed = _parseIntoList(note, parseInput, locale, memory);
   final plan = planDropIntoList(
@@ -182,29 +209,67 @@ List<Note> quickDropCandidates(
     for (var i = 0; i < note.items.length; i++)
       // Boş yer tutucu satır (yeni listenin tek boş maddesi) atılır.
       if (note.items[i].text.trim().isNotEmpty || note.items.length > 1)
-        note.items[i].copyWith(
-          text: plan.requantify[i],
-          checked: plan.uncheck.contains(i) ? false : null,
-        ),
+        () {
+          final nextText = plan.requantify[i];
+          var updated = note.items[i].copyWith(
+            text: nextText,
+            checked: plan.uncheck.contains(i) ? false : null,
+          );
+          if (nextText != null) {
+            final parsedQty = parseQuickQty(quickQtyOf(nextText));
+            if (parsedQty != null && parsedQty.value > 0) {
+              updated = updated.copyWith(
+                quantity: parsedQty.value,
+                unit: parsedQty.rawUnit,
+              );
+            }
+          }
+          return updated;
+        }(),
   ];
   final fresh = <NoteItem>[
     for (final t in plan.texts)
       () {
-        var item = NoteItem(id: id(), text: t);
-        if (kind == SmartListKind.shopping || kind == SmartListKind.expense) {
-          final priced = extractInlinePrice(t);
-          final foundPrice = priced.price ?? priceByKey[quickItemKey(t)];
-          if (foundPrice != null) {
-            final clean = priced.price != null && priced.text.isNotEmpty
-                ? quickCapitalize(priced.text)
-                : t;
-            item = item.copyWith(text: clean);
-            item = kind == SmartListKind.shopping
-                ? ShopItemMeta(unitPrice: foundPrice).applyToItem(item)
-                : ExpenseItemMeta(amount: foundPrice).applyToItem(item);
-          }
+        final key = quickItemKey(t);
+        final inline = metaByKey[key] ??
+            InlineItemParser.parse(
+              t,
+              mode: effectiveMode,
+              locale: locale,
+              learnedGroups: memory.itemGroups,
+            );
+        final parsedQty = parseQuickQty(quickQtyOf(t));
+        final foundPrice = inline.price ?? priceByKey[key];
+        final qty = parsedQty?.value ?? inline.quantity;
+        final unit = (parsedQty?.rawUnit.isNotEmpty ?? false)
+            ? parsedQty!.rawUnit
+            : inline.unit;
+        final cleanText =
+            (kind == SmartListKind.shopping || kind == SmartListKind.expense)
+                ? () {
+                    final priced = extractInlinePrice(t);
+                    return priced.price != null && priced.text.isNotEmpty
+                        ? quickCapitalize(priced.text)
+                        : t;
+                  }()
+                : (inline.title.isNotEmpty ? inline.title : t);
+        var category = inline.category;
+        if (category.isEmpty && effectiveMode == ListMode.shopping) {
+          final g =
+              memory.itemGroups[key] ??
+              groceryLexicon(locale).groupOf(cleanText);
+          category = aisleCategoryKey(g) ?? '';
         }
-        return item;
+        return NoteItem(
+          id: id(),
+          text: cleanText,
+          quantity: qty != null && qty > 0 ? qty : null,
+          unit: qty != null && qty > 0 ? unit : '',
+          price: foundPrice != null && foundPrice > 0 ? foundPrice : null,
+          dueDate: inline.dueDate,
+          priority: inline.priority,
+          category: category,
+        );
       }(),
   ];
   final items = insertItemsBySmartGroup(

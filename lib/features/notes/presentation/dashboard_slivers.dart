@@ -387,6 +387,14 @@ extension _DashSlivers on _DashboardScreenState {
           },
         );
       }
+      final contextNowIds = searchActive
+          ? const <String>{}
+          : ContextHighlightEngine.highlightedNoteIds(
+              items,
+              contextBoost: ref
+                  .read(quickDropRecentProvider.notifier)
+                  .contextScores(),
+            );
       // Tek bir kart hücresi. İki yerleşim (deterministik sütunlar ve tembel
       // masonry) AYNI hücreyi kullanır: sürükle-sırala, seçim ve odak vurgusu
       // davranışı ikisinde de birebir aynı kalsın.
@@ -401,6 +409,7 @@ extension _DashSlivers on _DashboardScreenState {
           note,
           searching: searchActive,
           calendarDay: calendarDays[note.id],
+          contextNow: contextNowIds.contains(note.id),
         );
         void select() =>
             ref.read(selectedNoteIdsProvider.notifier).toggle(note.id);

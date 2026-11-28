@@ -3945,5 +3945,197 @@
   "floatingSizeSmall": "Small",
   "floatingSizeMedium": "Medium",
   "floatingSizeLarge": "Full",
-  "floatingAlignCycle": "Horizontal alignment"
+  "floatingAlignCycle": "Horizontal alignment",
+  "quickInboxFolderName": "Quick Note",
+  "quickInboxSubtitle": "Unmatched additions land here",
+  "quickDropAddedQuickInbox": "Added to Quick Note",
+  "quickDropOpen": "Open",
+  "quickDropTargetLabel": "Target: {target}",
+  "@quickDropTargetLabel": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "quickDropMergeSingle": "Merge into one note",
+  "quickDropPriorityUrgent": "Urgent",
+  "quickDropPriorityHigh": "High",
+  "quickDropPriorityMedium": "Medium",
+  "quickDropPriorityLow": "Low",
+  "quickDropContextNow": "Suggested now: {title}",
+  "@quickDropContextNow": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "listModeLabel": "List mode",
+  "listModeGeneral": "General",
+  "listModeShopping": "Shopping",
+  "listModeRoutine": "Routine",
+  "listModeTemplate": "Template",
+  "listModeProject": "Project",
+  "listModeResetSchedule": "Reset",
+  "listModeResetNone": "Off",
+  "listModeResetDaily": "Every night",
+  "listModeResetWeekly": "Every week",
+  "listModeResetCustom": "Custom days",
+  "listModeTimeSlot": "Time slot",
+  "listModeSlotAny": "Anytime",
+  "listModeSlotMorning": "Morning",
+  "listModeSlotEvening": "Evening",
+  "listModeSlotWeekend": "Weekend",
+  "shoppingGroupToggle": "Aisles",
+  "shoppingBoughtCount": "{done}/{total} bought",
+  "@shoppingBoughtCount": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "shoppingTotalAmount": "Total: {amount}",
+  "@shoppingTotalAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "shoppingSummaryRemaining": "{count} left",
+  "@shoppingSummaryRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "routineTodayProgress": "Today {done}/{total}",
+  "@routineTodayProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "routineStreakDays": "{count} d",
+  "@routineStreakDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "routineBestStreak": "Best streak: {count} days",
+  "@routineBestStreak": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "routineLast30Days": "Last 30 days",
+  "templateResetReuse": "Reset all and reuse",
+  "templateResetDone": "All items reset",
+  "templateCopyNew": "Copy as new list",
+  "projectFocusToggle": "Focus (3)",
+  "projectFocusExit": "Exit focus",
+  "projectFocusPick": "Pick focus",
+  "projectFocusActive": "Focus mode: {shown}/{total}",
+  "@projectFocusActive": {
+    "placeholders": {
+      "shown": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "projectProgressLabel": "{percent}% · {done}/{total}",
+  "@projectProgressLabel": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      },
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "itemQuickPostponeTomorrow": "Move to tomorrow",
+  "itemQuickPriority": "Priority",
+  "itemQuickDueDate": "Due date",
+  "itemQuickPrice": "Price",
+  "itemQuickFocus": "Pin to focus",
+  "itemQuickUnfocus": "Remove from focus",
+  "itemQuickMeta": "Details",
+  "itemDueToday": "Today",
+  "itemDueTomorrow": "Tomorrow",
+  "itemDueNextWeek": "Next week",
+  "itemDueClear": "Clear date",
+  "itemPriorityNone": "None",
+  "listModeNudgeShopping": "Switch to Shopping mode?",
+  "listModeNudgeRoutine": "Switch to Routine mode?",
+  "listModeQuickAddHint": "e.g. 2 kg tomatoes, coffee $6…",
+  "ghostSuggestionsTitle": "Suggested items",
+  "ghostReasonDue": "Bought regularly",
+  "ghostReasonPair": "Goes well with",
+  "ghostReasonFrequent": "Frequently added",
+  "ghostReasonTemplate": "Might be missing",
+  "ghostReasonRoutine": "Daily idea",
+  "itemBreakdownAction": "Break into substeps",
+  "itemBreakdownTitle": "Substeps",
+  "itemBreakdownApply": "Add substeps",
+  "itemBreakdownEmpty": "Could not suggest substeps",
+  "textExtractAction": "Extract from text",
+  "textExtractTitle": "Extract items from text",
+  "textExtractHint": "Paste a message, recipe, or list here…",
+  "textExtractRefineAi": "Refine with AI",
+  "textExtractAddSelected": "Add selected ({count})",
+  "@textExtractAddSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "textExtractPasteBanner": "Extract {count} items from text",
+  "@textExtractPasteBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "listAiQuotaReached": "Daily AI quota reached; using local suggestion.",
+  "carryOverBanner": "{count} unfinished tasks from earlier",
+  "@carryOverBanner": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "carryOverAction": "Move to today",
+  "carryOverDone": "Moved {count} tasks to today",
+  "@carryOverDone": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "contextNowBadge": "Now"
 }

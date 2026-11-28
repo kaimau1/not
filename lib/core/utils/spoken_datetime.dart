@@ -679,3 +679,220 @@ DateTime? parseSpokenDateTime(
 /// hesaplamasın (biri unutulursa o akış sessizce Türkçeye sabitlenirdi).
 DateTime? parseSpokenDateTimeNow(String text, {DateTime? now}) =>
     parseSpokenDateTime(text, languageCode: Intl.getCurrentLocale(), now: now);
+
+({int start, int end})? _findWordSpan(String text, String word) {
+  var from = 0;
+  while (true) {
+    final at = text.indexOf(word, from);
+    if (at < 0) return null;
+    final before = at == 0 ? '' : text[at - 1];
+    final afterIndex = at + word.length;
+    final after = afterIndex >= text.length ? '' : text[afterIndex];
+    if (!_letter.hasMatch(before) && !_letter.hasMatch(after)) {
+      return (start: at, end: afterIndex);
+    }
+    from = at + 1;
+  }
+}
+
+({int start, int end})? _findAnyWordSpan(String text, List<String> words) {
+  for (final w in words) {
+    final s = _findWordSpan(text, w);
+    if (s != null) return s;
+  }
+  return null;
+}
+
+/// Satır içi ayrıştırıcı için tarih/saat ve metinde kapladığı karakter
+/// aralıklarını ([spans]) döndürür.
+({
+  DateTime at,
+  List<({int start, int end})> spans,
+  bool hasTime,
+})? parseSpokenDateTimeWithSpan(
+  String text, {
+  String languageCode = 'tr',
+  DateTime? now,
+}) {
+  final lang = _languages[_baseCode(languageCode)];
+  if (lang == null) return null;
+  final reference = now ?? DateTime.now();
+  final normalized = lang.lower(text);
+  // Karakter uzunluğu değiştiyse (nadir Unicode katlanması) span güvenilmez.
+  if (normalized.length != text.length) {
+    final dt = parseSpokenDateTime(
+      text,
+      languageCode: languageCode,
+      now: reference,
+    );
+    if (dt == null) return null;
+    return (at: dt, spans: const [], hasTime: false);
+  }
+
+  final spans = <({int start, int end})>[];
+  final today = DateTime(reference.year, reference.month, reference.day);
+
+  DateTime? day;
+  final datSpan = _findAnyWordSpan(normalized, lang.dayAfterTomorrow);
+  if (datSpan != null) {
+    day = today.add(const Duration(days: 2));
+    spans.add(datSpan);
+  } else {
+    final pattern = lang.tomorrowPattern;
+    if (pattern != null) {
+      final m = pattern.firstMatch(normalized);
+      if (m != null) {
+        day = today.add(const Duration(days: 1));
+        spans.add((start: m.start, end: m.end));
+      }
+    } else {
+      final tmSpan = _findAnyWordSpan(normalized, lang.tomorrow);
+      if (tmSpan != null) {
+        day = today.add(const Duration(days: 1));
+        spans.add(tmSpan);
+      }
+    }
+    if (day == null) {
+      final tdSpan = _findAnyWordSpan(normalized, lang.today);
+      if (tdSpan != null) {
+        day = today;
+        spans.add(tdSpan);
+      }
+    }
+    if (day == null) {
+      for (final entry in lang.weekdays.entries) {
+        final wSpan = _findWordSpan(normalized, entry.key);
+        if (wSpan == null) continue;
+        var delta = (entry.value - today.weekday) % 7;
+        final nwSpan = _findAnyWordSpan(normalized, lang.nextWeek);
+        if (delta == 0) delta = 7;
+        if (nwSpan != null && delta < 7) delta += 7;
+        day = today.add(Duration(days: delta));
+        spans.add(wSpan);
+        if (nwSpan != null) spans.add(nwSpan);
+        break;
+      }
+    }
+  }
+
+  String? part;
+  ({int start, int end})? partSpan;
+  for (final name in lang.parts.keys) {
+    final s = _findWordSpan(normalized, name);
+    if (s != null) {
+      part = name;
+      partSpan = s;
+      break;
+    }
+  }
+
+  int? hour;
+  var minute = 0;
+  var meridiemPm = false;
+  var meridiemAm = false;
+  var hasExplicitTime = false;
+
+  // Satır içi ayrıştırmada `:` zorunlu veya `saat 10.30` biçimi: düz ondalık
+  // sayıları (`1.50`) saat sanmamak için `:` doğrudan, `.` yalnız geçerli
+  // `00`–`59` dakika + yanında gün/saat ipucu varsa yakalanır.
+  final explicitColon = RegExp(r'\b(\d{1,2}):(\d{2})\b').firstMatch(normalized);
+  final meridiem = lang.meridiem?.firstMatch(normalized);
+  final half = lang.halfPast?.firstMatch(normalized);
+  final prefix = lang.hourPrefix.firstMatch(normalized);
+  final suffix = lang.hourSuffix?.firstMatch(normalized);
+
+  if (explicitColon != null) {
+    hour = int.parse(explicitColon.group(1)!);
+    minute = int.parse(explicitColon.group(2)!);
+    hasExplicitTime = true;
+    spans.add((start: explicitColon.start, end: explicitColon.end));
+    if (meridiem != null) {
+      meridiemPm = meridiem.group(2) == 'p';
+      meridiemAm = !meridiemPm;
+      spans.add((start: meridiem.start, end: meridiem.end));
+    }
+  } else if (meridiem != null) {
+    hour = int.parse(meridiem.group(1)!);
+    meridiemPm = meridiem.group(2) == 'p';
+    meridiemAm = !meridiemPm;
+    hasExplicitTime = true;
+    spans.add((start: meridiem.start, end: meridiem.end));
+  } else if (half != null) {
+    hour = int.parse(half.group(1)!);
+    minute = 30;
+    hasExplicitTime = true;
+    spans.add((start: half.start, end: half.end));
+  } else if (prefix != null) {
+    hour = int.parse(prefix.group(1)!);
+    hasExplicitTime = true;
+    spans.add((start: prefix.start, end: prefix.end));
+  } else if (suffix != null) {
+    hour = int.parse(suffix.group(1)!);
+    hasExplicitTime = true;
+    spans.add((start: suffix.start, end: suffix.end));
+  }
+
+  if (partSpan != null) {
+    spans.add(partSpan);
+    hasExplicitTime = true;
+  }
+
+  ({int hour, int minute})? time;
+  if (hour == null) {
+    if (part != null) {
+      time = (hour: lang.parts[part]!, minute: 0);
+    }
+  } else if (hour <= 23 && minute <= 59) {
+    var h = hour;
+    if (meridiemPm && h < 12) h += 12;
+    if (meridiemAm && h == 12) h = 0;
+    if (!meridiemAm &&
+        !meridiemPm &&
+        part != null &&
+        lang.afternoonParts.contains(part) &&
+        h < 12) {
+      h += 12;
+    }
+    time = (hour: h, minute: minute);
+  } else {
+    return null;
+  }
+
+  if (day == null && time == null) return null;
+
+  final base = day ?? today;
+  var result = DateTime(
+    base.year,
+    base.month,
+    base.day,
+    time?.hour ?? 9,
+    time?.minute ?? 0,
+  );
+  if (!result.isAfter(reference)) {
+    if (day != null) {
+      // "bugün" söylendi ama saat 09:00 geçtiyse günü koru (görev teslim tarihi).
+      if (day == today && time == null) {
+        result = DateTime(today.year, today.month, today.day, 23, 59);
+      } else if (day == today) {
+        // Saat bugünün geçmişinde ama kullanıcı açıkça "bugün" dedi.
+      } else {
+        return null;
+      }
+    } else {
+      result = result.add(const Duration(days: 1));
+    }
+  }
+
+  // Çakışan aralıkları birleştirip sırala.
+  spans.sort((a, b) => a.start.compareTo(b.start));
+  final merged = <({int start, int end})>[];
+  for (final s in spans) {
+    if (merged.isEmpty || s.start > merged.last.end) {
+      merged.add(s);
+    } else if (s.end > merged.last.end) {
+      merged[merged.length - 1] = (start: merged.last.start, end: s.end);
+    }
+  }
+
+  return (at: result, spans: merged, hasTime: hasExplicitTime);
+}

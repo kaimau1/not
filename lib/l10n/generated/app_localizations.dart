@@ -16861,6 +16861,480 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Yatay hiza'**
   String get floatingAlignCycle;
+
+  /// No description provided for @quickInboxFolderName.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hızlı Not'**
+  String get quickInboxFolderName;
+
+  /// No description provided for @quickInboxSubtitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Emin olunmayan eklemeler burada toplanır'**
+  String get quickInboxSubtitle;
+
+  /// No description provided for @quickDropAddedQuickInbox.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hızlı Not\'a eklendi'**
+  String get quickDropAddedQuickInbox;
+
+  /// No description provided for @quickDropOpen.
+  ///
+  /// In tr, this message translates to:
+  /// **'Aç'**
+  String get quickDropOpen;
+
+  /// No description provided for @quickDropTargetLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hedef: {target}'**
+  String quickDropTargetLabel(String target);
+
+  /// No description provided for @quickDropMergeSingle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tek notta birleştir'**
+  String get quickDropMergeSingle;
+
+  /// No description provided for @quickDropPriorityUrgent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Acil'**
+  String get quickDropPriorityUrgent;
+
+  /// No description provided for @quickDropPriorityHigh.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yüksek'**
+  String get quickDropPriorityHigh;
+
+  /// No description provided for @quickDropPriorityMedium.
+  ///
+  /// In tr, this message translates to:
+  /// **'Orta'**
+  String get quickDropPriorityMedium;
+
+  /// No description provided for @quickDropPriorityLow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Düşük'**
+  String get quickDropPriorityLow;
+
+  /// No description provided for @quickDropContextNow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şimdi önerilen: {title}'**
+  String quickDropContextNow(String title);
+
+  /// No description provided for @listModeLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'Liste kipi'**
+  String get listModeLabel;
+
+  /// No description provided for @listModeGeneral.
+  ///
+  /// In tr, this message translates to:
+  /// **'Genel'**
+  String get listModeGeneral;
+
+  /// No description provided for @listModeShopping.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alışveriş'**
+  String get listModeShopping;
+
+  /// No description provided for @listModeRoutine.
+  ///
+  /// In tr, this message translates to:
+  /// **'Rutin'**
+  String get listModeRoutine;
+
+  /// No description provided for @listModeTemplate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şablon'**
+  String get listModeTemplate;
+
+  /// No description provided for @listModeProject.
+  ///
+  /// In tr, this message translates to:
+  /// **'Proje'**
+  String get listModeProject;
+
+  /// No description provided for @listModeResetSchedule.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sıfırlama'**
+  String get listModeResetSchedule;
+
+  /// No description provided for @listModeResetNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Kapalı'**
+  String get listModeResetNone;
+
+  /// No description provided for @listModeResetDaily.
+  ///
+  /// In tr, this message translates to:
+  /// **'Her gece'**
+  String get listModeResetDaily;
+
+  /// No description provided for @listModeResetWeekly.
+  ///
+  /// In tr, this message translates to:
+  /// **'Her hafta'**
+  String get listModeResetWeekly;
+
+  /// No description provided for @listModeResetCustom.
+  ///
+  /// In tr, this message translates to:
+  /// **'Özel günler'**
+  String get listModeResetCustom;
+
+  /// No description provided for @listModeTimeSlot.
+  ///
+  /// In tr, this message translates to:
+  /// **'Zaman dilimi'**
+  String get listModeTimeSlot;
+
+  /// No description provided for @listModeSlotAny.
+  ///
+  /// In tr, this message translates to:
+  /// **'Her zaman'**
+  String get listModeSlotAny;
+
+  /// No description provided for @listModeSlotMorning.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sabah'**
+  String get listModeSlotMorning;
+
+  /// No description provided for @listModeSlotEvening.
+  ///
+  /// In tr, this message translates to:
+  /// **'Akşam'**
+  String get listModeSlotEvening;
+
+  /// No description provided for @listModeSlotWeekend.
+  ///
+  /// In tr, this message translates to:
+  /// **'Hafta sonu'**
+  String get listModeSlotWeekend;
+
+  /// No description provided for @shoppingGroupToggle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Reyonlar'**
+  String get shoppingGroupToggle;
+
+  /// No description provided for @shoppingBoughtCount.
+  ///
+  /// In tr, this message translates to:
+  /// **'{done}/{total} alındı'**
+  String shoppingBoughtCount(int done, int total);
+
+  /// No description provided for @shoppingTotalAmount.
+  ///
+  /// In tr, this message translates to:
+  /// **'Toplam: {amount}'**
+  String shoppingTotalAmount(String amount);
+
+  /// No description provided for @shoppingSummaryRemaining.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} kaldı'**
+  String shoppingSummaryRemaining(int count);
+
+  /// No description provided for @routineTodayProgress.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugün {done}/{total}'**
+  String routineTodayProgress(int done, int total);
+
+  /// No description provided for @routineStreakDays.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} gün'**
+  String routineStreakDays(int count);
+
+  /// No description provided for @routineBestStreak.
+  ///
+  /// In tr, this message translates to:
+  /// **'En iyi seri: {count} gün'**
+  String routineBestStreak(int count);
+
+  /// No description provided for @routineLast30Days.
+  ///
+  /// In tr, this message translates to:
+  /// **'Son 30 gün'**
+  String get routineLast30Days;
+
+  /// No description provided for @templateResetReuse.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tümünü sıfırla ve tekrar kullan'**
+  String get templateResetReuse;
+
+  /// No description provided for @templateResetDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tüm maddeler sıfırlandı'**
+  String get templateResetDone;
+
+  /// No description provided for @templateCopyNew.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni liste olarak kopyala'**
+  String get templateCopyNew;
+
+  /// No description provided for @projectFocusToggle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Odak (3)'**
+  String get projectFocusToggle;
+
+  /// No description provided for @projectFocusExit.
+  ///
+  /// In tr, this message translates to:
+  /// **'Odağı kapat'**
+  String get projectFocusExit;
+
+  /// No description provided for @projectFocusPick.
+  ///
+  /// In tr, this message translates to:
+  /// **'Odak seç'**
+  String get projectFocusPick;
+
+  /// No description provided for @projectFocusActive.
+  ///
+  /// In tr, this message translates to:
+  /// **'Odak kipi: {shown}/{total}'**
+  String projectFocusActive(int shown, int total);
+
+  /// No description provided for @projectProgressLabel.
+  ///
+  /// In tr, this message translates to:
+  /// **'%{percent} · {done}/{total}'**
+  String projectProgressLabel(int percent, int done, int total);
+
+  /// No description provided for @itemQuickPostponeTomorrow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yarına ertele'**
+  String get itemQuickPostponeTomorrow;
+
+  /// No description provided for @itemQuickPriority.
+  ///
+  /// In tr, this message translates to:
+  /// **'Öncelik'**
+  String get itemQuickPriority;
+
+  /// No description provided for @itemQuickDueDate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarih'**
+  String get itemQuickDueDate;
+
+  /// No description provided for @itemQuickPrice.
+  ///
+  /// In tr, this message translates to:
+  /// **'Fiyat'**
+  String get itemQuickPrice;
+
+  /// No description provided for @itemQuickFocus.
+  ///
+  /// In tr, this message translates to:
+  /// **'Odağa al'**
+  String get itemQuickFocus;
+
+  /// No description provided for @itemQuickUnfocus.
+  ///
+  /// In tr, this message translates to:
+  /// **'Odaktan çıkar'**
+  String get itemQuickUnfocus;
+
+  /// No description provided for @itemQuickMeta.
+  ///
+  /// In tr, this message translates to:
+  /// **'Ayrıntılar'**
+  String get itemQuickMeta;
+
+  /// No description provided for @itemDueToday.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugün'**
+  String get itemDueToday;
+
+  /// No description provided for @itemDueTomorrow.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yarın'**
+  String get itemDueTomorrow;
+
+  /// No description provided for @itemDueNextWeek.
+  ///
+  /// In tr, this message translates to:
+  /// **'Gelecek hafta'**
+  String get itemDueNextWeek;
+
+  /// No description provided for @itemDueClear.
+  ///
+  /// In tr, this message translates to:
+  /// **'Tarihi kaldır'**
+  String get itemDueClear;
+
+  /// No description provided for @itemPriorityNone.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yok'**
+  String get itemPriorityNone;
+
+  /// No description provided for @listModeNudgeShopping.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alışveriş kipine geç?'**
+  String get listModeNudgeShopping;
+
+  /// No description provided for @listModeNudgeRoutine.
+  ///
+  /// In tr, this message translates to:
+  /// **'Rutin kipine geç?'**
+  String get listModeNudgeRoutine;
+
+  /// No description provided for @listModeQuickAddHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Örn. 2 kg domates, kahve 180 tl…'**
+  String get listModeQuickAddHint;
+
+  /// No description provided for @ghostSuggestionsTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önerilen maddeler'**
+  String get ghostSuggestionsTitle;
+
+  /// No description provided for @ghostReasonDue.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sık alıyorsun'**
+  String get ghostReasonDue;
+
+  /// No description provided for @ghostReasonPair.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yanında iyi gider'**
+  String get ghostReasonPair;
+
+  /// No description provided for @ghostReasonFrequent.
+  ///
+  /// In tr, this message translates to:
+  /// **'Sık eklediklerin'**
+  String get ghostReasonFrequent;
+
+  /// No description provided for @ghostReasonTemplate.
+  ///
+  /// In tr, this message translates to:
+  /// **'Eksik olabilir'**
+  String get ghostReasonTemplate;
+
+  /// No description provided for @ghostReasonRoutine.
+  ///
+  /// In tr, this message translates to:
+  /// **'Günlük öneri'**
+  String get ghostReasonRoutine;
+
+  /// No description provided for @itemBreakdownAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alt adımlara böl'**
+  String get itemBreakdownAction;
+
+  /// No description provided for @itemBreakdownTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alt adımlar'**
+  String get itemBreakdownTitle;
+
+  /// No description provided for @itemBreakdownApply.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alt adımları ekle'**
+  String get itemBreakdownApply;
+
+  /// No description provided for @itemBreakdownEmpty.
+  ///
+  /// In tr, this message translates to:
+  /// **'Alt adım önerilemedi'**
+  String get itemBreakdownEmpty;
+
+  /// No description provided for @textExtractAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metinden ayıkla'**
+  String get textExtractAction;
+
+  /// No description provided for @textExtractTitle.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metinden madde ayıkla'**
+  String get textExtractTitle;
+
+  /// No description provided for @textExtractHint.
+  ///
+  /// In tr, this message translates to:
+  /// **'Mesaj, tarif veya liste metnini buraya yapıştır…'**
+  String get textExtractHint;
+
+  /// No description provided for @textExtractRefineAi.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yapay zekâ ile netleştir'**
+  String get textExtractRefineAi;
+
+  /// No description provided for @textExtractAddSelected.
+  ///
+  /// In tr, this message translates to:
+  /// **'Seçilenleri ekle ({count})'**
+  String textExtractAddSelected(int count);
+
+  /// No description provided for @textExtractPasteBanner.
+  ///
+  /// In tr, this message translates to:
+  /// **'Metinden {count} madde ayıkla'**
+  String textExtractPasteBanner(int count);
+
+  /// No description provided for @listAiQuotaReached.
+  ///
+  /// In tr, this message translates to:
+  /// **'Günlük yapay zekâ kotan doldu; yerel öneri kullanıldı.'**
+  String get listAiQuotaReached;
+
+  /// No description provided for @carryOverBanner.
+  ///
+  /// In tr, this message translates to:
+  /// **'Önceki günden {count} görev kaldı'**
+  String carryOverBanner(int count);
+
+  /// No description provided for @carryOverAction.
+  ///
+  /// In tr, this message translates to:
+  /// **'Bugüne aktar'**
+  String get carryOverAction;
+
+  /// No description provided for @carryOverDone.
+  ///
+  /// In tr, this message translates to:
+  /// **'{count} görev bugüne aktarıldı'**
+  String carryOverDone(int count);
+
+  /// No description provided for @contextNowBadge.
+  ///
+  /// In tr, this message translates to:
+  /// **'Şimdi'**
+  String get contextNowBadge;
 }
 
 class _AppLocalizationsDelegate

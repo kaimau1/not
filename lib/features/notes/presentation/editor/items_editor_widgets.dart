@@ -292,6 +292,10 @@ enum _ItemAction {
   moveToPage,
   task,
   reminder,
+  postponeTomorrow,
+  meta,
+  focus,
+  breakdown,
   alignStart,
   alignCenter,
   alignEnd,
@@ -306,6 +310,10 @@ class _ItemMenuPanel extends PopupMenuEntry<_ItemAction> {
     this.canMoveDown = true,
     this.canTask = false,
     this.canRemind = false,
+    this.canQuickMeta = false,
+    this.canFocus = false,
+    this.focusedInProject = false,
+    this.canBreakdown = false,
     this.header = false,
     this.align = '',
   });
@@ -324,11 +332,21 @@ class _ItemMenuPanel extends PopupMenuEntry<_ItemAction> {
   /// "Hatırlat" (satıra hatırlatıcı).
   final bool canRemind;
 
+  /// Kaydırmasız hızlı işlemler: Yarına ertele + Ayrıntılar levhası.
+  final bool canQuickMeta;
+
+  /// Proje kipinde odak sabitleme.
+  final bool canFocus;
+  final bool focusedInProject;
+
+  /// Proje kipinde AI alt adımlara bölme.
+  final bool canBreakdown;
+
   /// Satır ara başlık mı (düğme "Maddeye çevir" der).
   final bool header;
 
   @override
-  double get height => header ? 196 : 148;
+  double get height => header ? 196 : 210;
 
   @override
   bool represents(_ItemAction? value) => false;
@@ -405,6 +423,33 @@ class _ItemMenuPanelState extends State<_ItemMenuPanel> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final tiles = <Widget>[
+      if (widget.canQuickMeta) ...[
+        _tile(
+          _ItemAction.postponeTomorrow,
+          Icons.wb_sunny_outlined,
+          l10n.itemQuickPostponeTomorrow,
+        ),
+        _tile(
+          _ItemAction.meta,
+          Icons.tune_rounded,
+          l10n.itemQuickMeta,
+        ),
+      ],
+      if (widget.canFocus)
+        _tile(
+          _ItemAction.focus,
+          widget.focusedInProject
+              ? Icons.center_focus_weak_outlined
+              : Icons.center_focus_strong_outlined,
+          widget.focusedInProject ? l10n.itemQuickUnfocus : l10n.itemQuickFocus,
+          active: widget.focusedInProject,
+        ),
+      if (widget.canBreakdown)
+        _tile(
+          _ItemAction.breakdown,
+          Icons.auto_awesome,
+          l10n.itemBreakdownAction,
+        ),
       _tile(_ItemAction.select, Icons.checklist_rounded, l10n.select),
       _tile(_ItemAction.copyItem, AppIcons.copy, l10n.copy),
       _tile(

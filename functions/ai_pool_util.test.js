@@ -94,3 +94,57 @@ test("hız sınırı dakikadaki tavanı aşanı durdurur", () => {
   assert.strictEqual(blocked.ok, false);
   assert.strictEqual(blocked.reason, "rate-limited");
 });
+
+test("taskProfile (list_breakdown / list_extract) flash-lite + sıkı tavan zorlar", () => {
+  const ok = u.sanitizeGenerateRequest({
+    appId: "notlar",
+    model: "gemini-2.5-pro", // profil tarafından flash-lite'a düşürülür
+    taskProfile: "list_breakdown",
+    prompt: "Sunumu hazırla",
+    generationConfig: { maxOutputTokens: 2048 },
+  });
+  assert.ok(ok);
+  assert.strictEqual(ok.model, "gemini-2.5-flash-lite");
+  assert.strictEqual(ok.taskProfile, "list_breakdown");
+  assert.strictEqual(ok.payload.generationConfig.maxOutputTokens, 350);
+  assert.strictEqual(u.costForRequest(ok), 1);
+
+  // 2500 karakter üzeri prompt reddedilir.
+  assert.strictEqual(
+    u.sanitizeGenerateRequest({
+      appId: "notlar",
+      taskProfile: "list_extract",
+      prompt: "x".repeat(2501),
+    }),
+    null,
+  );
+
+  // Bilinmeyen profil reddedilir.
+  assert.strictEqual(
+    u.sanitizeGenerateRequest({
+      appId: "notlar",
+      taskProfile: "unknown_profile",
+      prompt: "merhaba",
+    }),
+    null,
+  );
+});
+
+test("günlük liste AI profil kotası ücretsiz (5) ve Pro (25) sınırlarını uygular", () => {
+  let rate = null;
+  const pool = { balance: 1000, starterGranted: true };
+  for (let i = 0; i < 5; i++) {
+    const r = u.reserveCredits(pool, null, rate, 1, "notlar", now, "list_breakdown");
+    assert.strictEqual(r.ok, true);
+    rate = r.rate;
+  }
+  const blocked = u.reserveCredits(pool, null, rate, 1, "notlar", now, "list_extract");
+  assert.strictEqual(blocked.ok, false);
+  assert.strictEqual(blocked.reason, "daily-quota-exceeded");
+
+  // Pro kullanıcı 6. çağrıyı yapabilir.
+  const pro = { tier: "pro", proUntil: new Date("2027-01-01T00:00:00Z") };
+  const proOk = u.reserveCredits(pool, pro, rate, 1, "notlar", now, "list_extract");
+  assert.strictEqual(proOk.ok, true);
+});
+

@@ -24,12 +24,14 @@ import '../../auth/presentation/auth_providers.dart';
 import '../../settings/settings_providers.dart';
 import '../domain/attachment.dart';
 import '../domain/ink_plan.dart';
+import '../domain/list_mode.dart';
 import '../domain/note.dart';
 import '../domain/note_heavy.dart';
 import '../domain/notebook_migration.dart';
 import '../domain/note_item.dart';
 import '../domain/note_version.dart';
 import '../domain/note_type.dart';
+import '../domain/routine_reset.dart';
 import 'attachment_repository.dart';
 import 'drive_store.dart' show driveFileDeleter;
 import 'local_notes_store.dart';
@@ -107,6 +109,13 @@ final notesStreamProvider = StreamProvider<List<Note>>((ref) {
     // dolmuş not varsa). Öne gelişte dashboard da çağırır.
     if (expiredNotes(notes, now).isNotEmpty) {
       unawaited(repo.archiveExpired(notes, now: now).catchError((Object _) {}));
+    }
+    // RUTİN SIFIRLAMA: yeni döneme geçmiş rutin listelerin eski tiklerini
+    // temizler (doneDays geçmişini korur, açık editördekini atlar).
+    if (RoutineResetEngine.dueResets(notes, now).isNotEmpty) {
+      unawaited(
+        repo.resetDueRoutines(notes, now: now).catchError((Object _) {}),
+      );
     }
     if (now.difference(lastCleanup) > const Duration(seconds: 30)) {
       lastCleanup = now;
@@ -454,9 +463,17 @@ class NotesRepository {
     DateTime? reminderAt,
     int listColumns = 1,
     String? listKind,
+    ListMode? listMode,
+    ResetSchedule? resetSchedule,
+    List<int> resetCustomDays = const [],
+    ContextTimeSlot contextTimeSlot = ContextTimeSlot.any,
+    bool isQuickInbox = false,
   }) async {
     final doc = _notes.doc();
     lastCreatedId = doc.id;
+    final resolvedMode = listMode ?? listModeFromLegacyKind(listKind);
+    final resolvedReset =
+        resetSchedule ?? defaultResetScheduleForLegacyKind(listKind);
     // [items]: ŞABLONDAN doğan listenin maddeleri (bkz. note_templates) —
     // not TEK yazımda dolu doğar; ardından ayrı bir güncelleme yazılsaydı
     // arada boş not görünüp boş-not temizliğine yakalanabilirdi.
@@ -469,6 +486,11 @@ class NotesRepository {
       reminderAt: reminderAt,
       listColumns: listColumns == 2 ? 2 : 1,
       listKind: listKind,
+      listMode: resolvedMode,
+      resetSchedule: resolvedReset,
+      resetCustomDays: resetCustomDays,
+      contextTimeSlot: contextTimeSlot,
+      isQuickInbox: isQuickInbox,
       // Son kullanılan gövde yazı boyutu (F56.3, [NoteFormatMemory]); yazı
       // tipi bilerek taşınmaz — her not varsayılan tiple doğar.
       fontScale: NoteFormatMemory.fontScale,
@@ -506,9 +528,17 @@ class NotesRepository {
     DateTime? reminderAt,
     int listColumns = 1,
     String? listKind,
+    ListMode? listMode,
+    ResetSchedule? resetSchedule,
+    List<int> resetCustomDays = const [],
+    ContextTimeSlot contextTimeSlot = ContextTimeSlot.any,
+    bool isQuickInbox = false,
   }) async {
     final doc = _notes.doc();
     lastCreatedId = doc.id;
+    final resolvedMode = listMode ?? listModeFromLegacyKind(listKind);
+    final resolvedReset =
+        resetSchedule ?? defaultResetScheduleForLegacyKind(listKind);
     final note = Note(
       id: doc.id,
       type: type,
@@ -520,6 +550,11 @@ class NotesRepository {
       urgent: urgent,
       listColumns: listColumns == 2 ? 2 : 1,
       listKind: listKind,
+      listMode: resolvedMode,
+      resetSchedule: resolvedReset,
+      resetCustomDays: resetCustomDays,
+      contextTimeSlot: contextTimeSlot,
+      isQuickInbox: isQuickInbox,
       fontScale: NoteFormatMemory.fontScale,
       items: items != null && items.isNotEmpty
           ? items
@@ -538,6 +573,75 @@ class NotesRepository {
       }),
     );
     return doc.id;
+  }
+
+  /// "Hızlı Not" klasöründeki yuvarlanan gelen kutusu checklist notunu bulur;
+  /// yoksa tek atomik yazımda oluşturup döndürür.
+  Future<Note> ensureQuickInboxNote({
+    required String folderId,
+    required String title,
+    required Iterable<Note> existingNotes,
+  }) async {
+    for (final n in existingNotes) {
+      if (n.deletedAt != null || n.archivedAt != null || n.locked) continue;
+      if (n.isQuickInbox && n.folderId == folderId) return n;
+    }
+    for (final n in existingNotes) {
+      if (n.deletedAt != null || n.archivedAt != null || n.locked) continue;
+      if (n.isQuickInbox) return n;
+    }
+    final id = await createRichNote(
+      NoteType.checklist,
+      title: title,
+      items: const [],
+      folderId: folderId,
+      listMode: ListMode.general,
+      isQuickInbox: true,
+    );
+    return Note(
+      id: id,
+      type: NoteType.checklist,
+      title: title,
+      folderId: folderId,
+      isQuickInbox: true,
+    );
+  }
+
+  /// Liste kipini merge-güvenli günceller (`general`a dönüşte eski `listMode`
+  /// ve `listKind` kayıtta kalmasın).
+  void setListMode(
+    String noteId,
+    ListMode mode, {
+    String? listKind,
+    ResetSchedule? resetSchedule,
+  }) {
+    final fields = <String, dynamic>{
+      'listMode': mode.id,
+      if (mode == ListMode.general) 'listKind': null,
+      if (mode == ListMode.shopping) 'listKind': listKind ?? 'shopping',
+      if (listKind != null && mode != ListMode.general) 'listKind': listKind,
+      if (resetSchedule != null) 'resetSchedule': resetSchedule.id,
+    };
+    updateFields(noteId, fields);
+  }
+
+  /// Rutin sıfırlama takvimini merge-güvenli günceller.
+  void setResetSchedule(
+    String noteId,
+    ResetSchedule schedule, {
+    List<int> customDays = const [],
+  }) {
+    updateFields(noteId, {
+      'resetSchedule': schedule.id,
+      'resetCustomDays': schedule == ResetSchedule.customDays
+          ? customDays
+          : const <int>[],
+    });
+  }
+
+  /// Günün saatine göre öne çıkma bağlamını merge-güvenli günceller.
+  void setContextTimeSlot(String noteId, ContextTimeSlot slot) {
+    updateFields(noteId, {'contextTimeSlot': slot.id});
   }
 
   /// Yazmadan YENİ not kimliği: not sonra TEK yazımda doğar
@@ -562,9 +666,29 @@ class NotesRepository {
   /// Hatırlatıcı da taşınmaz: aynı anda iki kez çalan bir hatırlatıcı istenen
   /// şey değil. Kopya ARŞİVLENMİŞ/SİLİNMİŞ olarak doğmaz; kaynağın çöpteki
   /// hâli kopyalansa bile kopya ana listeye gelir.
-  Future<String> duplicateNote(Note note) async {
+  Future<String> duplicateNote(Note note, {bool resetChecked = false}) async {
     final doc = _notes.doc();
     lastCreatedId = doc.id;
+    NoteItem cloneItem(NoteItem item) => NoteItem(
+      id: _uuid.v4(),
+      text: item.text,
+      checked: resetChecked ? false : item.checked,
+      starred: item.starred,
+      section: item.section,
+      title: item.title,
+      divider: item.divider,
+      header: item.header,
+      package: item.package,
+      align: item.align,
+      category: item.category,
+      quantity: item.quantity,
+      unit: item.unit,
+      price: item.price,
+      doneDays: resetChecked ? const [] : List<String>.from(item.doneDays),
+      priority: item.priority,
+      dueDate: item.dueDate,
+      extras: Map<String, dynamic>.from(item.extras),
+    );
     final copy = Note(
       id: doc.id,
       type: note.type,
@@ -572,21 +696,7 @@ class NotesRepository {
       body: note.body,
       // Madde kimlikleri YENİDEN üretilir: aynı id iki notta dolaşırsa
       // editörün madde eşlemesi (ve sürükle-sırala) karışır.
-      items: [
-        for (final item in note.items)
-          NoteItem(
-            id: _uuid.v4(),
-            text: item.text,
-            checked: item.checked,
-            starred: item.starred,
-            section: item.section,
-            title: item.title,
-            divider: item.divider,
-            header: item.header,
-            package: item.package,
-            align: item.align,
-          ),
-      ],
+      items: [for (final item in note.items) cloneItem(item)],
       tags: List<String>.from(note.tags),
       folderId: note.folderId,
       color: note.color,
@@ -604,26 +714,16 @@ class NotesRepository {
       titleTextOpacity: note.titleTextOpacity,
       listColumns: note.listColumns,
       listKind: note.listKind,
+      listMode: note.listMode,
+      resetSchedule: note.resetSchedule,
+      resetCustomDays: List<int>.from(note.resetCustomDays),
+      contextTimeSlot: note.contextTimeSlot,
       // Sayfalar da kopyalanır (F18.8 akış testi yakaladı: iki sayfalı notun
       // kopyası yalnız ilk sayfayla doğuyordu). Madde kimlikleri yine yeni.
       textPages: [
         for (final page in note.textPages)
           page.copyWith(
-            items: [
-              for (final item in page.items)
-                NoteItem(
-                  id: _uuid.v4(),
-                  text: item.text,
-                  checked: item.checked,
-                  starred: item.starred,
-                  section: item.section,
-                  title: item.title,
-                  divider: item.divider,
-                  header: item.header,
-                  package: item.package,
-                  align: item.align,
-                ),
-            ],
+            items: [for (final item in page.items) cloneItem(item)],
           ),
       ],
       activePage: note.activePage,
@@ -1095,6 +1195,20 @@ class NotesRepository {
           n.id: {
             'archivedAt': Timestamp.fromDate(n.expiresAt!),
             'expiresAt': null,
+          },
+    });
+  }
+
+  /// **RUTİN SIFIRLAMA**: yeni döneme geçen rutin listelerin önceki dönemden
+  /// kalan tiklerini atomik batch ile temizler; `doneDays` geçmişi korunur.
+  Future<void> resetDueRoutines(Iterable<Note> notes, {DateTime? now}) {
+    final at = now ?? DateTime.now();
+    return batchUpdateEach({
+      for (final due in RoutineResetEngine.dueResets(notes, at))
+        if (!openEditorNoteIds.contains(due.note.id))
+          due.note.id: {
+            'items': [for (final i in due.items) i.toMap()],
+            'lastResetAt': Timestamp.fromDate(due.periodStart),
           },
     });
   }
