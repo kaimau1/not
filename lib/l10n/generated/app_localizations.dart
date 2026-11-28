@@ -16865,7 +16865,7 @@ abstract class AppLocalizations {
   /// No description provided for @quickInboxFolderName.
   ///
   /// In tr, this message translates to:
-  /// **'Hızlı Not'**
+  /// **'Hızlı not'**
   String get quickInboxFolderName;
 
   /// No description provided for @quickInboxSubtitle.
@@ -16877,7 +16877,7 @@ abstract class AppLocalizations {
   /// No description provided for @quickDropAddedQuickInbox.
   ///
   /// In tr, this message translates to:
-  /// **'Hızlı Not\'a eklendi'**
+  /// **'Hızlı not\'a eklendi'**
   String get quickDropAddedQuickInbox;
 
   /// No description provided for @quickDropOpen.

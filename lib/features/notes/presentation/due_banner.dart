@@ -91,7 +91,7 @@ class _DueBannerState extends ConsumerState<DueBanner> {
     final now = DateTime.now();
     final batch = CarryOverEngine.buildCarryOverBatch(notes, plan, now: now);
     if (batch.updates.isEmpty) return;
-    await repo.batchUpdateEach(batch.updates);
+    unawaited(repo.batchUpdateEach(batch.updates));
     if (!mounted) return;
     final l10n = context.l10n;
     ScaffoldMessenger.of(context)

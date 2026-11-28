@@ -317,9 +317,8 @@ class SmartListModeHeader extends StatelessWidget {
               // Tek dokunuşla kip değiştirme hapı
               ActionChip(
                 key: const ValueKey('smart-mode-pill'),
-                visualDensity: VisualDensity.compact,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                avatar: Icon(modeIcon(mode), size: 16, color: accent),
+                visualDensity: const VisualDensity(horizontal: -2),
+                avatar: Icon(modeIcon(mode), size: AppIconSize.xs, color: accent),
                 label: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -333,7 +332,7 @@ class SmartListModeHeader extends StatelessWidget {
                     const SizedBox(width: 2),
                     Icon(
                       Icons.expand_more_rounded,
-                      size: 16,
+                      size: AppIconSize.xs,
                       color: scheme.onSurfaceVariant,
                     ),
                   ],
@@ -346,9 +345,8 @@ class SmartListModeHeader extends StatelessWidget {
                 const SizedBox(width: AppSpace.s),
                 InputChip(
                   key: ValueKey('mode-nudge-${nudge.name}'),
-                  visualDensity: VisualDensity.compact,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  avatar: Icon(modeIcon(nudge), size: 15, color: accent),
+                  visualDensity: const VisualDensity(horizontal: -2),
+                  avatar: Icon(modeIcon(nudge), size: AppIconSize.xs - 1, color: accent),
                   label: Text(
                     nudge == ListMode.shopping
                         ? l10n.listModeNudgeShopping
@@ -365,10 +363,9 @@ class SmartListModeHeader extends StatelessWidget {
                 const SizedBox(width: AppSpace.xs),
                 FilterChip(
                   key: const ValueKey('shopping-group-toggle'),
-                  visualDensity: VisualDensity.compact,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: const VisualDensity(horizontal: -2),
                   selected: groupByAisle,
-                  avatar: const Icon(Icons.category_outlined, size: 15),
+                  avatar: const Icon(Icons.category_outlined, size: AppIconSize.xs - 1),
                   label: Text(
                     l10n.shoppingGroupToggle,
                     style: theme.textTheme.labelSmall,
@@ -380,7 +377,7 @@ class SmartListModeHeader extends StatelessWidget {
                     key: const ValueKey('shopping-tool-barcode'),
                     tooltip: l10n.shopBarcodeTitle,
                     visualDensity: VisualDensity.compact,
-                    icon: const Icon(Icons.qr_code_scanner_rounded, size: 18),
+                    icon: const Icon(Icons.qr_code_scanner_rounded, size: AppIconSize.s),
                     onPressed: onOpenBarcode,
                   ),
                 if (onOpenReceipt != null)
@@ -388,7 +385,7 @@ class SmartListModeHeader extends StatelessWidget {
                     key: const ValueKey('shopping-tool-receipt'),
                     tooltip: l10n.shopReceiptTitle,
                     visualDensity: VisualDensity.compact,
-                    icon: const Icon(Icons.receipt_long_outlined, size: 18),
+                    icon: const Icon(Icons.receipt_long_outlined, size: AppIconSize.s),
                     onPressed: onOpenReceipt,
                   ),
                 if (onOpenRecipes != null)
@@ -396,7 +393,7 @@ class SmartListModeHeader extends StatelessWidget {
                     key: const ValueKey('shopping-tool-recipes'),
                     tooltip: l10n.shopRecipesTitle,
                     visualDensity: VisualDensity.compact,
-                    icon: const Icon(Icons.restaurant_menu_rounded, size: 18),
+                    icon: const Icon(Icons.restaurant_menu_rounded, size: AppIconSize.s),
                     onPressed: onOpenRecipes,
                   ),
                 if (onOpenAisleOrder != null)
@@ -404,7 +401,7 @@ class SmartListModeHeader extends StatelessWidget {
                     key: const ValueKey('shopping-tool-aisle-order'),
                     tooltip: l10n.shopAisleOrderTooltip,
                     visualDensity: VisualDensity.compact,
-                    icon: const Icon(Icons.swap_vert_rounded, size: 18),
+                    icon: const Icon(Icons.swap_vert_rounded, size: AppIconSize.s),
                     onPressed: onOpenAisleOrder,
                   ),
               ],
@@ -423,9 +420,8 @@ class SmartListModeHeader extends StatelessWidget {
                 const SizedBox(width: AppSpace.s),
                 ActionChip(
                   key: const ValueKey('routine-schedule-pill'),
-                  visualDensity: VisualDensity.compact,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  avatar: const Icon(Icons.schedule_rounded, size: 15),
+                  visualDensity: const VisualDensity(horizontal: -2),
+                  avatar: const Icon(Icons.schedule_rounded, size: AppIconSize.xs - 1),
                   label: Text(
                     scheduleLabel(l10n, note.resetSchedule),
                     style: theme.textTheme.labelSmall,
@@ -446,7 +442,7 @@ class SmartListModeHeader extends StatelessWidget {
                       vertical: AppSpace.xs,
                     ),
                   ),
-                  icon: const Icon(Icons.restart_alt_rounded, size: 16),
+                  icon: const Icon(Icons.restart_alt_rounded, size: AppIconSize.xs),
                   label: Text(
                     l10n.templateResetReuse,
                     style: theme.textTheme.labelSmall?.copyWith(
@@ -461,7 +457,7 @@ class SmartListModeHeader extends StatelessWidget {
                     key: const ValueKey('template-copy-btn'),
                     tooltip: l10n.templateCopyNew,
                     visualDensity: VisualDensity.compact,
-                    icon: const Icon(AppIcons.duplicate, size: 18),
+                    icon: const Icon(AppIcons.duplicate, size: AppIconSize.s),
                     onPressed: onCopyTemplate,
                   ),
                 ],
@@ -472,7 +468,7 @@ class SmartListModeHeader extends StatelessWidget {
                     key: const ValueKey('template-packing-wizard'),
                     tooltip: l10n.smartListTripWizard,
                     visualDensity: VisualDensity.compact,
-                    icon: const Icon(Icons.luggage_outlined, size: 18),
+                    icon: const Icon(Icons.luggage_outlined, size: AppIconSize.s),
                     onPressed: onOpenPackingWizard,
                   ),
                 ],
@@ -496,14 +492,13 @@ class SmartListModeHeader extends StatelessWidget {
                 const SizedBox(width: AppSpace.s),
                 FilterChip(
                   key: const ValueKey('project-focus-toggle'),
-                  visualDensity: VisualDensity.compact,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  visualDensity: const VisualDensity(horizontal: -2),
                   selected: focusMode,
                   avatar: Icon(
                     focusMode
                         ? Icons.center_focus_strong_rounded
                         : Icons.center_focus_weak_rounded,
-                    size: 15,
+                    size: AppIconSize.xs - 1,
                   ),
                   label: Text(
                     focusMode ? l10n.projectFocusExit : l10n.projectFocusToggle,
@@ -517,7 +512,7 @@ class SmartListModeHeader extends StatelessWidget {
                     key: const ValueKey('project-focus-pick'),
                     tooltip: l10n.projectFocusPick,
                     visualDensity: VisualDensity.compact,
-                    icon: const Icon(Icons.tune_rounded, size: 18),
+                    icon: const Icon(Icons.tune_rounded, size: AppIconSize.s),
                     onPressed: onPickFocusItems,
                   ),
                 ],

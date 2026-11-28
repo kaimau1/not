@@ -169,10 +169,10 @@ class _InlineParseBarState extends State<InlineParseBar> {
       children: [
         DecoratedBox(
           decoration: BoxDecoration(
-            color: scheme.surfaceContainerHighest.withValues(alpha: 0.45),
+            color: scheme.surfaceContainerHighest.withValues(alpha: AppAlpha.disabled),
             borderRadius: BorderRadius.circular(AppRadius.m),
             border: Border.all(
-              color: scheme.outlineVariant.withValues(alpha: 0.6),
+              color: scheme.outlineVariant.withValues(alpha: AppAlpha.muted),
             ),
           ),
           child: Row(
@@ -192,7 +192,7 @@ class _InlineParseBarState extends State<InlineParseBar> {
                   decoration: InputDecoration(
                     hintText: l10n.listModeQuickAddHint,
                     hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                      color: scheme.onSurfaceVariant.withValues(alpha: 0.7),
+                      color: scheme.onSurfaceVariant.withValues(alpha: AppAlpha.muted),
                     ),
                     border: InputBorder.none,
                     isDense: true,
@@ -283,7 +283,7 @@ class _InlineParseBarState extends State<InlineParseBar> {
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       avatar: Icon(
                         _chipIcon(chip.kind),
-                        size: 14,
+                        size: AppIconSize.xs - 2,
                         color: accent,
                       ),
                       label: Text(

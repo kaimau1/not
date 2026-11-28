@@ -128,7 +128,7 @@ class _ItemQuickMetaSheet extends StatelessWidget {
             children: [
               ActionChip(
                 key: const ValueKey('meta-due-today'),
-                avatar: const Icon(Icons.today_outlined, size: 16),
+                avatar: const Icon(Icons.today_outlined, size: AppIconSize.xs),
                 label: Text(l10n.itemDueToday),
                 onPressed: () {
                   AppHaptics.tick();
@@ -140,7 +140,7 @@ class _ItemQuickMetaSheet extends StatelessWidget {
               ),
               ActionChip(
                 key: const ValueKey('meta-due-tomorrow'),
-                avatar: const Icon(Icons.wb_sunny_outlined, size: 16),
+                avatar: const Icon(Icons.wb_sunny_outlined, size: AppIconSize.xs),
                 label: Text(l10n.itemDueTomorrow),
                 onPressed: () {
                   AppHaptics.tick();
@@ -152,7 +152,7 @@ class _ItemQuickMetaSheet extends StatelessWidget {
               ),
               ActionChip(
                 key: const ValueKey('meta-due-next-week'),
-                avatar: const Icon(Icons.date_range_outlined, size: 16),
+                avatar: const Icon(Icons.date_range_outlined, size: AppIconSize.xs),
                 label: Text(l10n.itemDueNextWeek),
                 onPressed: () {
                   AppHaptics.tick();
@@ -164,7 +164,7 @@ class _ItemQuickMetaSheet extends StatelessWidget {
               ),
               ActionChip(
                 key: const ValueKey('meta-due-pick'),
-                avatar: const Icon(Icons.calendar_month_outlined, size: 16),
+                avatar: const Icon(Icons.calendar_month_outlined, size: AppIconSize.xs),
                 label: Text(
                   item.dueDate != null
                       ? DateFormat(
@@ -178,7 +178,7 @@ class _ItemQuickMetaSheet extends StatelessWidget {
               if (item.dueDate != null)
                 ActionChip(
                   key: const ValueKey('meta-due-clear'),
-                  avatar: const Icon(Icons.close_rounded, size: 16),
+                  avatar: const Icon(Icons.close_rounded, size: AppIconSize.xs),
                   label: Text(l10n.itemDueClear),
                   onPressed: () {
                     AppHaptics.tick();
@@ -220,7 +220,7 @@ class _ItemQuickMetaSheet extends StatelessWidget {
               if (mode == ListMode.shopping || mode == ListMode.general)
                 FilledButton.tonalIcon(
                   key: const ValueKey('meta-edit-price'),
-                  icon: const Icon(Icons.payments_outlined, size: 18),
+                  icon: const Icon(Icons.payments_outlined, size: AppIconSize.s),
                   label: Text(l10n.itemQuickPrice),
                   onPressed: () => Navigator.pop(
                     context,
@@ -234,7 +234,7 @@ class _ItemQuickMetaSheet extends StatelessWidget {
                     isFocused
                         ? Icons.center_focus_weak_outlined
                         : Icons.center_focus_strong_outlined,
-                    size: 18,
+                    size: AppIconSize.s,
                   ),
                   label: Text(
                     isFocused ? l10n.itemQuickUnfocus : l10n.itemQuickFocus,
@@ -247,7 +247,7 @@ class _ItemQuickMetaSheet extends StatelessWidget {
               if (canBreakdown)
                 FilledButton.tonalIcon(
                   key: const ValueKey('meta-breakdown'),
-                  icon: const Icon(Icons.auto_awesome, size: 18),
+                  icon: const Icon(Icons.auto_awesome, size: AppIconSize.s),
                   label: Text(l10n.itemBreakdownAction),
                   onPressed: () => Navigator.pop(
                     context,
@@ -285,7 +285,7 @@ class _RoutineHeatmapCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(AppRadius.m),
-        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: AppAlpha.muted)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpace.m),
@@ -339,7 +339,7 @@ class _RoutineHeatmapCard extends StatelessWidget {
                           color: done
                               ? scheme.primary
                               : scheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderRadius.circular(AppRadius.xs),
                         ),
                       ),
                     );

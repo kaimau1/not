@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 import '../../../app/theme/app_tokens.dart';
 import '../../../core/l10n_ext.dart';
 import '../../../core/widgets/app_sheet.dart';
+import '../../../core/widgets/sheet_keyboard.dart';
 import '../../../core/widgets/undo_snackbar.dart';
 import '../../ai/data/list_ai_service.dart';
 import '../domain/list_mode.dart';
@@ -166,119 +167,120 @@ class _TextExtractSheetState extends ConsumerState<_TextExtractSheet> {
 
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: maxH),
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          AppSpace.l,
-          0,
-          AppSpace.l,
-          MediaQuery.viewInsetsOf(context).bottom + AppSpace.l,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.playlist_add_check_rounded,
-                  size: AppIconSize.m,
-                  color: scheme.primary,
-                ),
-                const SizedBox(width: AppSpace.s),
-                Expanded(
-                  child: Text(
-                    l10n.textExtractTitle,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: AppWeight.strong,
+      child: SheetInsetPadding(
+        extra: AppSpace.l,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.playlist_add_check_rounded,
+                    size: AppIconSize.m,
+                    color: scheme.primary,
+                  ),
+                  const SizedBox(width: AppSpace.s),
+                  Expanded(
+                    child: Text(
+                      l10n.textExtractTitle,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: AppWeight.strong,
+                      ),
                     ),
                   ),
-                ),
-                if (!widget.noteLocked && _controller.text.trim().isNotEmpty)
-                  TextButton.icon(
-                    key: const ValueKey('text-extract-ai-btn'),
-                    onPressed: _refining
-                        ? null
-                        : () => unawaited(_refineWithAi()),
-                    icon: _refining
-                        ? const SizedBox(
-                            width: 14,
-                            height: 14,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.auto_awesome_outlined, size: 16),
-                    label: Text(l10n.textExtractRefineAi),
-                  ),
-              ],
-            ),
-            const SizedBox(height: AppSpace.s),
-            TextField(
-              key: const ValueKey('text-extract-input'),
-              controller: _controller,
-              minLines: 2,
-              maxLines: 5,
-              onChanged: _parseLocal,
-              decoration: InputDecoration(
-                hintText: l10n.textExtractHint,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppRadius.m),
-                ),
-                isDense: true,
-              ),
-            ),
-            const SizedBox(height: AppSpace.s),
-            if (_drafts.isNotEmpty)
-              Flexible(
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: _drafts.length,
-                  itemBuilder: (context, i) {
-                    final d = _drafts[i];
-                    final metaParts = <String>[
-                      if (d.item.quantity != null)
-                        '${d.item.quantity == d.item.quantity!.roundToDouble() ? d.item.quantity!.toInt() : d.item.quantity}${d.item.unit.isNotEmpty ? ' ${d.item.unit}' : ''}',
-                      if (d.item.price != null)
-                        '${d.item.price!.toStringAsFixed(d.item.price! == d.item.price!.roundToDouble() ? 0 : 2)} ₺',
-                    ];
-                    return CheckboxListTile(
-                      key: ValueKey('text-extract-item-$i'),
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      controlAffinity: ListTileControlAffinity.leading,
-                      value: d.selected,
-                      onChanged: (v) {
-                        setState(() {
-                          _drafts = [
-                            for (var k = 0; k < _drafts.length; k++)
-                              k == i
-                                  ? _drafts[k].copyWith(selected: v ?? false)
-                                  : _drafts[k],
-                          ];
-                        });
-                      },
-                      title: Text(
-                        d.item.text,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      subtitle: metaParts.isEmpty
+                  if (!widget.noteLocked && _controller.text.trim().isNotEmpty)
+                    TextButton.icon(
+                      key: const ValueKey('text-extract-ai-btn'),
+                      onPressed: _refining
                           ? null
-                          : Text(
-                              metaParts.join(' · '),
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: scheme.primary,
-                              ),
+                          : () => unawaited(_refineWithAi()),
+                      icon: _refining
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(
+                              Icons.auto_awesome_outlined,
+                              size: AppIconSize.xs,
                             ),
-                    );
-                  },
+                      label: Text(l10n.textExtractRefineAi),
+                    ),
+                ],
+              ),
+              const SizedBox(height: AppSpace.s),
+              TextField(
+                key: const ValueKey('text-extract-input'),
+                controller: _controller,
+                minLines: 2,
+                maxLines: 5,
+                onChanged: _parseLocal,
+                decoration: InputDecoration(
+                  hintText: l10n.textExtractHint,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppRadius.m),
+                  ),
+                  isDense: true,
                 ),
               ),
-            const SizedBox(height: AppSpace.s),
-            FilledButton(
-              key: const ValueKey('text-extract-confirm'),
-              onPressed: selectedCount == 0 ? null : _confirm,
-              child: Text(l10n.textExtractAddSelected(selectedCount)),
-            ),
-          ],
+              const SizedBox(height: AppSpace.s),
+              if (_drafts.isNotEmpty)
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: _drafts.length,
+                    itemBuilder: (context, i) {
+                      final d = _drafts[i];
+                      final metaParts = <String>[
+                        if (d.item.quantity != null)
+                          '${d.item.quantity == d.item.quantity!.roundToDouble() ? d.item.quantity!.toInt() : d.item.quantity}${d.item.unit.isNotEmpty ? ' ${d.item.unit}' : ''}',
+                        if (d.item.price != null)
+                          '${d.item.price!.toStringAsFixed(d.item.price! == d.item.price!.roundToDouble() ? 0 : 2)} ₺',
+                      ];
+                      return CheckboxListTile(
+                        key: ValueKey('text-extract-item-$i'),
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        value: d.selected,
+                        onChanged: (v) {
+                          setState(() {
+                            _drafts = [
+                              for (var k = 0; k < _drafts.length; k++)
+                                k == i
+                                    ? _drafts[k].copyWith(selected: v ?? false)
+                                    : _drafts[k],
+                            ];
+                          });
+                        },
+                        title: Text(
+                          d.item.text,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: metaParts.isEmpty
+                            ? null
+                            : Text(
+                                metaParts.join(' · '),
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: scheme.primary,
+                                ),
+                              ),
+                      );
+                    },
+                  ),
+                ),
+              const SizedBox(height: AppSpace.s),
+              FilledButton(
+                key: const ValueKey('text-extract-confirm'),
+                onPressed: selectedCount == 0 ? null : _confirm,
+                child: Text(l10n.textExtractAddSelected(selectedCount)),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -324,103 +326,101 @@ class _TaskBreakdownSheetState extends State<_TaskBreakdownSheet> {
         if (_selected[i] && _controllers[i].text.trim().isNotEmpty) i,
     ].length;
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        AppSpace.l,
-        0,
-        AppSpace.l,
-        MediaQuery.viewInsetsOf(context).bottom + AppSpace.l,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.account_tree_outlined,
-                size: AppIconSize.m,
-                color: scheme.primary,
-              ),
-              const SizedBox(width: AppSpace.s),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.itemBreakdownTitle,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: AppWeight.strong,
-                      ),
-                    ),
-                    Text(
-                      widget.parentTaskText,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+    return SheetInsetPadding(
+      extra: AppSpace.l,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpace.l),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.account_tree_outlined,
+                  size: AppIconSize.m,
+                  color: scheme.primary,
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpace.s),
-          if (_controllers.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpace.l),
-              child: Text(
-                l10n.itemBreakdownEmpty,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
-              ),
-            )
-          else
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 280),
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: _controllers.length,
-                itemBuilder: (context, i) => Row(
-                  children: [
-                    Checkbox(
-                      value: _selected[i],
-                      onChanged: (v) =>
-                          setState(() => _selected[i] = v ?? false),
-                    ),
-                    Expanded(
-                      child: TextField(
-                        controller: _controllers[i],
-                        onChanged: (_) => setState(() {}),
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          isDense: true,
+                const SizedBox(width: AppSpace.s),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.itemBreakdownTitle,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: AppWeight.strong,
                         ),
                       ),
-                    ),
-                  ],
+                      Text(
+                        widget.parentTaskText,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpace.s),
+            if (_controllers.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpace.l),
+                child: Text(
+                  l10n.itemBreakdownEmpty,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              )
+            else
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 280),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: _controllers.length,
+                  itemBuilder: (context, i) => Row(
+                    children: [
+                      Checkbox(
+                        value: _selected[i],
+                        onChanged: (v) =>
+                            setState(() => _selected[i] = v ?? false),
+                      ),
+                      Expanded(
+                        child: TextField(
+                          controller: _controllers[i],
+                          onChanged: (_) => setState(() {}),
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            isDense: true,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
+            const SizedBox(height: AppSpace.m),
+            FilledButton(
+              key: const ValueKey('breakdown-apply-btn'),
+              onPressed: selectedCount == 0
+                  ? null
+                  : () {
+                      final steps = [
+                        for (var i = 0; i < _controllers.length; i++)
+                          if (_selected[i] &&
+                              _controllers[i].text.trim().isNotEmpty)
+                            _controllers[i].text.trim(),
+                      ];
+                      Navigator.of(context).pop(steps);
+                    },
+              child: Text(l10n.itemBreakdownApply),
             ),
-          const SizedBox(height: AppSpace.m),
-          FilledButton(
-            key: const ValueKey('breakdown-apply-btn'),
-            onPressed: selectedCount == 0
-                ? null
-                : () {
-                    final steps = [
-                      for (var i = 0; i < _controllers.length; i++)
-                        if (_selected[i] &&
-                            _controllers[i].text.trim().isNotEmpty)
-                          _controllers[i].text.trim(),
-                    ];
-                    Navigator.of(context).pop(steps);
-                  },
-            child: Text(l10n.itemBreakdownApply),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

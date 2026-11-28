@@ -43,9 +43,9 @@ class GhostSuggestionsSection extends StatelessWidget {
     final scheme = theme.colorScheme;
     final l10n = context.l10n;
     // S16 / katmansız solukluk: Opacity widget'ı yerine renk alfası kullanılır.
-    final mutedText = scheme.onSurface.withValues(alpha: 0.48);
-    final mutedSub = scheme.onSurfaceVariant.withValues(alpha: 0.48);
-    final borderColor = scheme.outlineVariant.withValues(alpha: 0.42);
+    final mutedText = scheme.onSurface.withValues(alpha: AppAlpha.disabled);
+    final mutedSub = scheme.onSurfaceVariant.withValues(alpha: AppAlpha.disabled);
+    final borderColor = scheme.outlineVariant.withValues(alpha: AppAlpha.disabled);
 
     return Padding(
       key: const ValueKey('ghost-suggestions-section'),
@@ -63,7 +63,7 @@ class GhostSuggestionsSection extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: AppSpace.xs),
             child: Row(
               children: [
-                Icon(Icons.auto_awesome_outlined, size: 14, color: mutedSub),
+                Icon(Icons.auto_awesome_outlined, size: AppIconSize.xs - 2, color: mutedSub),
                 const SizedBox(width: AppSpace.xs),
                 Text(
                   l10n.ghostSuggestionsTitle,

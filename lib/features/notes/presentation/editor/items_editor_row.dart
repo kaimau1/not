@@ -408,8 +408,8 @@ extension _ItemsRow on ItemsEditorState {
                           height: 18,
                           decoration: BoxDecoration(
                             color: (_accent?.accent ?? scheme.primary)
-                                .withValues(alpha: 0.45),
-                            borderRadius: BorderRadius.circular(1),
+                                .withValues(alpha: AppAlpha.disabled),
+                            borderRadius: BorderRadius.circular(AppRadius.hair),
                           ),
                         ),
                       ),
@@ -770,7 +770,7 @@ extension _ItemsRow on ItemsEditorState {
                                           Icons.tune_rounded,
                                           size: AppIconSize.s - 2,
                                           color: scheme.onSurfaceVariant
-                                              .withValues(alpha: 0.85),
+                                              .withValues(alpha: AppAlpha.strong),
                                         ),
                                       ),
                                     ),
@@ -938,7 +938,7 @@ extension _ItemsRow on ItemsEditorState {
                             horizontal: 5,
                             vertical: 4,
                           ),
-                          child: Icon(Icons.remove_rounded, size: 15),
+                          child: Icon(Icons.remove_rounded, size: AppIconSize.xs - 1),
                         ),
                       ),
                       Padding(
@@ -963,7 +963,7 @@ extension _ItemsRow on ItemsEditorState {
                             horizontal: 5,
                             vertical: 4,
                           ),
-                          child: Icon(Icons.add_rounded, size: 15),
+                          child: Icon(Icons.add_rounded, size: AppIconSize.xs - 1),
                         ),
                       ),
                     ],
@@ -995,7 +995,7 @@ extension _ItemsRow on ItemsEditorState {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                 decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.12),
+                  color: accent.withValues(alpha: AppAlpha.pressed),
                   borderRadius: BorderRadius.circular(AppRadius.s),
                 ),
                 child: Text(
@@ -1026,7 +1026,7 @@ extension _ItemsRow on ItemsEditorState {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                 decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.12),
+                  color: accent.withValues(alpha: AppAlpha.pressed),
                   borderRadius: BorderRadius.circular(AppRadius.s),
                 ),
                 child: Row(
@@ -1034,7 +1034,7 @@ extension _ItemsRow on ItemsEditorState {
                   children: [
                     Icon(
                       Icons.local_fire_department_rounded,
-                      size: 13,
+                      size: AppIconSize.xs - 3,
                       color: accent,
                     ),
                     const SizedBox(width: 2),
@@ -1058,7 +1058,7 @@ extension _ItemsRow on ItemsEditorState {
     if (item.priority != ItemPriority.none) {
       final pColor = switch (item.priority) {
         ItemPriority.urgent => scheme.error,
-        ItemPriority.high => scheme.tertiary,
+        ItemPriority.high => scheme.secondary,
         ItemPriority.medium => accent,
         ItemPriority.low => scheme.onSurfaceVariant,
         ItemPriority.none => scheme.onSurfaceVariant,
@@ -1073,14 +1073,14 @@ extension _ItemsRow on ItemsEditorState {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
               decoration: BoxDecoration(
-                color: pColor.withValues(alpha: 0.14),
+                color: pColor.withValues(alpha: AppAlpha.pressed),
                 borderRadius: BorderRadius.circular(AppRadius.s),
               ),
               child: Icon(
                 item.priority == ItemPriority.urgent
                     ? Icons.priority_high_rounded
                     : Icons.flag_rounded,
-                size: 13,
+                size: AppIconSize.xs - 3,
                 color: checked ? _dimmed(pColor, _kCheckedDim) : pColor,
               ),
             ),
@@ -1114,8 +1114,8 @@ extension _ItemsRow on ItemsEditorState {
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
               decoration: BoxDecoration(
                 color: overdue
-                    ? scheme.errorContainer.withValues(alpha: 0.7)
-                    : scheme.surfaceContainerHighest.withValues(alpha: 0.65),
+                    ? scheme.errorContainer.withValues(alpha: AppAlpha.muted)
+                    : scheme.surfaceContainerHighest.withValues(alpha: AppAlpha.muted),
                 borderRadius: BorderRadius.circular(AppRadius.s),
               ),
               child: Text(

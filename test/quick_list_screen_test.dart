@@ -593,7 +593,7 @@ void main() {
       await tester.tap(find.text('aç'));
       await tester.pumpAndSettle();
       // v3: boş açılışta varsayılan hedef "Hızlı Not" (alakasız son not değil).
-      expect(find.text('Hedef: Hızlı Not'), findsOneWidget);
+      expect(find.text('Hedef: Hızlı not'), findsOneWidget);
       final add = find.byKey(const ValueKey('quick-drop-add'));
       expect(tester.widget<FilledButton>(add).onPressed, isNull);
 

@@ -2003,7 +2003,7 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
                           ),
                           borderRadius: BorderRadius.circular(AppRadius.pill),
                           border: Border.all(
-                            color: scheme.primary.withValues(alpha: 0.35),
+                            color: scheme.primary.withValues(alpha: AppAlpha.scrim),
                           ),
                         ),
                         child: Padding(

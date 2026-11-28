@@ -4928,9 +4928,9 @@
   "floatingSizeMedium": "Orta",
   "floatingSizeLarge": "Tam",
   "floatingAlignCycle": "Yatay hiza",
-  "quickInboxFolderName": "Hızlı Not",
+  "quickInboxFolderName": "Hızlı not",
   "quickInboxSubtitle": "Emin olunmayan eklemeler burada toplanır",
-  "quickDropAddedQuickInbox": "Hızlı Not'a eklendi",
+  "quickDropAddedQuickInbox": "Hızlı not'a eklendi",
   "quickDropOpen": "Aç",
   "quickDropTargetLabel": "Hedef: {target}",
   "@quickDropTargetLabel": {

@@ -259,7 +259,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 350));
         expect(repo.richCreated, hasLength(2));
         expect(repo.richCreated.last.isQuickInbox, isTrue);
-        expect(find.text("Hızlı Not'a eklendi"), findsOneWidget);
+        expect(find.text("Hızlı not'a eklendi"), findsOneWidget);
         expect(find.text('Aç'), findsOneWidget);
         await tester.pumpAndSettle();
       },

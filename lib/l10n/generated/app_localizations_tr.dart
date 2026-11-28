@@ -9501,13 +9501,13 @@ class AppLocalizationsTr extends AppLocalizations {
   String get floatingAlignCycle => 'Yatay hiza';
 
   @override
-  String get quickInboxFolderName => 'Hızlı Not';
+  String get quickInboxFolderName => 'Hızlı not';
 
   @override
   String get quickInboxSubtitle => 'Emin olunmayan eklemeler burada toplanır';
 
   @override
-  String get quickDropAddedQuickInbox => 'Hızlı Not\'a eklendi';
+  String get quickDropAddedQuickInbox => 'Hızlı not\'a eklendi';
 
   @override
   String get quickDropOpen => 'Aç';

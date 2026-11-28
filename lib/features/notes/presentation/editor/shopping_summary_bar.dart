@@ -80,7 +80,7 @@ class ShoppingSummaryBar extends StatelessWidget {
           color: scheme.surfaceContainerLow,
           border: Border(
             top: BorderSide(
-              color: scheme.outlineVariant.withValues(alpha: 0.6),
+              color: scheme.outlineVariant.withValues(alpha: AppAlpha.muted),
             ),
           ),
         ),

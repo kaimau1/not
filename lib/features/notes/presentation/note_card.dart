@@ -1434,7 +1434,7 @@ class _ListModeBadge extends StatelessWidget {
     return DecoratedBox(
       key: ValueKey('card-mode-${note.listMode.name}'),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
+        color: color.withValues(alpha: AppAlpha.pressed),
         borderRadius: BorderRadius.circular(AppRadius.s),
       ),
       child: Padding(
@@ -1442,7 +1442,7 @@ class _ListModeBadge extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 12, color: color),
+            Icon(icon, size: AppIconSize.xs - 4, color: color),
             const SizedBox(width: 4),
             Flexible(
               child: Text(
@@ -1472,11 +1472,11 @@ class _ContextNowBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = _cardThemeOf(context);
     final scheme = theme.colorScheme;
-    final color = accent ?? scheme.tertiary;
+    final color = accent ?? scheme.secondary;
     return DecoratedBox(
       key: const ValueKey('card-context-now'),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.14),
+        color: color.withValues(alpha: AppAlpha.pressed),
         borderRadius: BorderRadius.circular(AppRadius.s),
       ),
       child: Padding(
@@ -1484,7 +1484,7 @@ class _ContextNowBadge extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.schedule_outlined, size: 11, color: color),
+            Icon(Icons.schedule_outlined, size: AppIconSize.xs - 5, color: color),
             const SizedBox(width: 3),
             Text(
               context.l10n.contextNowBadge,

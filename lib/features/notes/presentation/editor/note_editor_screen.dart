@@ -761,8 +761,7 @@ class _NoteEditorScreenState extends ConsumerState<NoteEditorScreen>
       // KARŞILAŞTIRILMIYORDU. İlk değişiklikten sonra (geri al düğmesi zaten
       // etkin) seçim "saf yazım" sayılıyor, `setState` atlanıyor ve yeni
       // desen ancak başka bir yeniden çizimde görünüyordu.
-      a.paged == b.paged &&
-      a.archivePaper == b.archivePaper &&
+      (a.paged, a.archivePaper) == (b.paged, b.archivePaper) &&
       a.orderIndex == b.orderIndex &&
       a.deletedAt == b.deletedAt &&
       a.archivedAt == b.archivedAt &&
