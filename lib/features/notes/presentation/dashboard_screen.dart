@@ -805,10 +805,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     ref.listen(selectedTagProvider, (_, next) {
       if (next != null) closeHub();
     });
-    // Ana ekrandaki paylaşılanlar bölümünün YERİ (kullanıcı isteği
-    // 2026-11-01: "paylaşılan notlar en üstte görülüyor, sıralaması
-    // ayarlanabilmeli") — üstte (varsayılan) ya da kendi notlarımın altında.
-    final sharedAtBottom = ref.watch(homeSharedAtBottomProvider);
     final hubActive =
         ref.watch(sharedHubOnHomeProvider) &&
         !selectionActive &&
@@ -1329,8 +1325,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                                       selectionActive,
                                                   hubActive: hubActive,
                                                   sharedFolder: sharedFolder,
-                                                  sharedAtBottom:
-                                                      sharedAtBottom,
                                                   columns: columns,
                                                   cellWidth: cellWidth,
                                                   selectedFolderId:

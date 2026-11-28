@@ -2060,6 +2060,9 @@ class AppLocalizationsMs extends AppLocalizations {
   String get listTwoColumns => 'Dua lajur';
 
   @override
+  String get listThreeColumns => 'Tiga lajur';
+
+  @override
   String get listOneColumn => 'Satu lajur';
 
   @override
@@ -5186,16 +5189,6 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get homeShowSharedShort => 'Tunjukkan nota dikongsi';
-
-  @override
-  String get homeSharedAtBottom => 'Nota dikongsi di bawah nota saya';
-
-  @override
-  String get homeSharedAtBottomInfo =>
-      'Jika dihidupkan, nota dikongsi berada di bawah nota anda.';
-
-  @override
-  String get homeSharedAtBottomShort => 'Nota dikongsi di bawah';
 
   @override
   String get homeSharedSection => 'Dikongsi';

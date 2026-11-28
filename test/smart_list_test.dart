@@ -115,15 +115,22 @@ void main() {
         .text;
     List<String> rows(WidgetTester tester) {
       final scroll = find.byKey(const ValueKey('quick-list-scroll'));
+      // Yalnız madde satırları (reyon başlıkları sayılmaz, 2026-11-28).
+      final rowsOnly = find.descendant(
+        of: scroll,
+        matching: find.byWidgetPredicate(
+          (w) => w.runtimeType.toString() == '_QuickRow',
+        ),
+      );
       final texts = tester
           .widgetList<Text>(
-            find.descendant(of: scroll, matching: find.byType(Text)),
+            find.descendant(of: rowsOnly, matching: find.byType(Text)),
           )
           .map((t) => t.data ?? '')
           .where((t) => t.isNotEmpty)
           .toList();
-      // İki sütun: önce sol sütun yukarıdan aşağı, sonra sağ — sırayı
-      // ekrandaki konumdan değil bu düzenden oku.
+      // Reyon bölümlerinde satır satır (soldan sağa) dizilir: ağaç sırası
+      // listenin sırasıdır.
       return texts;
     }
 

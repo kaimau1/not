@@ -2046,6 +2046,9 @@ class AppLocalizationsTr extends AppLocalizations {
   String get listTwoColumns => '2 sütun';
 
   @override
+  String get listThreeColumns => '3 sütun';
+
+  @override
   String get listOneColumn => 'Tek sütun';
 
   @override
@@ -5144,16 +5147,6 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get homeShowSharedShort => 'Paylaşılan notları göster';
-
-  @override
-  String get homeSharedAtBottom => 'Paylaşılanlar notlarımın altında';
-
-  @override
-  String get homeSharedAtBottomInfo =>
-      'Açıkken paylaşılan notlar kendi notlarının altında durur.';
-
-  @override
-  String get homeSharedAtBottomShort => 'Paylaşılanlar altta';
 
   @override
   String get homeSharedSection => 'Paylaşılan';

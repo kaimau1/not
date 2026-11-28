@@ -25,6 +25,8 @@ import '../domain/quick_entry.dart';
 import '../domain/quick_suggestion_sanitizer.dart';
 import '../domain/smart_lexicon_v2.dart';
 import '../domain/smart_list.dart';
+import 'app_background_layers.dart';
+import 'dashboard_background_sheet.dart';
 import 'quick_entry_bar.dart';
 import 'quick_list_catalog_sheet.dart';
 
@@ -235,8 +237,16 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
 
   /// Liste değişti (satır eklendi/çıktı/güncellendi).
   final _rev = ValueNotifier<int>(0);
-  late final ValueNotifier<bool> _twoColumns;
+
+  /// Listede satır var mı ([_rev]'den türer; boş ↔ dolu geçişinde değişir).
+  final _hasRows = ValueNotifier<bool>(false);
+
+  /// Sütun sayısı 1–3 (3 yalnız sığarsa çizilir; bkz. [_fitColumns]).
+  late final ValueNotifier<int> _columns;
   late final ValueNotifier<bool> _aisle;
+
+  /// Zemin eklenip kalkınca Scaffold Stack'e girip çıkar: durumu korunsun.
+  final _scaffoldKey = GlobalKey();
   final _tab = ValueNotifier<int>(0);
 
   /// Vurgulanacak satır (zaten listede olan madde yeniden yazıldı): (kimlik,
@@ -408,6 +418,10 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
 
   void _applyKind(SmartListKind kind) {
     if (kind == _kind.value) return;
+    // Reyon başlıkları ve renkleri türe bağlı.
+    _sectionCache.clear();
+    _lineCache.clear();
+    _headerCache.clear();
     _kind.value = kind;
     _tab.value = 0;
     final l10n = context.l10n;
@@ -558,12 +572,20 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
       _kind.value = initK;
       _kindSaid = initK;
     }
-    _twoColumns = ValueNotifier(ref.read(quickListTwoColumnsProvider));
+    _columns = ValueNotifier(
+      !ref.read(quickListTwoColumnsProvider)
+          ? 1
+          : ref.read(quickListThreeColumnsProvider)
+          ? 3
+          : 2,
+    );
     _aisle = ValueNotifier(ref.read(quickListAisleSortProvider));
     for (final t in widget.args.initialItems) {
       if (t.trim().isEmpty) continue;
       _rows.add(_Row(_seq++, QuickItem(name: t.trim(), how: QuickHow.exact)));
     }
+    _hasRows.value = _rows.isNotEmpty;
+    _rev.addListener(() => _hasRows.value = _rows.isNotEmpty);
     focusAfterRouteOpens(this, _focus);
   }
 
@@ -623,7 +645,8 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
     _focus.dispose();
     _scroll.dispose();
     _rev.dispose();
-    _twoColumns.dispose();
+    _hasRows.dispose();
+    _columns.dispose();
     _aisle.dispose();
     _tab.dispose();
     _kind.dispose();
@@ -653,6 +676,79 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
     return null;
   }
 
+  /// Ham maddeyi listeye hazırlar: tür öbeği ("alışveriş listesi") madde
+  /// değildir (tür olarak kaydedilir, null döner); satır içi fiyat ve türün
+  /// sözlüğündeki reyon eklenir.
+  (QuickItem, Map<String, dynamic>)? _prepare(
+    QuickItem rawItem, {
+    Map<String, Map<String, dynamic>>? extrasByKey,
+    required SmartListKind kindNow,
+    required QuickLexicon? kindLex,
+    required VoidCallback onKindSaid,
+  }) {
+    // "Bavul listesi", "alışveriş listesi": madde değil, listenin türü.
+    if (widget.args.smart) {
+      final k = smartKindFromPhrase(rawItem.name);
+      if (k != null) {
+        _kindSaid = k;
+        onKindSaid();
+        return null;
+      }
+    }
+    var item = rawItem;
+    final itemExtras = <String, dynamic>{
+      ...?extrasByKey?[quickItemKey(rawItem.name)],
+      ...?extrasByKey?[quickItemKey(rawItem.text)],
+    };
+    if ((kindNow == SmartListKind.shopping ||
+            kindNow == SmartListKind.expense) &&
+        !itemExtras.containsKey('p') &&
+        !itemExtras.containsKey('exCost')) {
+      final priced = extractInlinePrice(rawItem.name);
+      if (priced.price != null && priced.text.isNotEmpty) {
+        item = QuickItem(
+          name: quickCapitalize(priced.text),
+          qty: rawItem.qty,
+          group: rawItem.group,
+          how: rawItem.how,
+          typed: rawItem.typed,
+        );
+        if (kindNow == SmartListKind.shopping) {
+          itemExtras['p'] = priced.price;
+        } else {
+          itemExtras['exCost'] = priced.price;
+        }
+      }
+    }
+    if (item.group < 0 && kindLex != null) {
+      final g = kindLex.groupOf(item.name);
+      if (g >= 0) {
+        item = QuickItem(
+          name: item.name,
+          qty: item.qty,
+          group: g,
+          how: item.how,
+          typed: item.typed,
+        );
+      }
+    }
+    return (item, itemExtras);
+  }
+
+  QuickLexicon? _kindLexFor(SmartListKind kind) => kind == SmartListKind.generic
+      ? null
+      : lexiconForSmartKind(kind, mounted ? context.l10n.localeName : 'tr');
+
+  /// Zaten listedeki satıra yeniden yazılan madde: yenisi eklenmez, miktar
+  /// geldiyse güncellenir, satır kısa bir vurguyla parlar.
+  void _touchExisting(_Row existing, QuickItem item, Map<String, dynamic> ex) {
+    if (item.qty.isNotEmpty && item.qty != existing.item.qty) {
+      existing.item = existing.item.withQty(item.qty);
+    }
+    if (ex.isNotEmpty) existing.extras = {...existing.extras, ...ex};
+    _pulse.value = (existing.id, _pulse.value.$2 + 1);
+  }
+
   void _add(
     List<QuickItem> items, {
     Map<String, Map<String, dynamic>>? extrasByKey,
@@ -660,67 +756,20 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
     _Row? touched;
     var said = false;
     final kindNow = _effectiveKind;
-    final locale = mounted ? context.l10n.localeName : 'tr';
-    final kindLex = kindNow == SmartListKind.generic
-        ? null
-        : lexiconForSmartKind(kindNow, locale);
+    final kindLex = _kindLexFor(kindNow);
     for (final rawItem in items) {
-      // "Bavul listesi", "alışveriş listesi": madde değil, listenin türü.
-      if (widget.args.smart) {
-        final k = smartKindFromPhrase(rawItem.name);
-        if (k != null) {
-          _kindSaid = k;
-          said = true;
-          continue;
-        }
-      }
-      var item = rawItem;
-      final itemExtras = <String, dynamic>{
-        ...?extrasByKey?[quickItemKey(rawItem.name)],
-        ...?extrasByKey?[quickItemKey(rawItem.text)],
-      };
-      if ((kindNow == SmartListKind.shopping ||
-              kindNow == SmartListKind.expense) &&
-          !itemExtras.containsKey('p') &&
-          !itemExtras.containsKey('exCost')) {
-        final priced = extractInlinePrice(rawItem.name);
-        if (priced.price != null && priced.text.isNotEmpty) {
-          item = QuickItem(
-            name: quickCapitalize(priced.text),
-            qty: rawItem.qty,
-            group: rawItem.group,
-            how: rawItem.how,
-            typed: rawItem.typed,
-          );
-          if (kindNow == SmartListKind.shopping) {
-            itemExtras['p'] = priced.price;
-          } else {
-            itemExtras['exCost'] = priced.price;
-          }
-        }
-      }
-      if (item.group < 0 && kindLex != null) {
-        final g = kindLex.groupOf(item.name);
-        if (g >= 0) {
-          item = QuickItem(
-            name: item.name,
-            qty: item.qty,
-            group: g,
-            how: item.how,
-            typed: item.typed,
-          );
-        }
-      }
+      final prepared = _prepare(
+        rawItem,
+        extrasByKey: extrasByKey,
+        kindNow: kindNow,
+        kindLex: kindLex,
+        onKindSaid: () => said = true,
+      );
+      if (prepared == null) continue;
+      final (item, itemExtras) = prepared;
       final existing = _find(item.text);
       if (existing != null) {
-        // Zaten listede: yenisi eklenmez, miktar geldiyse güncellenir.
-        if (item.qty.isNotEmpty && item.qty != existing.item.qty) {
-          existing.item = existing.item.withQty(item.qty);
-        }
-        if (itemExtras.isNotEmpty) {
-          existing.extras = {...existing.extras, ...itemExtras};
-        }
-        _pulse.value = (existing.id, _pulse.value.$2 + 1);
+        _touchExisting(existing, item, itemExtras);
         touched = existing;
         continue;
       }
@@ -734,6 +783,99 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
     _rev.value++;
     _updateKind();
     _reveal(touched);
+  }
+
+  // ── Konuşma: anında ekle, gerekirse değiştir ───────────────────────────
+
+  /// Süren konuşmanın maddeleri sırayla: listede hangi satıra karşılık
+  /// geldiği; [owned] = satırı BU konuşma ekledi (değişebilir, silinebilir).
+  /// Önceden listede olan satır ([owned] false) konuşma değişse de silinmez.
+  final _spoken = <({String sig, _Row row, bool owned})>[];
+
+  /// Konuşmanın o ana kadarki TÜM maddeleri ([QuickEntryBar.onSpokenItems]):
+  /// yeni madde hemen eklenir; tanıyıcı ya da öbek sonradan değişirse
+  /// ("tavuk" → "tavuk göğsü") aynı satır yerinde güncellenir, artık
+  /// karşılığı olmayan satır (tavuk + göğsü → tek madde) çıkarılır.
+  void _onSpoken(List<QuickItem> items) {
+    var said = false;
+    final kindNow = _effectiveKind;
+    final kindLex = _kindLexFor(kindNow);
+    final next = <(QuickItem, Map<String, dynamic>)>[
+      for (final raw in items)
+        ?_prepare(
+          raw,
+          kindNow: kindNow,
+          kindLex: kindLex,
+          onKindSaid: () => said = true,
+        ),
+    ];
+    _Row? touched;
+    var changed = false;
+    for (var i = 0; i < next.length; i++) {
+      final (item, extras) = next[i];
+      final sig = item.text;
+      final prev = i < _spoken.length ? _spoken[i] : null;
+      if (prev != null && prev.sig == sig) continue;
+      ({String sig, _Row row, bool owned}) entry;
+      final prevRow = prev?.row;
+      if (prev != null && prev.owned && _rows.contains(prevRow)) {
+        final other = _findOther(sig, prevRow!);
+        if (other == null) {
+          // Aynı satır yeni hâline döner (yerinde; satır sırası korunur).
+          prevRow.item = item;
+          prevRow.extras = extras;
+          _pulse.value = (prevRow.id, _pulse.value.$2 + 1);
+          entry = (sig: sig, row: prevRow, owned: true);
+        } else {
+          // Yeni hâli listede zaten var: bu konuşmanın satırı çıkar.
+          _rows.remove(prevRow);
+          _rowCache.remove(prevRow.id);
+          _touchExisting(other, item, extras);
+          entry = (sig: sig, row: other, owned: false);
+        }
+      } else {
+        final existing = _find(sig);
+        if (existing != null) {
+          _touchExisting(existing, item, extras);
+          entry = (sig: sig, row: existing, owned: false);
+        } else {
+          final row = _Row(_seq++, item, extras: extras);
+          _rows.add(row);
+          _lastId = row.id;
+          entry = (sig: sig, row: row, owned: true);
+        }
+      }
+      changed = true;
+      touched = entry.row;
+      if (i < _spoken.length) {
+        _spoken[i] = entry;
+      } else {
+        _spoken.add(entry);
+      }
+    }
+    // Konuşma kısaldı (öbek birleşti, tanıyıcı kelimeyi geri aldı).
+    while (_spoken.length > next.length) {
+      final gone = _spoken.removeLast();
+      if (gone.owned && _rows.remove(gone.row)) {
+        _rowCache.remove(gone.row.id);
+        changed = true;
+      }
+    }
+    if (said) _updateKind();
+    if (!changed) return;
+    _rev.value++;
+    _updateKind();
+    if (touched != null && _rows.contains(touched)) _reveal(touched);
+  }
+
+  void _onSpokenDone() => _spoken.clear();
+
+  _Row? _findOther(String text, _Row except) {
+    final key = quickItemKey(text);
+    for (final r in _rows) {
+      if (!identical(r, except) && quickItemKey(r.item.text) == key) return r;
+    }
+    return null;
   }
 
   void _attachQty(String qty) {
@@ -884,7 +1026,8 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
         title: title,
         body: '',
         items: [for (final i in items) i.text],
-        columns: _twoColumns.value ? 2 : 1,
+        // Not en çok iki sütun doğar (üç sütun yalnız bu ekranın görünümü).
+        columns: _columns.value >= 2 ? 2 : 1,
       ),
       open: open || openWorkspace,
       openWorkspace: openWorkspace,
@@ -903,16 +1046,43 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
 
   // ── Kurulum ───────────────────────────────────────────────────────────
 
-  final Map<int, (QuickItem, Widget)> _rowCache = {};
+  final Map<int, (QuickItem, Widget, bool, Color?)> _rowCache = {};
+
+  /// Satırın türdeki reyon/grup sırası (`kSmartKindSpecs[tür].groups`
+  /// dizini); bilinmiyorsa -1. Bavulda grup [kPackingGroupBase]'den, öbür
+  /// türlerde [kExtraGroupBase]'den başlar.
+  int _sectionOf(_Row row) {
+    final kind = _effectiveKind;
+    if (kind == SmartListKind.generic) return -1;
+    final spec = kSmartKindSpecs[kind];
+    if (spec == null || spec.groups.isEmpty) return -1;
+    var g = row.item.group;
+    if (kind == SmartListKind.packing) {
+      g = g >= kPackingGroupBase && g < kExtraGroupBase
+          ? g - kPackingGroupBase
+          : -1;
+    } else if (kind != SmartListKind.shopping) {
+      final base = kExtraGroupBase + kind.index * 10;
+      g = g >= base && g < base + 10 ? g - base : -1;
+    } else if (!isGroceryGroup(g)) {
+      g = -1;
+    }
+    return g >= 0 && g < spec.groups.length ? g : -1;
+  }
 
   Color? _dotColorFor(_Row row) {
-    final kind = _effectiveKind;
-    if (kind == SmartListKind.generic) return null;
-    final spec = kSmartKindSpecs[kind];
-    if (spec == null || spec.groups.isEmpty) return null;
-    final g = row.item.group;
-    if (g >= 0 && g < spec.groups.length) return spec.groups[g].color;
-    return null;
+    final g = _sectionOf(row);
+    if (g < 0) return null;
+    return kSmartKindSpecs[_effectiveKind]!.groups[g].color;
+  }
+
+  /// İstenen sütun sayısı ekrana sığıyor mu: üç sütunda satır başına en az
+  /// [_minThreeColumn] px (kutucuk + kısa ad + çıkar). Sığmazsa iki.
+  static const double _minThreeColumn = 118;
+  int _fitColumns(int wanted, double width) {
+    if (wanted < 3) return wanted;
+    final usable = (width > 720 ? 720 : width) - AppSpace.s * 2;
+    return usable / 3 >= _minThreeColumn ? 3 : 2;
   }
 
   Future<void> _editRow(_Row row) async {
@@ -940,22 +1110,152 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
     _rev.value++;
   }
 
-  Widget _rowFor(_Row row) {
+  Widget _rowFor(_Row row, {bool compact = false}) {
     final hit = _rowCache[row.id];
-    if (hit != null && identical(hit.$1, row.item)) return hit.$2;
+    final color = _dotColorFor(row);
+    if (hit != null &&
+        identical(hit.$1, row.item) &&
+        hit.$3 == compact &&
+        hit.$4 == color) {
+      return hit.$2;
+    }
     final w = _QuickRow(
       key: row.key,
       id: row.id,
       item: row.item,
-      dotColor: _dotColorFor(row),
+      dotColor: color,
+      compact: compact,
       pulse: _pulse,
       onRemove: () => _remove(row),
       onRevert: () => _revert(row),
       onEdit: () => unawaited(_editRow(row)),
     );
-    _rowCache[row.id] = (row.item, w);
+    _rowCache[row.id] = (row.item, w, compact, color);
     return w;
   }
+
+  /// [rows] [cols] sütuna notla AYNI düzende (ItemsEditor) dizilir: ilk
+  /// pay solda, sonraki sağda.
+  Widget _columnsOf(List<_Row> rows, int cols) {
+    if (cols <= 1) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [for (final r in rows) _rowFor(r)],
+      );
+    }
+    final compact = cols >= 3;
+    final per = (rows.length + cols - 1) ~/ cols;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var c = 0; c < cols; c++)
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = c * per; i < (c + 1) * per && i < rows.length; i++)
+                  _rowFor(rows[i], compact: compact),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// REYON BÖLÜMLERİ (kullanıcı isteği 2026-11-28: "reyonlar burada da
+  /// görünsün, şu an sadece renklendirme var; reyona bölünebilir"): reyon
+  /// sırası açıkken her reyon kendi başlığıyla, kendi sütunlarında. Değişmeyen
+  /// bölüm AYNI örnek kalır (madde eklenince yalnız o bölüm kurulur — S49).
+  final Map<int, (int, List<QuickItem>, Widget)> _sectionCache = {};
+  final Map<int, Widget> _headerCache = {};
+
+  /// Bölümün içi SATIR SATIR ızgara: madde bölümün sonuna eklenir, öbür
+  /// satırlar yer değiştirmez (sütun öncelikli dizilimde her ekleme bir
+  /// satırı öbür sütuna taşıyıp yeniden kurduruyordu). Değişmeyen ızgara
+  /// satırı aynı örnek kalır.
+  Widget _sectionBody(int key, List<_Row> rows, int cols) {
+    final hit = _sectionCache[key];
+    if (hit != null && hit.$1 == cols && hit.$2.length == rows.length) {
+      var same = true;
+      for (var i = 0; i < rows.length; i++) {
+        if (!identical(hit.$2[i], rows[i].item)) {
+          same = false;
+          break;
+        }
+      }
+      if (same) return hit.$3;
+    }
+    final compact = cols >= 3;
+    final lines = <Widget>[];
+    for (var start = 0; start < rows.length; start += cols) {
+      final cells = rows.sublist(
+        start,
+        start + cols > rows.length ? rows.length : start + cols,
+      );
+      lines.add(_gridLine(key, start ~/ cols, cells, cols, compact));
+    }
+    final w = Column(
+      key: ValueKey('quick-sec-body-$key'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: lines,
+    );
+    _sectionCache[key] = (cols, [for (final r in rows) r.item], w);
+    return w;
+  }
+
+  final Map<(int, int), (int, List<QuickItem>, Widget)> _lineCache = {};
+
+  Widget _gridLine(
+    int section,
+    int index,
+    List<_Row> cells,
+    int cols,
+    bool compact,
+  ) {
+    final hit = _lineCache[(section, index)];
+    if (hit != null && hit.$1 == cols && hit.$2.length == cells.length) {
+      var same = true;
+      for (var i = 0; i < cells.length; i++) {
+        if (!identical(hit.$2[i], cells[i].item) ||
+            !identical(_rowCache[cells[i].id]?.$1, cells[i].item)) {
+          same = false;
+          break;
+        }
+      }
+      if (same) return hit.$3;
+    }
+    final Widget w = cols <= 1
+        ? _rowFor(cells.single)
+        : Row(
+            key: ValueKey('quick-line-$section-$index'),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (var c = 0; c < cols; c++)
+                Expanded(
+                  child: c < cells.length
+                      ? _rowFor(cells[c], compact: compact)
+                      : const SizedBox.shrink(),
+                ),
+            ],
+          );
+    _lineCache[(section, index)] = (cols, [for (final r in cells) r.item], w);
+    return w;
+  }
+
+  Widget _sectionHeader(int key, AppLocalizations l10n, ColorScheme scheme) =>
+      _headerCache[key] ??= () {
+        final spec = kSmartKindSpecs[_effectiveKind];
+        final group = key >= 0 && spec != null && key < spec.groups.length
+            ? spec.groups[key]
+            : null;
+        final isTr = l10n.localeName.startsWith('tr');
+        return _AisleHeader(
+          key: ValueKey('quick-sec-$key'),
+          icon: group?.icon ?? Icons.more_horiz_rounded,
+          color: group?.color ?? scheme.onSurfaceVariant,
+          label: group?.label(isTr: isTr) ?? l10n.menuSectionOther,
+        );
+      }();
 
   List<_Tab> _tabs(AppLocalizations l10n, [SmartListKind? kind]) {
     final k = widget.args.smart ? (kind ?? _kind.value) : SmartListKind.generic;
@@ -1166,6 +1466,8 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
       hint: _entryHint(l10n, kind),
       focusNode: _focus,
       onItems: _add,
+      onSpokenItems: _onSpoken,
+      onSpokenDone: _onSpokenDone,
       onTrailingQty: _attachQty,
       // "Bitti" / "bu kadar" söylenince dinleme biter ve liste
       // nota çevrilir (Bitti düğmesiyle aynı yol).
@@ -1190,53 +1492,60 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
             : buildEntryBar(_effectiveKind),
       ),
     );
-    final list = ListenableBuilder(
+    final screenW = MediaQuery.sizeOf(context).width;
+    final bgLayers = buildAppBackgroundLayers(context, ref);
+    final hasBg = bgLayers.isNotEmpty;
+    // Kayar kutu yalnız liste boş ↔ dolu geçişinde kurulur; madde/çip
+    // eklenince yalnız içerik (değişen bölüm) kurulur (S49).
+    final content = ListenableBuilder(
       listenable: Listenable.merge([
         _rev,
-        _twoColumns,
+        _columns,
         _aisle,
         if (widget.args.smart) _kind,
       ]),
       builder: (context, _) {
         final rows = _ordered();
-        if (rows.isEmpty) {
-          return _buildEmptyState(context, l10n, scheme, text);
+        final cols = _fitColumns(_columns.value, screenW);
+        if (_hasAisles && _aisle.value) {
+          // Reyona göre öbekler (ilk görünme sırası; bilinmeyen en sonda).
+          final groups = <int, List<_Row>>{};
+          for (final r in rows) {
+            (groups[_sectionOf(r)] ??= []).add(r);
+          }
+          final other = groups.remove(-1);
+          if (groups.isNotEmpty) {
+            if (other != null) groups[-1] = other;
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final e in groups.entries) ...[
+                  _sectionHeader(e.key, l10n, scheme),
+                  _sectionBody(e.key, e.value, cols),
+                ],
+              ],
+            );
+          }
         }
-        // İKİ SÜTUN notla AYNI düzen (ItemsEditor): ilk yarı
-        // solda, ikinci yarı sağda.
-        final two = _twoColumns.value;
-        final half = two ? (rows.length + 1) ~/ 2 : rows.length;
-        return SingleChildScrollView(
-          key: const ValueKey('quick-list-scroll'),
-          controller: _scroll,
-          padding: const EdgeInsets.fromLTRB(
-            AppSpace.s,
-            0,
-            AppSpace.s,
-            AppSpace.l,
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [for (var i = 0; i < half; i++) _rowFor(rows[i])],
-                ),
-              ),
-              if (two)
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      for (var i = half; i < rows.length; i++) _rowFor(rows[i]),
-                    ],
-                  ),
-                ),
-            ],
-          ),
-        );
+        // Bölümsüz: İKİ/ÜÇ SÜTUN notla AYNI düzen (ItemsEditor).
+        return _columnsOf(rows, cols);
       },
+    );
+    final scroll = SingleChildScrollView(
+      key: const ValueKey('quick-list-scroll'),
+      controller: _scroll,
+      padding: const EdgeInsets.fromLTRB(AppSpace.s, 0, AppSpace.s, AppSpace.l),
+      child: content,
+    );
+    final list = ValueListenableBuilder<bool>(
+      valueListenable: _hasRows,
+      builder: (context, has, _) => has
+          ? scroll
+          : ListenableBuilder(
+              listenable: _kind,
+              builder: (context, _) =>
+                  _buildEmptyState(context, l10n, scheme, text),
+            ),
     );
     // Şerit yoksa da kayar kutu durur: gezinme çubuğu payını o veriyor,
     // ağacın şekli de değişmiyor.
@@ -1278,7 +1587,7 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
             builder: (context, kind, _) => chipPanel(_tabs(l10n, kind)),
           )
         : chipPanel(tabs);
-    return PopScope(
+    final page = PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) unawaited(_finish());
@@ -1293,8 +1602,12 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
       // boyamada ([KeyboardSlide]) izler.
       child: KeyboardInsetScope(
         child: Scaffold(
+          key: _scaffoldKey,
+          backgroundColor: hasBg ? Colors.transparent : null,
           resizeToAvoidBottomInset: false,
           appBar: AppBar(
+            backgroundColor: hasBg ? Colors.transparent : null,
+            systemOverlayStyle: hasBg ? statusBarOverZemin(context) : null,
             actionsPadding: const EdgeInsets.only(right: AppSpace.s),
             leading: IconButton(
               tooltip: l10n.back,
@@ -1407,21 +1720,40 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
                     ),
                   ),
                 ),
-              ValueListenableBuilder<bool>(
-                valueListenable: _twoColumns,
-                builder: (context, two, _) => IconButton(
-                  key: const ValueKey('quick-list-columns'),
-                  tooltip: two ? l10n.listOneColumn : l10n.listTwoColumns,
-                  icon: Icon(
-                    two
-                        ? Icons.view_agenda_outlined
-                        : Icons.view_column_outlined,
-                  ),
-                  onPressed: () {
-                    _twoColumns.value = !two;
-                    ref.read(quickListTwoColumnsProvider.notifier).set(!two);
-                  },
-                ),
+              ValueListenableBuilder<int>(
+                valueListenable: _columns,
+                builder: (context, cols, _) {
+                  // 1 → 2 → 3 (sığarsa) → 1.
+                  final canThree = _fitColumns(3, screenW) == 3;
+                  final next = cols == 1
+                      ? 2
+                      : cols == 2 && canThree
+                      ? 3
+                      : 1;
+                  final shown = _fitColumns(cols, screenW);
+                  return IconButton(
+                    key: const ValueKey('quick-list-columns'),
+                    tooltip: switch (next) {
+                      1 => l10n.listOneColumn,
+                      2 => l10n.listTwoColumns,
+                      _ => l10n.listThreeColumns,
+                    },
+                    icon: Icon(switch (shown) {
+                      1 => Icons.view_agenda_outlined,
+                      2 => Icons.view_column_outlined,
+                      _ => Icons.view_week_outlined,
+                    }),
+                    onPressed: () {
+                      _columns.value = next;
+                      ref
+                          .read(quickListTwoColumnsProvider.notifier)
+                          .set(next >= 2);
+                      ref
+                          .read(quickListThreeColumnsProvider.notifier)
+                          .set(next == 3);
+                    },
+                  );
+                },
               ),
               PopupMenuButton<String>(
                 key: const ValueKey('quick-list-menu'),
@@ -1432,6 +1764,8 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
                       ref
                           .read(quickListAisleSortProvider.notifier)
                           .set(_aisle.value);
+                    case 'background':
+                      unawaited(showDashboardBackgroundSheet(context));
                     case 'open':
                       unawaited(_finish(open: true));
                     case 'wizard':
@@ -1468,6 +1802,13 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
                       value: 'workspace',
                       child: Text(l10n.smartListOpenWorkspace),
                     ),
+                  // ZEMİN (kullanıcı isteği 2026-11-28: "buranın da arka planı
+                  // ayarlanabilir olmalı, aynı ana ekran gibi"): ana ekranın
+                  // zemini burada da; buradan değiştirilir.
+                  PopupMenuItem(
+                    value: 'background',
+                    child: Text(l10n.dashboardBackground),
+                  ),
                   PopupMenuItem(
                     value: 'open',
                     child: Text(l10n.quickListOpenInNote),
@@ -1515,6 +1856,57 @@ class _QuickListScreenState extends ConsumerState<QuickListScreen>
         ),
       ),
     );
+    return _withBackground(bgLayers, page);
+  }
+
+  /// Zemin yoksa Scaffold olduğu gibi (S49: fazladan kurulum yok); varsa
+  /// ana ekranın zemin katmanlarının üstünde.
+  Widget _withBackground(List<Widget> layers, Widget scaffold) => layers.isEmpty
+      ? scaffold
+      : Stack(fit: StackFit.expand, children: [...layers, scaffold]);
+}
+
+/// Reyon başlığı: grubun simgesi ve adı, grubun renginde.
+class _AisleHeader extends StatelessWidget {
+  const _AisleHeader({
+    super.key,
+    required this.icon,
+    required this.color,
+    required this.label,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = AppText.of(Theme.of(context));
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpace.s,
+        AppSpace.s,
+        AppSpace.s,
+        AppSpace.xxs,
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: AppIconSize.xs, color: color),
+          const SizedBox(width: AppSpace.xs),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: text.label.copyWith(
+                color: color,
+                fontWeight: AppWeight.strong,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -1531,11 +1923,15 @@ class _QuickRow extends StatefulWidget {
     required this.onRemove,
     required this.onRevert,
     required this.onEdit,
+    this.compact = false,
   });
 
   final int id;
   final QuickItem item;
   final Color? dotColor;
+
+  /// Üç sütunda sıkı satır (küçük boşluklar, çıkar düğmesi dar).
+  final bool compact;
   final ValueListenable<(int, int)> pulse;
   final VoidCallback onRemove;
   final VoidCallback onRevert;
@@ -1607,12 +2003,13 @@ class _QuickRowState extends State<_QuickRow> with TickerProviderStateMixin {
     final scheme = theme.colorScheme;
     final text = AppText.of(theme);
     final item = widget.item;
+    final compact = widget.compact;
     final row = Row(
       children: [
-        const SizedBox(width: AppSpace.s),
+        SizedBox(width: compact ? AppSpace.xxs : AppSpace.s),
         Icon(
           Icons.check_box_outline_blank,
-          size: AppIconSize.m,
+          size: compact ? AppIconSize.s : AppIconSize.m,
           color: widget.dotColor ?? scheme.onSurfaceVariant,
         ),
         Expanded(
@@ -1628,8 +2025,8 @@ class _QuickRowState extends State<_QuickRow> with TickerProviderStateMixin {
             },
             onPointerCancel: (_) => _tapDown = null,
             child: Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(
-                AppSpace.s,
+              padding: EdgeInsetsDirectional.fromSTEB(
+                compact ? AppSpace.xs : AppSpace.s,
                 AppSpace.s,
                 0,
                 AppSpace.s,
@@ -1665,7 +2062,7 @@ class _QuickRowState extends State<_QuickRow> with TickerProviderStateMixin {
           onTap: widget.onRemove,
           radius: AppSpace.xl,
           child: Padding(
-            padding: const EdgeInsets.all(AppSpace.s),
+            padding: EdgeInsets.all(compact ? AppSpace.xs : AppSpace.s),
             child: Tooltip(
               message: l10n.quickListRemove,
               child: Icon(

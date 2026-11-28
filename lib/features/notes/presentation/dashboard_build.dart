@@ -372,7 +372,6 @@ extension _DashboardBuild on _DashboardScreenState {
     required bool selectionActive,
     required bool hubActive,
     required SharedFolderKey? sharedFolder,
-    required bool sharedAtBottom,
     required int columns,
     required double cellWidth,
     required String? selectedFolderId,
@@ -389,7 +388,6 @@ extension _DashboardBuild on _DashboardScreenState {
                                           !selectionActive &&
                                           !hubActive &&
                                           sharedFolder == null &&
-                                          !sharedAtBottom &&
                                           ref.watch(homeShowSharedProvider) &&
                                           ref.watch(noteFilterProvider) ==
                                               NoteFilter.all &&
@@ -511,25 +509,6 @@ extension _DashboardBuild on _DashboardScreenState {
                                           ),
                                         ],
                                       ),
-                                      // Paylaşılanlar ALTTA seçildiyse
-                                      // (bkz. homeSharedAtBottomProvider).
-                                      if (!searchActive &&
-                                          !reorderActive &&
-                                          !selectionActive &&
-                                          !hubActive &&
-                                          sharedFolder == null &&
-                                          sharedAtBottom &&
-                                          ref.watch(homeShowSharedProvider) &&
-                                          ref.watch(noteFilterProvider) ==
-                                              NoteFilter.all &&
-                                          ref.watch(selectedTagProvider) ==
-                                              null &&
-                                          ref.watch(selectedFolderProvider) ==
-                                              null)
-                                        SharedNotesHomeSection(
-                                          columns: columns,
-                                          cellWidth: cellWidth,
-                                        ),
                                       // Listenin sonu düğme sütununun
                                       // ÜSTÜNE çıkabilsin (bkz.
                                       // [_kFabClearance]).

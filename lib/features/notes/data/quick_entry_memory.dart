@@ -328,6 +328,14 @@ final quickListTwoColumnsProvider = boolPref(
   defaultValue: true,
 );
 
+/// Hızlı listede ÜÇ sütun (kullanıcı isteği 2026-11-28: "sığarsa 3 sütun").
+/// Yalnız [quickListTwoColumnsProvider] açıkken anlamlıdır; dar ekranda iki
+/// sütun gibi davranır. Not yine en çok iki sütun doğar.
+final quickListThreeColumnsProvider = boolPref(
+  'quick_list_three_columns',
+  defaultValue: false,
+);
+
 /// Sözlüğü kurar: (isteğe bağlı) hazır market sözlüğü + şablonun öneri
 /// grupları + kullanıcının bu türde daha önce ekledikleri.
 ///

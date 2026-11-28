@@ -636,17 +636,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 '${l10n.homeShowSharedInfo} paylasilan ortak not ana ekran',
             group: l10n.settingsGroupShared,
           ),
-          _SettingRow(
-            _PrefSwitch(
-              provider: homeSharedAtBottomProvider,
-              icon: Icons.vertical_align_bottom,
-              title: l10n.homeSharedAtBottom,
-              subtitle: l10n.homeSharedAtBottomInfo,
-            ),
-            title: l10n.homeSharedAtBottom,
-            keywords:
-                '${l10n.homeSharedAtBottomInfo} paylasilan siralama alt ust',
-          ),
           // "İçerikten not açılışı" (Balonlu / Klasik / Sor) KALKTI
           // (kullanıcı isteği 2026-11-03): not hep klasik açılır, görünüm
           // notun içinde seçilir.

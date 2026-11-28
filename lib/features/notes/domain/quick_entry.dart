@@ -446,6 +446,149 @@ const _stopWords = {
   'some',
 };
 
+/// Tamlama başı OLMAYAN iyelikli kelimeler ("hepsi", "biri"): öncekine
+/// yapışmaz.
+const _notCompoundHeads = {
+  'hepsi',
+  'biri',
+  'birisi',
+  'ikisi',
+  'ucu',
+  'tanesi',
+  'digeri',
+  'kendisi',
+  'bazisi',
+  'nesi',
+};
+
+/// Sık tamlama BAŞLARI (ASCII): "tavuk göğsü", "kuzu kolu", "dana eti",
+/// "zeytin yağı", "diş macunu". Ünlüyle biten ada gelen -sı/-si/-su/-sü
+/// ("salçası", "kolisi") kuraldan zaten tanınır; burada ünsüzle bitenler.
+const _compoundHeads = {
+  'gogsu',
+  'butu',
+  'budu',
+  'kanadi',
+  'incigi',
+  'kolu',
+  'eti',
+  'cigeri',
+  'suyu',
+  'yagi',
+  'peyniri',
+  'ekmegi',
+  'unu',
+  'sekeri',
+  'tozu',
+  'tuzu',
+  'kremi',
+  'macunu',
+  'jeli',
+  'sabunu',
+  'sampuani',
+  'deterjani',
+  'kagidi',
+  'bezi',
+  'paketi',
+  'poseti',
+  'pili',
+  'ampulu',
+  'cayi',
+  'sutu',
+  'yogurdu',
+  'receli',
+  'mercimegi',
+  'pirinci',
+  'lokumu',
+  'boregi',
+  'keki',
+  'ozu',
+  'baharati',
+  'harci',
+  'sucugu',
+  'salami',
+  'cicegi',
+  'tohumu',
+  'kumu',
+  'yemi',
+  'kabi',
+  'oyuncagi',
+  'tableti',
+  'surubu',
+  'hapi',
+  'vitamini',
+  'losyonu',
+  'spreyi',
+  'kopugu',
+  'bicagi',
+  'antrikotu',
+  'misiri',
+  'yapragi',
+  'cubugu',
+  'cekirdegi',
+  'fistigi',
+  'ici',
+  'otu',
+  'filizi',
+};
+
+/// Kelime bir tamlama BAŞI mı ("göğsü", "suyu", "salçası", "kolu", "eti"):
+/// sık başlar listesi ya da ünlüden sonra kaynaştırmalı -sı/-si/-su/-sü.
+/// Sözlükte olmayan böyle bir kelime bir önceki maddeye yapışır (kullanıcı
+/// bulgusu 2026-11-28: "tavuk göğsü" söylerken kısa duraklamada "Tavuk" ve
+/// "Göğsü" iki madde oldu). Yalın "ünsüz + ı/i/u/ü" yetmez: "zımbırtı" gibi
+/// kökü öyle biten kelimeler de var.
+bool quickLooksPossessive(String word) {
+  final a = quickAscii(word);
+  if (a.length < 3 || _notCompoundHeads.contains(a)) return false;
+  if (_compoundHeads.contains(a)) return true;
+  return a.length >= 5 && RegExp(r'[aeiou]s[iu]$').hasMatch(a);
+}
+
+/// Cihaz tanıyıcısı duraklamadaki her bölütü yeni SATIRA yazar; satır sonu
+/// ayrıştırıcıda KESİN ayırıcıdır. Bölüt sınırı bir öbeği ikiye bölüyorsa
+/// ("tavuk⏎göğsü", "domates⏎salçası") sınır boşluğa döner; öbek değilse
+/// (iki ayrı madde) satır sonu kalır — duraklama bilinmeyen iki maddeyi
+/// ayırmaya devam eder.
+String quickJoinSpeechSegments(String text, QuickLexicon lexicon) {
+  if (!text.contains('\n')) return text;
+  final lines = text.split('\n');
+  final b = StringBuffer(lines.first);
+  var prevLine = lines.first;
+  for (var k = 1; k < lines.length; k++) {
+    final line = lines[k];
+    final prevWords = [
+      for (final w in prevLine.trim().split(RegExp(r'\s+')))
+        if (_clean(w).isNotEmpty) _clean(w),
+    ];
+    final nextWords = [
+      for (final w in line.trim().split(RegExp(r'\s+')))
+        if (_clean(w).isNotEmpty) _clean(w),
+    ];
+    var soft = false;
+    if (prevWords.isNotEmpty &&
+        nextWords.isNotEmpty &&
+        !RegExp(r'[,;.!?]\s*$').hasMatch(prevLine)) {
+      final last = prevWords.last;
+      final first = nextWords.first;
+      final last2 = prevWords.length >= 2
+          ? '${prevWords[prevWords.length - 2]} $last'
+          : null;
+      soft =
+          lexicon.exact('$last $first') != null ||
+          (last2 != null && lexicon.exact('$last2 $first') != null) ||
+          (lexicon.exact(first) == null &&
+              lexicon.exact(last) != null &&
+              quickLooksPossessive(first));
+    }
+    b
+      ..write(soft ? ' ' : '\n')
+      ..write(line);
+    prevLine = soft ? '$prevLine $line' : line;
+  }
+  return b.toString();
+}
+
 const _numberWords = {
   'bir': '1',
   'iki': '2',
@@ -749,6 +892,8 @@ class QuickParser {
     int? qtyStart;
     // Bu KESİN öbekte çıkan son maddenin sırası (sondaki miktar ona gider).
     int? lastInSegment;
+    // Son çıkan maddenin son kelimesinin dizini (tamlama başı ona yapışır).
+    int? lastEmitTok;
     var trailingQty = '';
     int? restStart;
 
@@ -1036,6 +1181,7 @@ class QuickParser {
             typed: word,
           ),
         );
+        lastEmitTok = i + hitLen - 1;
         final end = toks[i + hitLen - 1];
         i += hitLen;
         if (end.hardAfter) closeSegment();
@@ -1045,6 +1191,42 @@ class QuickParser {
       // 3) Tek kelime, sözlükte yok.
       if (_stopWords.contains(fold)) {
         flushRun();
+        i++;
+        if (tok.hardAfter) closeSegment();
+        continue;
+      }
+      // 3a) Tamlama başı: "tavuk göğsü", "kuzu kolu", "dana eti" — bir
+      // önceki maddeye BİTİŞİK, iyelik ekli, sözlükte olmayan kelime ona
+      // yapışır (yakın eşleşme "kolu"yu "Kola" yapmasın).
+      final prevIdx = lastInSegment;
+      if (prevIdx != null &&
+          prevIdx == items.length - 1 &&
+          lastEmitTok == i - 1 &&
+          run.isEmpty &&
+          qty.isEmpty &&
+          !_modifiers.contains(fold) &&
+          learnedFix?.call(word) == null &&
+          quickLooksPossessive(word)) {
+        final prev = items[prevIdx];
+        items[prevIdx] = QuickItem(
+          name: quickCapitalize('${prev.name} ${trLower(word)}'),
+          qty: prev.qty,
+          group: prev.group,
+          how: prev.how,
+          typed: '${prev.typed} $word',
+        );
+        lastEmitTok = i;
+        i++;
+        if (tok.hardAfter) closeSegment();
+        continue;
+      }
+      // Bilinmeyen öbeğin devamı ("kuzu kolu"): yakın eşleşmeye sokulmaz.
+      if (run.isNotEmpty &&
+          identical(run.last, toks[i - 1]) &&
+          !run.last.hardAfter &&
+          learnedFix?.call(word) == null &&
+          quickLooksPossessive(word)) {
+        run.add(tok);
         i++;
         if (tok.hardAfter) closeSegment();
         continue;
@@ -1079,6 +1261,7 @@ class QuickParser {
       }
       if (single != null || parts != null) {
         flushRun();
+        lastEmitTok = i;
         if (single != null) {
           emit(single.withQty(takeQty()));
         } else {

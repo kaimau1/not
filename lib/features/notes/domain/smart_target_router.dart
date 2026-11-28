@@ -556,11 +556,35 @@ class SmartTargetRouter {
     if (words.isEmpty) return false;
     for (var k = 0; k < profile.itemKeys.length; k++) {
       final text = profile.itemKeys[k];
-      if (lowerAscii == text || lowerAscii.contains(text)) return true;
+      if (lowerAscii == text) return true;
       final itemWords = profile.itemWords[k];
+      if (itemWords.isEmpty) continue;
+      // Madde girdinin en az YARISINI kapsamalı ve TAM KELİME olarak geçmeli
+      // (kullanıcı bulgusu 2026-11-28: "yeni bir alışveriş listesi oluştur…"
+      // ve "oraya da elma armut peynir ekmek" 411 maddelik "Notlar"a gitti —
+      // eski kural girdinin içinde herhangi bir maddenin metni ALT DİZGE
+      // olarak geçerse tek başına 0,76 veriyordu; çok maddeli notta neredeyse
+      // her cümle bir maddeye "uyuyordu").
+      if (itemWords.length * 2 < words.length) continue;
+      if (_containsRun(words, itemWords)) return true;
       if (itemWords.length >= 2 && itemWords.every((w) => words.contains(w))) {
         return true;
       }
+    }
+    return false;
+  }
+
+  /// [run] kelimeleri [words] içinde ARDIŞIK geçiyor mu.
+  static bool _containsRun(List<String> words, List<String> run) {
+    for (var i = 0; i + run.length <= words.length; i++) {
+      var ok = true;
+      for (var j = 0; j < run.length; j++) {
+        if (words[i + j] != run[j]) {
+          ok = false;
+          break;
+        }
+      }
+      if (ok) return true;
     }
     return false;
   }
@@ -585,7 +609,7 @@ class SmartTargetRouter {
     }
     final profile = _NoteRouteProfile(
       locale: locale,
-      kind: detectNoteListKind(note, locale: locale),
+      kind: _routeKindOf(note, locale),
       grocery:
           note.type != NoteType.text &&
           looksLikeGrocery(note.displayTitle, [
@@ -596,6 +620,31 @@ class SmartTargetRouter {
     );
     _profiles[note] = profile;
     return profile;
+  }
+
+  /// Notun yönlendirmedeki türü. Tür yalnız MADDELERDEN çıktıysa
+  /// ([detectSmartKindFromItems] tek market maddesinde bile "alışveriş"
+  /// der) maddelerin en az %40'ı o türün sözlüğünde olmalı: 411 maddelik bir
+  /// fikir notunda tek "ekmek" maddesi onu alışveriş listesi yapmasın
+  /// (kullanıcı bulgusu 2026-11-28).
+  static SmartListKind _routeKindOf(Note note, String locale) {
+    final kind = detectNoteListKind(note, locale: locale);
+    if (kind == SmartListKind.generic ||
+        smartListKindFromId(note.listKind) != SmartListKind.generic ||
+        smartKindFromPhrase(note.displayTitle) != null) {
+      return kind;
+    }
+    final lex = kind == SmartListKind.shopping
+        ? groceryLexicon(locale)
+        : lexiconForSmartKind(kind, locale);
+    var total = 0;
+    var hits = 0;
+    for (final i in note.items) {
+      if (i.header || i.text.trim().isEmpty) continue;
+      total++;
+      if (lex.groupOf(i.text) >= 0) hits++;
+    }
+    return hits * 5 >= total * 2 ? kind : SmartListKind.generic;
   }
 
   static bool _matchesTimeSlot(ContextTimeSlot slot, DateTime now) =>

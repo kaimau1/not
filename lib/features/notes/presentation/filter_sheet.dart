@@ -362,17 +362,9 @@ class _ViewModeSection extends ConsumerWidget {
           ref.read(homeShowSharedProvider.notifier).toggle();
         },
       ),
-      if (shared)
-        _FilterTile(
-          kind: _TileKind.toggle,
-          label: l10n.homeSharedAtBottomShort,
-          icon: Icons.vertical_align_bottom,
-          selected: ref.watch(homeSharedAtBottomProvider),
-          onTap: () {
-            AppHaptics.tick();
-            ref.read(homeSharedAtBottomProvider.notifier).toggle();
-          },
-        ),
+      // "Paylaşılanlar altta" KALKTI (kullanıcı isteği 2026-11-28:
+      // "paylaşılanların kendine ait bir yeri var; altta/üstte gibi
+      // seçenekleri kaldıralım").
     ];
     return _Card(
       children: [

@@ -2036,6 +2036,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get listTwoColumns => 'عمودان';
 
   @override
+  String get listThreeColumns => 'ثلاثة أعمدة';
+
+  @override
   String get listOneColumn => 'عمود واحد';
 
   @override
@@ -5130,16 +5133,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get homeShowSharedShort => 'إظهار الملاحظات المشتركة';
-
-  @override
-  String get homeSharedAtBottom => 'المشتركة أسفل ملاحظاتي';
-
-  @override
-  String get homeSharedAtBottomInfo =>
-      'عند التفعيل تكون الملاحظات المشتركة أسفل ملاحظاتك.';
-
-  @override
-  String get homeSharedAtBottomShort => 'المشتركة في الأسفل';
 
   @override
   String get homeSharedSection => 'المشتركة';

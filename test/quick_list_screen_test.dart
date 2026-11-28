@@ -312,13 +312,141 @@ void main() {
     await tester.pumpAndSettle();
     expect(row('Yumurta'), findsNothing);
 
-    // Tek sütuna geç: not tek sütun doğar.
+    // Sütun düğmesi 2 → 3 (sığarsa) → 1 döner (2026-11-28). Üç sütunda not
+    // yine iki sütun doğar; tek sütunda tek.
+    await tester.tap(find.byKey(const ValueKey('quick-list-columns')));
+    await tester.pumpAndSettle();
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is Tooltip && w.message == 'Tek sütun',
+      ),
+      findsOneWidget,
+      reason: 'üç sütundayken sonraki adım tek sütun',
+    );
     await tester.tap(find.byKey(const ValueKey('quick-list-columns')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('quick-list-done')));
     await tester.pumpAndSettle();
     expect(outcome!.content.columns, 1);
     // Bildirimin kapanma sayacı bitsin.
+    await tester.pump(const Duration(seconds: 8));
+  });
+
+  // Kullanıcı bulgusu 2026-11-28: "ekmek armut diyorum, armut bekliyor;
+  // elma deyince armutu ekliyor" + "tavuk göğsü" duraklamada "Tavuk" ve
+  // "Göğsü" iki madde oluyordu (tanıyıcı her bölütü yeni satıra yazar).
+  testWidgets('konuşma: son kelime ANINDA eklenir, öbek gelince yerinde '
+      'değişir', (tester) async {
+    const events = EventChannel('dev.kaimau.notlar/speech');
+    MockStreamHandlerEventSink? sink;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockStreamHandler(
+          events,
+          MockStreamHandler.inline(
+            onListen: (_, s) {
+              sink = s;
+            },
+          ),
+        );
+    DeviceSpeech.debugAvailable = true;
+    DeviceSpeech.debugMicGranted = true;
+    addTearDown(() {
+      DeviceSpeech.debugAvailable = null;
+      DeviceSpeech.debugMicGranted = null;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockStreamHandler(events, null);
+    });
+    TemplateOutcome? outcome;
+    await pumpHost(
+      tester,
+      onTap: (context, ref) async => outcome = await pickTemplate(
+        context,
+        ref,
+        initial: NoteTemplate.shopping,
+      ),
+    );
+    await tester.tap(find.text('aç'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('quick-entry-mic')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(sink, isNotNull, reason: 'dinleme başlamadı');
+    Future<void> heard(String text) async {
+      sink!.success({'text': text});
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+
+    await heard('ekmek armut');
+    expect(row('Ekmek'), findsOneWidget);
+    expect(row('Armut'), findsOneWidget, reason: 'son kelime beklememeli');
+    await heard('ekmek armut tavuk');
+    expect(row('Tavuk'), findsOneWidget);
+    // Duraklama: tanıyıcı yeni bölütü yeni satıra yazdı.
+    await heard('ekmek armut tavuk\ngöğsü');
+    expect(row('Tavuk göğsü'), findsOneWidget);
+    expect(row('Tavuk'), findsNothing);
+    expect(row('Göğsü'), findsNothing);
+    // Tanıyıcı kelimeyi geri alırsa satır da gider.
+    await heard('ekmek armut tavuk göğsü elm');
+    await heard('ekmek armut tavuk göğsü elma');
+    expect(row('Elma'), findsOneWidget);
+    expect(find.textContaining('Elm '), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('quick-list-done')));
+    await tester.pumpAndSettle();
+    expect(
+      outcome!.content.items.toSet(),
+      {'Ekmek', 'Armut', 'Tavuk göğsü', 'Elma'},
+    );
+    await tester.pump(const Duration(seconds: 8));
+  });
+
+  // Kullanıcı isteği 2026-11-28: reyonlar hızlı listede de bölüm olarak,
+  // sığarsa üç sütun, zemin ana ekran gibi ayarlanabilir.
+  testWidgets('reyon bölümleri, üç sütun ve zemin menüsü', (tester) async {
+    TemplateOutcome? outcome;
+    await pumpHost(
+      tester,
+      onTap: (context, ref) async => outcome = await pickTemplate(
+        context,
+        ref,
+        initial: NoteTemplate.shopping,
+      ),
+    );
+    await tester.tap(find.text('aç'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('quick-entry-field')),
+      'domates ekmek süt elma deterjan ',
+    );
+    await tester.pumpAndSettle();
+    final headers = find.byWidgetPredicate(
+      (w) => w.key is ValueKey<String> &&
+          (w.key! as ValueKey<String>).value.startsWith('quick-sec-') &&
+          !(w.key! as ValueKey<String>).value.startsWith('quick-sec-body'),
+    );
+    expect(headers, findsAtLeastNWidgets(3), reason: 'reyon başlıkları');
+    // 2 → 3 sütun: üç sütunda bir ızgara satırında üç madde yan yana.
+    await tester.tap(find.byKey(const ValueKey('quick-list-columns')));
+    await tester.pumpAndSettle();
+    final lines = find.byWidgetPredicate(
+      (w) => w is Row &&
+          w.key is ValueKey<String> &&
+          (w.key! as ValueKey<String>).value.startsWith('quick-line-'),
+    );
+    expect(lines, findsWidgets);
+    expect(tester.widget<Row>(lines.first).children, hasLength(3));
+    // Zemin ⋮ menüsünde.
+    await tester.tap(find.byKey(const ValueKey('quick-list-menu')));
+    await tester.pumpAndSettle();
+    expect(find.text('Ana ekran zemini'), findsOneWidget);
+    await tester.tapAt(const Offset(5, 5));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('quick-list-done')));
+    await tester.pumpAndSettle();
+    // Not en çok iki sütun doğar; madde sırası reyon sırası.
+    expect(outcome!.content.columns, 2);
+    expect(outcome!.content.items, hasLength(5));
     await tester.pump(const Duration(seconds: 8));
   });
 

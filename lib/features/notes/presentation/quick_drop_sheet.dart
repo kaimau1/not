@@ -36,6 +36,7 @@ import '../domain/list_mode.dart';
 import '../domain/note.dart';
 import '../domain/note_item.dart';
 import '../domain/note_type.dart';
+import '../domain/quick_create_command.dart';
 import '../domain/quick_drop.dart';
 import '../domain/quick_entry.dart';
 import '../domain/smart_lexicon_v2.dart';
@@ -90,6 +91,7 @@ class _Drop {
     this.tags = const [],
     this.urgent = false,
     this.newSmartListKind,
+    this.create,
     this.confidence = 0,
     this.inlineChips = const [],
   });
@@ -104,6 +106,9 @@ class _Drop {
   final List<String> tags;
   final bool urgent;
   final SmartListKind? newSmartListKind;
+
+  /// "Yeni (alışveriş) listesi oluştur, en başa koy …" komutu (2026-11-28).
+  final QuickCreateCommand? create;
   final double confidence;
   final List<InlineParsedChip> inlineChips;
 
@@ -117,6 +122,7 @@ class _Drop {
       other.calendarDay == calendarDay &&
       other.urgent == urgent &&
       other.newSmartListKind == newSmartListKind &&
+      other.create == create &&
       other.confidence == confidence &&
       listEquals(other.ties, ties) &&
       listEquals(other.multi, multi) &&
@@ -132,6 +138,7 @@ class _Drop {
     calendarDay,
     urgent,
     newSmartListKind,
+    create,
     confidence,
     Object.hashAll(ties),
     Object.hashAll(multi),
@@ -284,6 +291,7 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
       ties: st.ties,
       multi: st.multi,
       newSmartListKind: st.newSmartListKind,
+      create: st.create,
     );
     if (targets != _targets.value) _targets.value = targets;
     final content = st.content.trim();
@@ -325,6 +333,15 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
         SmartListKind.generic => l10n.smartListGeneric,
       };
 
+  /// Yeni notun başlığı: tanınan tür adı, söylenen ad ya da (liste ise)
+  /// başlıksız.
+  String _createTitle(AppLocalizations l10n, QuickCreateCommand c) {
+    final kind = c.kind;
+    if (kind != null) return _smartKindTitle(l10n, kind);
+    if (c.title.isNotEmpty) return c.title;
+    return c.list ? l10n.smartListGeneric : l10n.newNoteShort;
+  }
+
   ({String text, bool ready}) _previewInfo(AppLocalizations l10n, _Drop st) {
     final modSuffix = [
       if (st.urgent) '!',
@@ -334,10 +351,12 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
         modSuffix.isEmpty ? base : '$base · $modSuffix';
 
     final content = st.content.trim();
-    if (_toSmartList && st.newSmartListKind != null) {
-      final title = _smartKindTitle(l10n, st.newSmartListKind!);
+    final create = st.create;
+    if (_toSmartList && create != null) {
+      final title = _createTitle(l10n, create);
+      final head = create.pin ? '$title · ${l10n.filterPinned}' : title;
       return (
-        text: withMods(content.isEmpty ? title : '$title · $content'),
+        text: withMods(content.isEmpty ? head : '$head · $content'),
         ready: true,
       );
     }
@@ -520,23 +539,61 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
       return;
     }
 
-    // 1) Yeni akıllı liste komutu: "yeni bavul listesi: pasaport, şarj"
+    // 1) Yeni not/liste komutu: "yeni bir alışveriş listesi oluştur ve en
+    // başa koy, oraya da elma armut" (konuşma) ya da "yeni bavul listesi:
+    // pasaport, şarj" (iki noktalı yazım).
     if (_chosenId == null || _chosenId == _kSmartListId) {
-      final smartCmd = parseNewSmartListCommand(text);
-      if (smartCmd != null) {
+      var create = parseCreateNoteCommand(text);
+      if (create == null) {
+        final smartCmd = parseNewSmartListCommand(text);
+        if (smartCmd != null) {
+          create = QuickCreateCommand(
+            list: true,
+            kind: smartCmd.kind,
+            content: smartCmd.content,
+          );
+        }
+      }
+      if (create != null) {
         _parsed = (
           index: null,
-          content: smartCmd.content,
+          content: create.content,
           ties: const [],
           command: true,
         );
         final next = _Drop(
           id: _kSmartListId,
-          content: smartCmd.content,
+          content: create.content,
           tags: tags,
           urgent: urgent,
-          newSmartListKind: smartCmd.kind,
+          newSmartListKind: create.kind,
+          create: create,
           confidence: 1.0,
+        );
+        if (next != _state.value) _state.value = next;
+        return;
+      }
+    }
+
+    // 1b) Açık hatırlatma isteği: "bugün saat 8'de duş alacağım bana
+    // hatırlat" → hatırlatıcılı yeni not (kullanıcı bulgusu 2026-11-28:
+    // "Hızlı not"a düşüyordu).
+    if (_chosenId == null || _chosenId == _kNewId) {
+      final remind = parseReminderCommand(text, languageCode: _locale);
+      if (remind != null) {
+        _parsed = (
+          index: null,
+          content: remind.content,
+          ties: const [],
+          command: true,
+        );
+        final next = _Drop(
+          id: _kNewId,
+          content: remind.content,
+          reminderAt: remind.at,
+          tags: tags,
+          urgent: urgent,
+          confidence: 0.95,
         );
         if (next != _state.value) _state.value = next;
         return;
@@ -560,6 +617,39 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
           tags: tags,
           urgent: urgent,
           confidence: 0.95,
+        );
+        if (next != _state.value) _state.value = next;
+        return;
+      }
+    }
+
+    // 2b) "Oraya da elma armut" / "aynı listeye süt": SON eklenen not
+    // (az önce oluşturulan liste dahil).
+    if (_chosenId == null) {
+      final deictic = parseDeicticAdd(text);
+      final recent = ref.read(quickDropRecentProvider);
+      final last = deictic == null || recent.isEmpty
+          ? null
+          : _noteOf(recent.first);
+      if (deictic != null &&
+          last != null &&
+          !last.locked &&
+          last.deletedAt == null &&
+          last.archivedAt == null) {
+        _parsed = (index: null, content: deictic, ties: const [], command: true);
+        final inline = InlineItemParser.parse(
+          deictic,
+          mode: last.listMode,
+          locale: _locale,
+          learnedGroups: ref.read(quickEntryMemoryProvider).itemGroups,
+        );
+        final next = _Drop(
+          id: last.id,
+          content: deictic,
+          tags: tags,
+          urgent: urgent,
+          confidence: 0.9,
+          inlineChips: inline.chips,
         );
         if (next != _state.value) _state.value = next;
         return;
@@ -734,6 +824,7 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
       tags: cur.tags,
       urgent: cur.urgent,
       newSmartListKind: id == _kSmartListId ? cur.newSmartListKind : null,
+      create: id == _kSmartListId ? cur.create : null,
       confidence: 1.0,
       inlineChips: inline.chips,
     );
@@ -857,6 +948,12 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     _resolve(said);
     final st = _state.value;
     final parsed = _parsed;
+    // "Yeni … listesi oluştur" kesin komuttur: içeriksiz de olsa kısa geri
+    // sayımla oluşur, hedef sorulmaz.
+    if (_toSmartList && st.create != null) {
+      now ? _apply(resolve: false) : _startCountdown(quick: true);
+      return;
+    }
     if (st.content.trim().isEmpty && st.multi.isEmpty) return;
     final quick = (parsed?.command ?? false) || endsWithAddCommand(said);
     if (_toNewNote || _toQuickInbox || st.multi.isNotEmpty) {
@@ -1208,58 +1305,74 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     final keepOpen = ref.read(quickDropKeepOpenProvider);
     final navContext = Navigator.of(context).context;
 
-    // 1) Yeni akıllı liste komutu: "yeni bavul listesi: pasaport, şarj"
-    if (_toSmartList && st.newSmartListKind != null) {
-      final kind = st.newSmartListKind!;
+    // 1) Yeni not/liste komutu ("yeni alışveriş listesi oluştur, en başa
+    // koy …", "yeni bavul listesi: pasaport, şarj").
+    if (_toSmartList && st.create != null) {
+      final cmd = st.create!;
+      final kind = cmd.kind;
       final l10n = context.l10n;
-      final title = _smartKindTitle(l10n, kind);
+      final title = kind != null ? _smartKindTitle(l10n, kind) : cmd.title;
       final messenger = ScaffoldMessenger.of(context);
       final raw = st.content.trim();
-      final listId = smartListKindId(kind);
-      final List<NoteItem> items;
-      if (raw.isEmpty) {
-        items = const [];
-      } else {
-        final stub = Note(
-          id: '',
-          type: NoteType.checklist,
+      final Future<String> created;
+      if (!cmd.list) {
+        created = repo.createRichNote(
+          NoteType.text,
           title: title,
+          body: raw,
+          tags: st.tags,
+          urgent: st.urgent,
+        );
+      } else {
+        final listId = kind == null ? null : smartListKindId(kind);
+        final List<NoteItem> items;
+        if (raw.isEmpty) {
+          items = const [];
+        } else {
+          final stub = Note(
+            id: '',
+            type: NoteType.checklist,
+            title: title,
+            listKind: listId,
+            listMode: listModeFromLegacyKind(listId),
+          );
+          final res = quickDropFields(
+            stub,
+            raw,
+            locale: l10n.localeName,
+            memory: ref.read(quickEntryMemoryProvider),
+          );
+          final rawItems = res.fields['items'] as List? ?? const [];
+          items = [
+            for (final m in rawItems)
+              if (m is Map<String, dynamic>) NoteItem.fromMap(m),
+          ];
+        }
+        created = repo.createRichNote(
+          NoteType.checklist,
+          title: title,
+          items: items,
+          tags: st.tags,
+          urgent: st.urgent,
           listKind: listId,
           listMode: listModeFromLegacyKind(listId),
+          resetSchedule: defaultResetScheduleForLegacyKind(listId),
         );
-        final res = quickDropFields(
-          stub,
-          raw,
-          locale: l10n.localeName,
-          memory: ref.read(quickEntryMemoryProvider),
-        );
-        final rawItems = res.fields['items'] as List? ?? const [];
-        items = [
-          for (final m in rawItems)
-            if (m is Map<String, dynamic>) NoteItem.fromMap(m),
-        ];
       }
       unawaited(
-        repo
-            .createRichNote(
-              NoteType.checklist,
-              title: title,
-              items: items,
-              tags: st.tags,
-              urgent: st.urgent,
-              listKind: listId,
-              listMode: listModeFromLegacyKind(listId),
-              resetSchedule: defaultResetScheduleForLegacyKind(listId),
-            )
-            .then((id) {
-              recentNotifier.remember(id);
-              focusNotifier.focus(id);
-            }),
+        created.then((id) {
+          // "En başa koy": sabitlenir — liste ne sıralanırsa en üstte durur.
+          if (cmd.pin) repo.updateFields(id, {'pinned': true});
+          recentNotifier.remember(id);
+          focusNotifier.focus(id);
+        }),
       );
       _finishAfterApply(keepOpen: keepOpen);
       messenger
         ..hideCurrentSnackBar()
-        ..showMessage(l10n.quickListSaved(title));
+        ..showMessage(
+          l10n.quickListSaved(title.isEmpty ? l10n.newNoteShort : title),
+        );
       return;
     }
 
@@ -1631,12 +1744,14 @@ class _QuickDropSheetState extends ConsumerState<QuickDropSheet>
     AppLocalizations l10n,
     _Drop st,
   ) {
-    if (st.id == _kSmartListId && st.newSmartListKind != null) {
+    final create = st.create;
+    if (st.id == _kSmartListId && create != null) {
+      final kind = create.kind;
       return (
-        icon:
-            kSmartKindSpecs[st.newSmartListKind!]?.icon ??
-            Icons.auto_awesome_outlined,
-        label: _smartKindTitle(l10n, st.newSmartListKind!),
+        icon: kind != null
+            ? (kSmartKindSpecs[kind]?.icon ?? Icons.auto_awesome_outlined)
+            : (create.list ? Icons.checklist_rounded : Icons.add),
+        label: _createTitle(l10n, create),
       );
     }
     if (st.id == _kNewId) {

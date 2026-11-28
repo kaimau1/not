@@ -74,6 +74,38 @@ void main() {
     });
   });
 
+  group('çok maddeli not (kullanıcı bulgusu 2026-11-28)', () {
+    // 411 işaretli maddelik bir fikir notu: içinde "ekmek", "koy", "yeni
+    // liste" gibi kısa maddeler var. Eski kural maddenin metni cümlede ALT
+    // DİZGE olarak geçince 0,76 veriyordu → konuşma bu nota gidiyordu.
+    final big = Note(
+      id: 'notlar',
+      type: NoteType.checklist,
+      title: 'Notlar',
+      tags: const ['yazilim'],
+      items: [
+        const NoteItem(id: 'b0', text: 'ekmek', checked: true),
+        const NoteItem(id: 'b1', text: 'koy', checked: true),
+        const NoteItem(id: 'b2', text: 'yeni liste', checked: true),
+        for (var i = 3; i < 411; i++)
+          NoteItem(id: 'b$i', text: 'Arka plan rengi düzeltilmeli $i', checked: true),
+      ],
+    );
+    test('uzun cümle tek kısa madde yüzünden o nota gitmez', () {
+      for (final s in [
+        'Eee oraya da elma armut peynir ekmek',
+        'Yeni bir alışveriş listesi oluştur ve en başa koy',
+      ]) {
+        final r = SmartTargetRouter.route(s, [big], locale: 'tr');
+        expect(r.noteId, isNot('notlar'), reason: s);
+      }
+    });
+    test('maddenin kendisi yine o nota gider', () {
+      final r = SmartTargetRouter.route('yeni liste', [big], locale: 'tr');
+      expect(r.noteId, 'notlar');
+    });
+  });
+
   group('MultiIntentSplitter', () {
     test('tek nefeste 3 farklı niyeti 3 ayrı listeye böler', () {
       final segments = MultiIntentSplitter.split(

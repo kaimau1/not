@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 28 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Hızlı ekle niyetleri + Hızlı liste sesle anında ekleme, reyonlar, 3 sütun, zemin (28 Kasım akşam, bulutta yazıldı — cihazda doğrulanmadı; A/B yapılamadı, cihaz yoktu)**
+  Nerede/Nasıl: (1) ⚡ Hızlı ekle → "Yeni bir alışveriş listesi oluştur ve en başa koy, eee oraya da elma armut peynir ekmek" de → yeni sabit "Alışveriş listesi" içinde Elma/Armut/Peynir/Ekmek mi; başka nota bir şey yazılmadı mı. Sonra "oraya da süt" → aynı listeye mi. (2) Akşam "bugün saat 8'de duş alacağım bana hatırlat" → hedef "Yeni not", çip "Bugün 20:00" mı; eklenince 20:00 hatırlatıcılı not mu. (3) Alışveriş şablonu → 🎤 "ekmek armut" → armut hemen görünüyor mu; "tavuk ... (kısa dur) ... göğsü" → tek "Tavuk göğsü" mü. (4) Maddeler reyon başlıkları altında mı; sütun düğmesi 2 → 3 → 1, üç sütunda adlar okunuyor mu; ⋮ → Ana ekran zemini → zemin hızlı listede de görünüyor mu, yazılar okunuyor mu. (5) Görünüm ve süz'de "Paylaşılanlar altta" yok mu.
+  Yanlışsa: madde numarasını yaz, ekran görüntüsü/kaydı at.
+
 - [ ] **Hızlı ekle donması düzeltildi (28 Kasım, bulutta yazıldı, cihazda doğrulanmadı)**
   Nerede/Nasıl: Ana ekran → ⚡ Hızlı ekle → hem klavyeyle hem mikrofonla uzun bir cümle söyle/yaz ("notlarda geliştirmeler yapılmalı, süt al ve ekmek"). Her harfte takılma, donma ya da kapanma olmamalı. Rutin listede ekleme kutusunda "Örn. 8 bardak su…" yazmalı.
   Yanlışsa: ekran görüntüsü at.

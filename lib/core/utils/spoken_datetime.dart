@@ -552,7 +552,13 @@ bool _hasAny(String text, List<String> words) =>
 /// Metindeki saat bilgisi. Rastgele sayıları saat sanmamak için sayı
 /// MUTLAKA bir saat ipucuna bağlı olmalı: "14:30", "saat 9", "9'da",
 /// "9 buçuk", "9 pm". Yoksa yalnızca günün bölümü (sabah/akşam…) kullanılır.
-({int hour, int minute})? _parseTime(String text, _SpokenLanguage lang) {
+/// [ambiguous]: 1–11 arası saat, sabah/akşam ya da am/pm söylenmemiş ("saat
+/// 8'de", "8:30") — konuşmada öğleden sonrası da olabilir (bkz.
+/// [_preferLater]).
+({int hour, int minute, bool ambiguous})? _parseTime(
+  String text,
+  _SpokenLanguage lang,
+) {
   String? part;
   for (final name in lang.parts.keys) {
     if (_hasWord(text, name)) {
@@ -593,9 +599,16 @@ bool _hasAny(String text, List<String> words) =>
 
   if (hour == null) {
     if (part == null) return null;
-    return (hour: lang.parts[part]!, minute: 0);
+    return (hour: lang.parts[part]!, minute: 0, ambiguous: false);
   }
   if (hour > 23 || minute > 59) return null;
+  final ambiguous =
+      hour >= 1 &&
+      hour <= 11 &&
+      !meridiemAm &&
+      !meridiemPm &&
+      part == null &&
+      (explicit == null || !explicit.group(1)!.startsWith('0'));
   // "9 pm" → 21:00, "12 am" → 00:00.
   if (meridiemPm && hour < 12) hour += 12;
   if (meridiemAm && hour == 12) hour = 0;
@@ -607,7 +620,18 @@ bool _hasAny(String text, List<String> words) =>
       hour < 12) {
     hour += 12;
   }
-  return (hour: hour, minute: minute);
+  return (hour: hour, minute: minute, ambiguous: ambiguous);
+}
+
+/// GEÇMİŞ SAAT ÖĞLEDEN SONRASI (kullanıcı bulgusu 2026-11-28: saat 17:31'de
+/// "bugün saat 8'de duş alacağım bana hatırlat" → 08:00 geçmiş sayılıp
+/// hatırlatıcı kurulmuyordu). Sabah/akşam söylenmemiş 1–11 arası saat
+/// bugünün geçmişindeyse ve 12 saat sonrası hâlâ bugünse o kastedilmiştir
+/// ("saat 8" akşam 20:00).
+DateTime? _preferLater(DateTime result, DateTime reference) {
+  final later = result.add(const Duration(hours: 12));
+  if (later.isAfter(reference) && later.day == result.day) return later;
+  return null;
 }
 
 /// Metindeki günü verir: gün bulunamazsa null (saat varsa çağıran bugüne
@@ -669,6 +693,11 @@ DateTime? parseSpokenDateTime(
   );
 
   if (result.isAfter(reference)) return result;
+  final today = DateTime(reference.year, reference.month, reference.day);
+  if (time != null && time.ambiguous && (day == null || day == today)) {
+    final later = _preferLater(result, reference);
+    if (later != null) return later;
+  }
   // Gün açıkça söylendiyse geçmişe kurulmaz (kullanıcı geçmiş bir günü
   // kastetmiştir, hatırlatıcı anlamsız).
   if (day != null) return null;
@@ -838,6 +867,14 @@ DateTime? parseSpokenDateTimeNow(String text, {DateTime? now}) =>
   }
 
   ({int hour, int minute})? time;
+  final ambiguous =
+      hour != null &&
+      hour >= 1 &&
+      hour <= 11 &&
+      !meridiemAm &&
+      !meridiemPm &&
+      part == null &&
+      (explicitColon == null || !explicitColon.group(1)!.startsWith('0'));
   if (hour == null) {
     if (part != null) {
       time = (hour: lang.parts[part]!, minute: 0);
@@ -868,6 +905,11 @@ DateTime? parseSpokenDateTimeNow(String text, {DateTime? now}) =>
     time?.hour ?? 9,
     time?.minute ?? 0,
   );
+  if (!result.isAfter(reference) &&
+      ambiguous &&
+      (day == null || day == today)) {
+    result = _preferLater(result, reference) ?? result;
+  }
   if (!result.isAfter(reference)) {
     if (day != null) {
       // "bugün" söylendi ama saat 09:00 geçtiyse günü koru (görev teslim tarihi).

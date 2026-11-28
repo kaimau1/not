@@ -89,8 +89,11 @@ class _DropV2Repo implements NotesRepository {
     ContextTimeSlot contextTimeSlot = ContextTimeSlot.any,
     bool isQuickInbox = false,
   }) async {
+    plainCreated.add((type: type, body: body, reminderAt: reminderAt));
     return 'plain-1';
   }
+
+  final plainCreated = <({NoteType type, String body, DateTime? reminderAt})>[];
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -264,5 +267,216 @@ void main() {
         await tester.pumpAndSettle();
       },
     );
+
+    // Kullanıcı bulgusu 2026-11-28: konuşmada "yeni bir alışveriş listesi
+    // oluştur ve en başa koy, eee oraya da elma armut peynir ekmek" — yeni
+    // liste açılmıyor, cümleler başka nota madde oluyordu.
+    testWidgets('sesli "yeni alışveriş listesi oluştur, en başa koy" yeni '
+        'sabit liste açar; "oraya da" son nota gider', (tester) async {
+      SharedPreferences.setMockInitialValues({
+        'quick_drop_recent': ['big'],
+      });
+      final prefs = await SharedPreferences.getInstance();
+      final repo = _DropV2Repo();
+      final notes = [
+        Note(
+          id: 'big',
+          type: NoteType.checklist,
+          title: 'Notlar',
+          items: [
+            const NoteItem(id: 'b0', text: 'ekmek', checked: true),
+            const NoteItem(id: 'b1', text: 'koy', checked: true),
+            for (var i = 2; i < 60; i++)
+              NoteItem(id: 'b$i', text: 'Arka plan rengi $i', checked: true),
+          ],
+        ),
+      ];
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+            notesRepositoryProvider.overrideWithValue(repo),
+            notesStreamProvider.overrideWithValue(AsyncData(notes)),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: const Locale('tr'),
+            home: Scaffold(
+              body: Builder(
+                builder: (ctx) => Center(
+                  child: ElevatedButton(
+                    onPressed: () => showQuickDropSheet(ctx),
+                    child: const Text('open'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('quick-drop-settings')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('quick-drop-keep-open')));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const ValueKey('quick-entry-field')),
+        'Yeni bir alışveriş listesi oluştur ve en başa koy eee oraya da '
+        'elma armut peynir ekmek',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('quick-drop-add')));
+      await tester.pumpAndSettle();
+
+      expect(repo.richCreated, hasLength(1));
+      final created = repo.richCreated.single;
+      expect(created.type, NoteType.checklist);
+      expect(created.listKind, 'shopping');
+      expect(created.title, 'Alışveriş listesi');
+      expect(
+        [for (final i in created.items!) i.text],
+        ['Elma', 'Armut', 'Peynir', 'Ekmek'],
+      );
+      expect(
+        repo.updates.where((u) => u.id == 'rich-1' && u.fields['pinned'] == true),
+        hasLength(1),
+        reason: '"en başa koy" → sabitlenmeli',
+      );
+      // Büyük nota HİÇBİR şey yazılmadı.
+      expect(repo.updates.where((u) => u.id == 'big'), isEmpty);
+
+      // Az önce oluşturulan liste "son not" olur: ardından söylenen
+      // "oraya da …" ona gider.
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(Scaffold).first),
+      );
+      expect(container.read(quickDropRecentProvider).first, 'rich-1');
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('"… bana hatırlat" hatırlatıcılı yeni not olur', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final repo = _DropV2Repo();
+      const notes = [
+        Note(
+          id: 'm',
+          type: NoteType.checklist,
+          title: 'Alışveriş listesi',
+          listKind: 'shopping',
+          items: [NoteItem(id: 'm1', text: 'Süt')],
+        ),
+      ];
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+            notesRepositoryProvider.overrideWithValue(repo),
+            notesStreamProvider.overrideWithValue(const AsyncData(notes)),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: const Locale('tr'),
+            home: Scaffold(
+              body: Builder(
+                builder: (ctx) => Center(
+                  child: ElevatedButton(
+                    onPressed: () => showQuickDropSheet(ctx),
+                    child: const Text('open'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('quick-entry-field')),
+        'yarın saat 10:30 diş randevusu bana hatırlat',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('quick-drop-add')));
+      await tester.pumpAndSettle();
+      expect(repo.plainCreated, hasLength(1));
+      final c = repo.plainCreated.single;
+      expect(c.type, NoteType.text);
+      expect(c.body, 'Diş randevusu');
+      final tomorrow = DateTime.now().add(const Duration(days: 1));
+      expect(
+        c.reminderAt,
+        DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 10, 30),
+      );
+      expect(repo.updates, isEmpty, reason: 'mevcut nota yazılmamalı');
+    });
+
+    testWidgets('"Eee oraya da …" son eklenen nota yazar', (tester) async {
+      SharedPreferences.setMockInitialValues({
+        'quick_drop_recent': ['ev'],
+      });
+      final prefs = await SharedPreferences.getInstance();
+      final repo = _DropV2Repo();
+      const notes = [
+        Note(
+          id: 'ev',
+          type: NoteType.checklist,
+          title: 'Ev işleri',
+          items: [NoteItem(id: 'e1', text: 'Çamaşır')],
+        ),
+        Note(
+          id: 'm',
+          type: NoteType.checklist,
+          title: 'Market',
+          listKind: 'shopping',
+          items: [NoteItem(id: 'm1', text: 'Süt')],
+        ),
+      ];
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+            notesRepositoryProvider.overrideWithValue(repo),
+            notesStreamProvider.overrideWithValue(const AsyncData(notes)),
+          ],
+          child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: const Locale('tr'),
+            home: Scaffold(
+              body: Builder(
+                builder: (ctx) => Center(
+                  child: ElevatedButton(
+                    onPressed: () => showQuickDropSheet(ctx),
+                    child: const Text('open'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('quick-entry-field')),
+        'Eee oraya da bulaşık yıka',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('quick-drop-add')));
+      await tester.pumpAndSettle();
+      final written = repo.updates.where((u) => u.id == 'ev').toList();
+      expect(written, hasLength(1));
+      final items = (written.single.fields['items'] as List)
+          .cast<Map<String, dynamic>>();
+      expect(items.last['text'], 'Bulaşık yıka');
+      expect(repo.updates.where((u) => u.id == 'm'), isEmpty);
+    });
   });
 }

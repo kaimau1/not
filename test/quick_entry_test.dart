@@ -214,4 +214,35 @@ void main() {
     expect([for (final i in r.items) i.text], ['Faturayı öde', 'Annemi ara']);
     expect(p.parse('faturayı öde, annemi').rest, 'annemi');
   });
+
+  // Kullanıcı bulgusu 2026-11-28: "tavuk göğsü" kısa duraklamada iki madde.
+  group('tamlama başı (izafet) ve konuşma bölütleri', () {
+    final lex = buildQuickLexicon(locale: 'tr', grocery: true);
+    final p = buildQuickParser(lex, spell: SpellMemory());
+    List<String> parse(String s) => [
+      for (final i in p.parse(quickJoinSpeechSegments(s, lex), flush: true)
+          .items)
+        i.text,
+    ];
+    test('bölüt sınırı öbeği bölmez, iki maddeyi ayırmaya devam eder', () {
+      expect(parse('peynir tavuk\ngöğsü'), ['Peynir', 'Tavuk göğsü']);
+      expect(parse('domates\nsalçası'), ['Domates salçası']);
+      expect(parse('süt\nekmek'), ['Süt', 'Ekmek']);
+    });
+    test('bilinmeyen tamlama yakın eşleşmeye düşmez', () {
+      expect(parse('kuzu kolu ekmek'), ['Kuzu kolu', 'Ekmek']);
+    });
+    test('kökü ı/i ile biten bilinmeyen kelime yapışmaz', () {
+      expect(parse('süt zımbırtı, elma'), ['Süt', 'Zımbırtı', 'Elma']);
+      expect(parse('ekmek hepsi'), isNot(contains('Ekmek hepsi')));
+    });
+    test('quickLooksPossessive', () {
+      for (final w in ['göğsü', 'salçası', 'kolisi', 'suyu', 'eti']) {
+        expect(quickLooksPossessive(w), isTrue, reason: w);
+      }
+      for (final w in ['zımbırtı', 'kivi', 'hepsi', 'pepsi', 'elma']) {
+        expect(quickLooksPossessive(w), isFalse, reason: w);
+      }
+    });
+  });
 }

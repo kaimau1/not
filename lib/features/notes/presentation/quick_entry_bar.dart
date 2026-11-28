@@ -35,6 +35,8 @@ class QuickEntryBar extends ConsumerStatefulWidget {
     super.key,
     required this.parser,
     required this.onItems,
+    this.onSpokenItems,
+    this.onSpokenDone,
     this.onTrailingQty,
     this.onSubmittedEmpty,
     this.focusNode,
@@ -60,6 +62,19 @@ class QuickEntryBar extends ConsumerStatefulWidget {
 
   /// Yeni çıkan maddeler (sırayla).
   final ValueChanged<List<QuickItem>> onItems;
+
+  /// KONUŞMA ANINDA MADDE (kullanıcı isteği 2026-11-28: "ekmek armut
+  /// diyorum, armut bekliyor; elma deyince armutu ekliyor. Direkt eklensin,
+  /// gerekirse değiştirilsin"). Verilirse konuşmanın her sonucunda bu
+  /// oturumun TÜM maddeleri (son kelime dahil) verilir; çağıran öncekiyle
+  /// uzlaştırır: "tavuk" eklenir, ardından "göğsü" gelince aynı satır
+  /// "Tavuk göğsü" olur. Boş sonuç gönderilmez (yalın "bitti" dışında).
+  /// Verilmezse eski yol: son kelime bir sonraki gelene kadar bekler ve
+  /// [onItems] ile çıkar.
+  final ValueChanged<List<QuickItem>>? onSpokenItems;
+
+  /// [onSpokenItems] oturumu bitti: sonraki sonuç YENİ oturumdur.
+  final VoidCallback? onSpokenDone;
 
   /// Maddesiz kalan miktar ("3 kg" + Enter): son eklenen maddeye yapışır.
   final ValueChanged<String>? onTrailingQty;
@@ -419,12 +434,29 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
       _watchAddWord(full);
       return;
     }
+    final spoken = widget.onSpokenItems;
+    if (spoken != null) {
+      if (full.trim().isEmpty) return;
+      final joined = quickJoinSpeechSegments(full, widget.parser.lexicon);
+      final r = widget.parser.parse(joined, flush: true);
+      spoken(r.items);
+      _heard.value = _tailOf(joined);
+      return;
+    }
     final r = widget.parser.parse(full);
     if (r.items.length > _spokenCount) {
       widget.onItems(r.items.sublist(_spokenCount));
       _spokenCount = r.items.length;
     }
     _heard.value = r.rest.trim();
+  }
+
+  /// Dinleme satırında gösterilen son söz (en çok üç kelime).
+  static String _tailOf(String text) {
+    final words = text.trim().split(RegExp(r'\s+'));
+    return words.length <= 3
+        ? words.join(' ')
+        : words.sublist(words.length - 3).join(' ');
   }
 
   /// Sonda "ekle" varsa kısa sessizlik bekler; yeni (farklı) söz gelirse
@@ -474,6 +506,8 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
       _setFromSpeech(text);
       _spoken = '';
     } else {
+      // Yalın "bitti": ara sonuçtan anında eklenmiş "bit…" satırı kalmasın.
+      if (rest.trim().isEmpty) widget.onSpokenItems?.call(const []);
       _spoken = rest;
       _finishSpeech();
     }
@@ -496,6 +530,20 @@ class QuickEntryBarState extends ConsumerState<QuickEntryBar> {
   void _finishSpeech() {
     if (widget.raw) {
       _spoken = '';
+      return;
+    }
+    final spoken = widget.onSpokenItems;
+    if (spoken != null) {
+      if (_spoken.trim().isNotEmpty) {
+        final joined = quickJoinSpeechSegments(_spoken, widget.parser.lexicon);
+        final r = widget.parser.parse(joined, flush: true);
+        spoken(r.items);
+        if (r.trailingQty.isNotEmpty) widget.onTrailingQty?.call(r.trailingQty);
+      }
+      widget.onSpokenDone?.call();
+      _spoken = '';
+      _spokenCount = 0;
+      _heard.value = '';
       return;
     }
     final r = widget.parser.parse(_spoken, flush: true);

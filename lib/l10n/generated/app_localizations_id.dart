@@ -2065,6 +2065,9 @@ class AppLocalizationsId extends AppLocalizations {
   String get listTwoColumns => 'Dua kolom';
 
   @override
+  String get listThreeColumns => 'Tiga kolom';
+
+  @override
   String get listOneColumn => 'Satu kolom';
 
   @override
@@ -5188,16 +5191,6 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get homeShowSharedShort => 'Tampilkan catatan bersama';
-
-  @override
-  String get homeSharedAtBottom => 'Catatan bersama di bawah milikku';
-
-  @override
-  String get homeSharedAtBottomInfo =>
-      'Jika aktif, catatan bersama berada di bawah catatanmu.';
-
-  @override
-  String get homeSharedAtBottomShort => 'Catatan bersama di bawah';
 
   @override
   String get homeSharedSection => 'Bersama';

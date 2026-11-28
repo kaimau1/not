@@ -2051,6 +2051,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listTwoColumns => 'Two columns';
 
   @override
+  String get listThreeColumns => 'Three columns';
+
+  @override
   String get listOneColumn => 'Single column';
 
   @override
@@ -5164,16 +5167,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeShowSharedShort => 'Show shared notes';
-
-  @override
-  String get homeSharedAtBottom => 'Shared notes below mine';
-
-  @override
-  String get homeSharedAtBottomInfo =>
-      'When on, shared notes sit below your own notes.';
-
-  @override
-  String get homeSharedAtBottomShort => 'Shared notes at bottom';
 
   @override
   String get homeSharedSection => 'Shared';

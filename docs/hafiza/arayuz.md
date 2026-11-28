@@ -59,8 +59,8 @@ HAFIZA.md'den cümle değiştirilmeden taşındı (F58.2, 2026-11-10). Tam eski 
   ekranı süzer (`sharedHubOnHomeProvider`), "Gelen" klasörü cihaz tercihi.
   Çip sayısı listeyle AYNI süzgeç (`sharedNotesVisibleCountProvider`: çöpteki/
   silinmiş/kendi aynası sayılmaz — 2026-11-05 "boşken 1 görünüyor").
-  Paylaşılanlar ayrı bölüm (`home_show_shared`, yer
-  `homeSharedAtBottomProvider`).
+  Paylaşılanlar ayrı bölüm (`home_show_shared`, ana ekranın tepesinde;
+  "Paylaşılanlar altta" seçeneği 2026-11-28 kullanıcı isteğiyle KALKTI).
 - Süz düğmesi arama kutusunun içinde; varsayılan sıralama "Son güncellenen"
   (`migrateDefaultNoteSort`).
 - Kartta görünenler `card_show_*`; kart TEK semantik düğüm, ⋮ ayrı.

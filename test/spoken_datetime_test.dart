@@ -158,4 +158,29 @@ void main() {
       isNull,
     );
   });
+
+  // Kullanıcı bulgusu 2026-11-28: 17:31'de "bugün saat 8'de" geçmiş sayılıp
+  // hatırlatıcı kurulmuyordu — konuşmada akşam 20:00 kastedilir.
+  test('sabah/akşam söylenmemiş geçmiş saat öğleden sonrasıdır', () {
+    final at1731 = DateTime(2026, 11, 28, 17, 31);
+    DateTime? p(String t, DateTime n) => parseSpokenDateTime(t, now: n);
+    expect(p("bugün saat 8'de duş", at1731), DateTime(2026, 11, 28, 20));
+    expect(p("saat 8'de duş", at1731), DateTime(2026, 11, 28, 20));
+    expect(
+      parseSpokenDateTimeWithSpan("bugün saat 8'de duş", now: at1731)?.at,
+      DateTime(2026, 11, 28, 20),
+    );
+    // Sabah açıkça söylendi: akşama çevrilmez.
+    expect(p('bugün sabah 8 de duş', at1731), isNull);
+    // Sabah 7'de "saat 8" hâlâ sabah 8.
+    expect(
+      p('saat 8 de duş', DateTime(2026, 11, 28, 7)),
+      DateTime(2026, 11, 28, 8),
+    );
+    // Gece 21'de "saat 8" yarın sabah (akşam 8 de geçti).
+    expect(
+      p('saat 8 de duş', DateTime(2026, 11, 28, 21)),
+      DateTime(2026, 11, 29, 8),
+    );
+  });
 }

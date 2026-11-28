@@ -3818,6 +3818,12 @@ abstract class AppLocalizations {
   /// **'2 sütun'**
   String get listTwoColumns;
 
+  /// No description provided for @listThreeColumns.
+  ///
+  /// In tr, this message translates to:
+  /// **'3 sütun'**
+  String get listThreeColumns;
+
   /// No description provided for @listOneColumn.
   ///
   /// In tr, this message translates to:
@@ -9181,24 +9187,6 @@ abstract class AppLocalizations {
   /// In tr, this message translates to:
   /// **'Paylaşılan notları göster'**
   String get homeShowSharedShort;
-
-  /// No description provided for @homeSharedAtBottom.
-  ///
-  /// In tr, this message translates to:
-  /// **'Paylaşılanlar notlarımın altında'**
-  String get homeSharedAtBottom;
-
-  /// No description provided for @homeSharedAtBottomInfo.
-  ///
-  /// In tr, this message translates to:
-  /// **'Açıkken paylaşılan notlar kendi notlarının altında durur.'**
-  String get homeSharedAtBottomInfo;
-
-  /// No description provided for @homeSharedAtBottomShort.
-  ///
-  /// In tr, this message translates to:
-  /// **'Paylaşılanlar altta'**
-  String get homeSharedAtBottomShort;
 
   /// No description provided for @homeSharedSection.
   ///
