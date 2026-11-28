@@ -9712,6 +9712,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get listModeQuickAddHint => 'e.g. 2 kg tomatoes, coffee \$6…';
 
   @override
+  String get listModeQuickAddHintRoutine =>
+      'e.g. 8 glasses of water, 20 min walk…';
+
+  @override
+  String get listModeQuickAddHintProject =>
+      'e.g. prepare slides tomorrow !high…';
+
+  @override
+  String get listModeQuickAddHintGeneral => 'Write a new item…';
+
+  @override
   String get ghostSuggestionsTitle => 'Suggested items';
 
   @override

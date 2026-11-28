@@ -9,6 +9,10 @@ oraya bakman gerekmez. Son güncelleme: 28 Kasım 2026.)
 
 ## Telefonda bak
 
+- [ ] **Hızlı ekle donması düzeltildi (28 Kasım, bulutta yazıldı, cihazda doğrulanmadı)**
+  Nerede/Nasıl: Ana ekran → ⚡ Hızlı ekle → hem klavyeyle hem mikrofonla uzun bir cümle söyle/yaz ("notlarda geliştirmeler yapılmalı, süt al ve ekmek"). Her harfte takılma, donma ya da kapanma olmamalı. Rutin listede ekleme kutusunda "Örn. 8 bardak su…" yazmalı.
+  Yanlışsa: ekran görüntüsü at.
+
 - [ ] **Birleşik Görünüm stüdyosu, Arayüz düzeni, Ekler yenilemesi ve sabit medya klavyesi (28 Kasım — MatePad 11 tablet `9006`/`9007` ve Chrome Web'de doğrulandı; Android telefon kontrolü açık)**
   Nerede/Nasıl: (1) Ana ekran / Ayarlar / Takvim / Not içinden Görünüm stüdyosunu aç → her temada **Otomatik / Açık / Koyu** tek satırda taşmadan duruyor mu (`360 dp` dahil); **"Notlara da uygula"** açıkken özel zemini olmayan notlar ana ekran zeminini alıyor mu. (2) Ayarlar → **Arayüz düzeni** → 4 katlanabilir başlık temiz görünüyor mu. (3) Telefonda sabit görsel/PDF varken klavyeyi aç → yazı alanı ferah mı, **Küçült** ve **Klavyeyi gizle** düğmeleri çalışıyor mu; karışık çoklu ek seçimi, tüm yüzeylerde yeniden adlandırma ve ek şeridi **Tümü** yöneticisi düzgün mü.
   Yanlışsa: ekran görüntüsü at. *(Not: MatePad 11 `9007`'de stüdyo, Arayüz düzeni, Şablonlar v2, Akıllı Liste v2 ve sabit PDF `Küçült`/`Klavyeyi gizle` ile Chrome Web'de sol ray kip geçişi/`"Botanik bahçe"` zemin yayılımı/ekler akışı doğrulandı; dar ekran `"Otomatik"` satır sarma düzeltmesi `9007`'de doğrulandı.)*

@@ -9760,6 +9760,15 @@ class AppLocalizationsMs extends AppLocalizations {
   String get listModeQuickAddHint => 'Cth. 2 kg tomato, kopi RM12…';
 
   @override
+  String get listModeQuickAddHintRoutine => 'Cth. 8 gelas air, jalan 20 minit…';
+
+  @override
+  String get listModeQuickAddHintProject => 'Cth. sediakan slaid esok !tinggi…';
+
+  @override
+  String get listModeQuickAddHintGeneral => 'Tulis item baharu…';
+
+  @override
   String get ghostSuggestionsTitle => 'Item dicadangkan';
 
   @override

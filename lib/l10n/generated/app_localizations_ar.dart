@@ -9659,6 +9659,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get listModeQuickAddHint => 'مثلاً 2 كغ طماطم، قهوة 50 ر.س…';
 
   @override
+  String get listModeQuickAddHintRoutine => 'مثلاً 8 أكواب ماء، مشي 20 دقيقة…';
+
+  @override
+  String get listModeQuickAddHintProject => 'مثلاً جهّز العرض غداً !عالية…';
+
+  @override
+  String get listModeQuickAddHintGeneral => 'اكتب عنصراً جديداً…';
+
+  @override
   String get ghostSuggestionsTitle => 'عناصر مقترحة';
 
   @override

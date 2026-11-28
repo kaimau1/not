@@ -17210,6 +17210,24 @@ abstract class AppLocalizations {
   /// **'Örn. 2 kg domates, kahve 180 tl…'**
   String get listModeQuickAddHint;
 
+  /// No description provided for @listModeQuickAddHintRoutine.
+  ///
+  /// In tr, this message translates to:
+  /// **'Örn. 8 bardak su, 20 dk yürüyüş…'**
+  String get listModeQuickAddHintRoutine;
+
+  /// No description provided for @listModeQuickAddHintProject.
+  ///
+  /// In tr, this message translates to:
+  /// **'Örn. sunumu hazırla yarın !yüksek…'**
+  String get listModeQuickAddHintProject;
+
+  /// No description provided for @listModeQuickAddHintGeneral.
+  ///
+  /// In tr, this message translates to:
+  /// **'Yeni madde yaz…'**
+  String get listModeQuickAddHintGeneral;
+
   /// No description provided for @ghostSuggestionsTitle.
   ///
   /// In tr, this message translates to:

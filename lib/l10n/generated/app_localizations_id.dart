@@ -9752,6 +9752,16 @@ class AppLocalizationsId extends AppLocalizations {
   String get listModeQuickAddHint => 'Mis. 2 kg tomat, kopi 25000 rp…';
 
   @override
+  String get listModeQuickAddHintRoutine => 'Mis. 8 gelas air, jalan 20 menit…';
+
+  @override
+  String get listModeQuickAddHintProject =>
+      'Mis. siapkan presentasi besok !tinggi…';
+
+  @override
+  String get listModeQuickAddHintGeneral => 'Tulis item baru…';
+
+  @override
   String get ghostSuggestionsTitle => 'Item disarankan';
 
   @override

@@ -308,8 +308,10 @@ NoteTemplateContent buildNoteTemplate(
       l10n.tplTravelName,
       _split(l10n.tplTravelItems),
     ),
+    // Tarihsiz: rutin her gün sıfırlanır, başlıktaki gün ertesi gün yanlış
+    // kalıyordu (kullanıcı 2026-11-28: "alışkanlık takibi düzeltilmeli").
     NoteTemplate.habits => list(
-      '${l10n.tplHabitsName} · $shortDate',
+      l10n.tplHabitsName,
       _split(l10n.tplHabitsItems),
     ),
     NoteTemplate.cleaning => list(

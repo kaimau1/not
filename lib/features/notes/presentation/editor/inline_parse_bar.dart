@@ -190,7 +190,15 @@ class _InlineParseBarState extends State<InlineParseBar> {
                   onSubmitted: (_) => _submit(),
                   style: theme.textTheme.bodyMedium,
                   decoration: InputDecoration(
-                    hintText: l10n.listModeQuickAddHint,
+                    // Kipe göre ipucu: rutin listede "domates" örneği
+                    // kipleri birbirine karıştırıyordu (kullanıcı 2026-11-28).
+                    hintText: switch (widget.mode) {
+                      ListMode.shopping => l10n.listModeQuickAddHint,
+                      ListMode.routine => l10n.listModeQuickAddHintRoutine,
+                      ListMode.project => l10n.listModeQuickAddHintProject,
+                      ListMode.template ||
+                      ListMode.general => l10n.listModeQuickAddHintGeneral,
+                    },
                     hintStyle: theme.textTheme.bodyMedium?.copyWith(
                       color: scheme.onSurfaceVariant.withValues(alpha: AppAlpha.muted),
                     ),

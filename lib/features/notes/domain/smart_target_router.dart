@@ -333,14 +333,13 @@ class SmartTargetRouter {
       final noteMode = note.listMode != ListMode.general
           ? note.listMode
           : listModeFromLegacyKind(note.listKind);
-      final noteKind = detectNoteListKind(note, locale: locale);
+      final profile = _profileOf(note, locale);
+      final noteKind = profile.kind;
       final isShoppingNote =
           note.type != NoteType.text &&
           (noteMode == ListMode.shopping ||
               noteKind == SmartListKind.shopping ||
-              looksLikeGrocery(note.displayTitle, [
-                for (final i in note.items) i.text,
-              ], locale));
+              profile.grocery);
       final isRoutineNote =
           note.type != NoteType.text &&
           (noteMode == ListMode.routine || noteKind == SmartListKind.habits);
@@ -397,7 +396,7 @@ class SmartTargetRouter {
 
       // 4) Mevcut maddelerle birebir/kök örtüşme (özellikle rutin ve şablonlarda)
       if (note.type != NoteType.text && note.items.isNotEmpty) {
-        final itemMatch = _existingItemOverlap(lowerAscii, words, note.items);
+        final itemMatch = _existingItemOverlap(lowerAscii, words, profile);
         if (itemMatch) {
           score = (score + 0.26).clamp(0.76, 0.93);
           reason = SmartRouteReason.lexicalMatch;
@@ -552,19 +551,51 @@ class SmartTargetRouter {
   static bool _existingItemOverlap(
     String lowerAscii,
     List<String> words,
-    List<dynamic> items,
+    _NoteRouteProfile profile,
   ) {
     if (words.isEmpty) return false;
-    for (final item in items) {
-      final text = quickAscii(quickBaseName((item as dynamic).text as String));
-      if (text.length < 3) continue;
+    for (var k = 0; k < profile.itemKeys.length; k++) {
+      final text = profile.itemKeys[k];
       if (lowerAscii == text || lowerAscii.contains(text)) return true;
-      final itemWords = _wordsOf(text);
+      final itemWords = profile.itemWords[k];
       if (itemWords.length >= 2 && itemWords.every((w) => words.contains(w))) {
         return true;
       }
     }
     return false;
+  }
+
+  /// Not başına pahalı özellikler (tür tespiti 400 maddede ~190 ms) bir kez
+  /// hesaplanır. [Note] değişmez: not değişince yeni nesne gelir ve önbellek
+  /// kendiliğinden tazelenir. Kök neden: hızlı ekle her harfte / her dikte
+  /// kısmi sonucunda bütün adayları baştan tarıyordu (harf başına saniyeler,
+  /// kullanıcı 2026-11-28 "aşırı donuyor, çöküyor").
+  static final _profiles = Expando<_NoteRouteProfile>('smartRouteProfile');
+
+  static _NoteRouteProfile _profileOf(Note note, String locale) {
+    final cached = _profiles[note];
+    if (cached != null && cached.locale == locale) return cached;
+    final keys = <String>[];
+    final wordsList = <List<String>>[];
+    for (final item in note.items) {
+      final text = quickAscii(quickBaseName(item.text));
+      if (text.length < 3) continue;
+      keys.add(text);
+      wordsList.add(_wordsOf(text));
+    }
+    final profile = _NoteRouteProfile(
+      locale: locale,
+      kind: detectNoteListKind(note, locale: locale),
+      grocery:
+          note.type != NoteType.text &&
+          looksLikeGrocery(note.displayTitle, [
+            for (final i in note.items) i.text,
+          ], locale),
+      itemKeys: keys,
+      itemWords: wordsList,
+    );
+    _profiles[note] = profile;
+    return profile;
   }
 
   static bool _matchesTimeSlot(ContextTimeSlot slot, DateTime now) =>
@@ -707,4 +738,20 @@ class MultiIntentSplitter {
         }(),
     ];
   }
+}
+
+class _NoteRouteProfile {
+  const _NoteRouteProfile({
+    required this.locale,
+    required this.kind,
+    required this.grocery,
+    required this.itemKeys,
+    required this.itemWords,
+  });
+
+  final String locale;
+  final SmartListKind kind;
+  final bool grocery;
+  final List<String> itemKeys;
+  final List<List<String>> itemWords;
 }

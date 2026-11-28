@@ -9695,6 +9695,16 @@ class AppLocalizationsTr extends AppLocalizations {
   String get listModeQuickAddHint => 'Örn. 2 kg domates, kahve 180 tl…';
 
   @override
+  String get listModeQuickAddHintRoutine => 'Örn. 8 bardak su, 20 dk yürüyüş…';
+
+  @override
+  String get listModeQuickAddHintProject =>
+      'Örn. sunumu hazırla yarın !yüksek…';
+
+  @override
+  String get listModeQuickAddHintGeneral => 'Yeni madde yaz…';
+
+  @override
   String get ghostSuggestionsTitle => 'Önerilen maddeler';
 
   @override
